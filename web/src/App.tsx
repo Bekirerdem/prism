@@ -4,6 +4,9 @@ import Background from "./components/Background";
 import Landing from "./components/Landing";
 import FeedbackButton from "./components/FeedbackButton";
 import { logFunnel } from "./lib/funnel";
+import { hashForView, viewFromHash, type View } from "./lib/routes";
+import { ToastProvider } from "./state/toast";
+import { TreasuryProvider } from "./state/treasury";
 
 // Heavy views (they pull in the large @stellar/stellar-sdk) are code-split so the
 // landing loads fast — stellar-sdk only downloads when you open them.
@@ -25,35 +28,34 @@ function lazyWithReload<T extends ComponentType<any>>(factory: () => Promise<{ d
     }),
   );
 }
-const Dashboard = lazyWithReload(() => import("./components/Dashboard"));
-const Wallet = lazyWithReload(() => import("./components/Wallet"));
-const ActivityFeed = lazyWithReload(() => import("./components/ActivityFeed"));
-const Workspace = lazyWithReload(() => import("./components/Workspace"));
-// AppNav pulls in the wallet kit — keep it lazy so the landing bundle stays light.
-const AppNav = lazyWithReload(() => import("./components/AppNav"));
+// The shell pulls in the wallet kit (via WalletChip) — lazy keeps the landing bundle light.
+const AppShell = lazyWithReload(() => import("./components/shell/AppShell"));
+const ShellRouter = lazyWithReload(() => import("./components/shell/ShellRouter"));
 
-type View = "landing" | "dashboard" | "wallet" | "activity" | "workspace";
-
-// Views live in the URL hash so a refresh (or back/forward) keeps the current view
-// instead of dumping the user back on the landing page.
-const VIEWS: readonly View[] = ["landing", "dashboard", "wallet", "activity", "workspace"];
-const viewFromHash = (): View => {
-  const h = window.location.hash.slice(1);
-  return (VIEWS as readonly string[]).includes(h) ? (h as View) : "landing";
-};
+// Keep the address bar canonical: legacy hashes (#workspace) and unknown ones rewrite
+// to what actually rendered, so a copied link always reproduces the same view.
+function normalizeHash(v: View) {
+  const want = hashForView(v);
+  if (window.location.hash.slice(1) !== want) {
+    window.history.replaceState(null, "", want ? `#${want}` : window.location.pathname + window.location.search);
+  }
+}
 
 export default function App() {
-  const [view, setView] = useState<View>(viewFromHash);
+  const [view, setView] = useState<View>(() => viewFromHash(window.location.hash));
 
   // One page_view per visit (device-tagged) — the top of the funnel, so connect-clicks
   // and deploys can be read as a fraction of who actually arrived.
   useEffect(() => {
     logFunnel({ event: "page_view" });
+    normalizeHash(viewFromHash(window.location.hash));
   }, []);
 
   useEffect(() => {
     const onHash = () => {
-      setView(viewFromHash());
+      const v = viewFromHash(window.location.hash);
+      normalizeHash(v);
+      setView(v);
       window.scrollTo({ top: 0, behavior: "auto" });
     };
     window.addEventListener("hashchange", onHash);
@@ -61,7 +63,7 @@ export default function App() {
   }, []);
 
   const go = (v: View) => {
-    window.location.hash = v === "landing" ? "" : v; // hashchange drives setView
+    window.location.hash = hashForView(v); // hashchange drives setView
     setView(v); // and set directly so "#" edge cases (landing) still switch
     window.scrollTo({ top: 0, behavior: "auto" });
   };
@@ -70,76 +72,55 @@ export default function App() {
     <>
       <Background />
 
-      {/* App-level nav only on the inner views — the landing has its own floating
-          navbar (Wallet/Activity live there now), so this would just clutter it. */}
-      {view !== "landing" && (
-        <Suspense fallback={null}>
-          <AppNav view={view} onGo={go} />
-        </Suspense>
-      )}
-
-      <Suspense fallback={null}>
-        <AnimatePresence mode="wait">
-          {view === "workspace" ? (
-            <motion.div
-              key="workspace"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Workspace />
-            </motion.div>
-          ) : view === "wallet" ? (
-            <motion.div
-              key="wallet"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Wallet />
-            </motion.div>
-          ) : view === "activity" ? (
-            <motion.div
-              key="activity"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ActivityFeed />
-            </motion.div>
-          ) : view === "landing" ? (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.4, ease: [0.2, 0.7, 0.3, 1] }}
-            >
-              <Landing
-                onLaunch={() => go("dashboard")}
-                onWallet={() => go("wallet")}
-                onActivity={() => go("activity")}
-                onWorkspace={() => go("workspace")}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.2, 0.7, 0.3, 1] }}
-            >
-              <Dashboard onHome={() => go("landing")} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Suspense>
+      <AnimatePresence mode="wait">
+        {view === "landing" ? (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.4, ease: [0.2, 0.7, 0.3, 1] }}
+          >
+            <Landing
+              onLaunch={() => go("dashboard")}
+              onWallet={() => go("wallet")}
+              onActivity={() => go("activity")}
+              onWorkspace={() => go("overview")}
+            />
+          </motion.div>
+        ) : (
+          // One key for the whole app — the shell persists across page switches; only
+          // the page content inside cross-fades.
+          <motion.div
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ToastProvider>
+              <TreasuryProvider>
+                <Suspense fallback={null}>
+                  <AppShell page={view} onGo={go}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={view}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.2, 0.7, 0.3, 1] }}
+                      >
+                        <ShellRouter view={view} onGo={go} />
+                      </motion.div>
+                    </AnimatePresence>
+                  </AppShell>
+                </Suspense>
+              </TreasuryProvider>
+            </ToastProvider>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <FeedbackButton />
     </>
   );
 }
-
