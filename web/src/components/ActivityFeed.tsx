@@ -7,15 +7,18 @@ import { rpc } from "@stellar/stellar-sdk";
 import { EXPLORER, RPC_URL, TREASURY_ID, VERIFIER_ID } from "../config";
 import { dedupeById, fetchAllEvents, fetchEventsPage, type FeedEvent } from "../lib/events";
 import { fetchActivityHistory, mergeFeedEvents, subscribeActivity } from "../lib/activity";
+import { filterFeed, type FeedFilter } from "../lib/feedFilter";
 import { getAddress, onAddressChange } from "../lib/walletKit";
 import { getTreasuryId } from "../lib/treasuryStore";
 
 const POLL_MS = 6000; // ~1 testnet ledger
 const MAX_ITEMS = 120;
+const PAGE = 30; // rows revealed per "Load more"
 
-export default function ActivityFeed() {
+export default function ActivityFeed({ filter }: { filter?: FeedFilter }) {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [state, setState] = useState<"connecting" | "live" | "error">("connecting");
+  const [visible, setVisible] = useState(PAGE);
 
   // Watch the connected user's own treasury alongside the demo treasury + verifier —
   // otherwise a user's payments never show up here and the feed looks broken.
@@ -95,51 +98,63 @@ export default function ActivityFeed() {
     };
   }, [contractIds]);
 
-  return (
-    <div style={wrap}>
-      <div style={card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>◭ Activity</h1>
-          <span style={dot(state)}>
-            {state === "live" ? "● live" : state === "connecting" ? "○ connecting" : "○ offline"}
-          </span>
-        </div>
-        <p style={{ color: "#A0A0B8", marginTop: 6, fontSize: 14 }}>
-          Every treasury action across Prism — full history, streamed live. On-chain events
-          from the demo treasury, the ZK verifier and your own treasury ride on top.
-        </p>
+  // View-level filter + paging: merge/poll state above stays untouched, so switching
+  // chips never refetches — it just re-slices what's already in memory.
+  const shown = useMemo(() => {
+    const list = filter ? filterFeed(events, filter) : events;
+    return { list: list.slice(0, visible), total: list.length };
+  }, [events, filter, visible]);
 
-        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-          {events.length === 0 ? (
-            <div style={{ color: "#7C7C92", fontSize: 14, padding: "20px 0" }}>
-              {state === "error"
-                ? "Couldn't reach the network — retrying…"
-                : state === "connecting"
-                  ? "Loading platform activity…"
-                  : "No activity yet — the first treasury action lands here live."}
-            </div>
-          ) : (
-            events.map((e) => {
-              const inner = (
-                <>
-                  <span style={kindTag(e.kind)}>{e.kind}</span>
-                  <span style={{ flex: 1, fontSize: 13.5 }}>{e.label}</span>
-                  <span style={{ color: "#7C7C92", fontSize: 11.5 }}>{timeAgo(e.at)}</span>
-                </>
-              );
-              return e.txHash ? (
-                <a key={e.id} style={item} href={`${EXPLORER}/tx/${e.txHash}`} target="_blank" rel="noreferrer">
-                  {inner}
-                </a>
-              ) : (
-                <div key={e.id} style={item}>
-                  {inner}
-                </div>
-              );
-            })
-          )}
-        </div>
+  return (
+    <div style={card}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h1 style={{ margin: 0, fontSize: 24, letterSpacing: "-0.02em" }}>◭ Activity</h1>
+        <span style={dot(state)}>
+          {state === "live" ? "● live" : state === "connecting" ? "○ connecting" : "○ offline"}
+        </span>
       </div>
+      <p style={{ color: "#A0A0B8", marginTop: 6, fontSize: 14 }}>
+        Every treasury action across Prism — full history, streamed live. On-chain events
+        from the demo treasury, the ZK verifier and your own treasury ride on top.
+      </p>
+
+      <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
+        {shown.list.length === 0 ? (
+          <div style={{ color: "#7C7C92", fontSize: 14, padding: "20px 0" }}>
+            {state === "error"
+              ? "Couldn't reach the network — retrying…"
+              : state === "connecting"
+                ? "Loading platform activity…"
+                : filter && events.length > 0
+                  ? "Nothing matches these filters."
+                  : "No activity yet — the first treasury action lands here live."}
+          </div>
+        ) : (
+          shown.list.map((e) => {
+            const inner = (
+              <>
+                <span style={kindTag(e.kind)}>{e.kind}</span>
+                <span style={{ flex: 1, fontSize: 13.5 }}>{e.label}</span>
+                <span style={{ color: "#7C7C92", fontSize: 11.5 }}>{timeAgo(e.at)}</span>
+              </>
+            );
+            return e.txHash ? (
+              <a key={e.id} style={item} href={`${EXPLORER}/tx/${e.txHash}`} target="_blank" rel="noreferrer">
+                {inner}
+              </a>
+            ) : (
+              <div key={e.id} style={item}>
+                {inner}
+              </div>
+            );
+          })
+        )}
+      </div>
+      {shown.total > visible && (
+        <button style={loadMore} onClick={() => setVisible((v) => v + PAGE)} type="button">
+          Load more ({shown.total - shown.list.length} older)
+        </button>
+      )}
     </div>
   );
 }
@@ -154,11 +169,16 @@ function timeAgo(iso: string): string {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const wrap: React.CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: "84px 16px 24px" };
+// Shell-embedded: the AppShell provides page padding/centering; the card fills its slot.
 const card: React.CSSProperties = {
-  width: "100%", maxWidth: 560, padding: 28, borderRadius: 18,
+  width: "100%", maxWidth: 640, margin: "0 auto", boxSizing: "border-box", padding: 24, borderRadius: 18,
   background: "rgba(18,18,28,0.72)", border: "1px solid rgba(255,255,255,0.08)",
   backdropFilter: "blur(12px)", color: "#EDEDF4",
+};
+const loadMore: React.CSSProperties = {
+  marginTop: 12, width: "100%", padding: "9px 14px", borderRadius: 10, cursor: "pointer",
+  background: "transparent", border: "1px solid rgba(255,255,255,0.14)", color: "#A0A0B8",
+  fontSize: 13, fontFamily: "inherit",
 };
 const item: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 11,

@@ -91,6 +91,7 @@ export function activityToFeedEvent(row: ActivityRow): FeedEvent {
     txHash: row.tx_hash ?? "",
     at: row.created_at,
     amountXlm: amt != null && !Number.isNaN(amt) ? amt : undefined,
+    treasuryId: row.treasury_id ?? undefined,
   };
 }
 

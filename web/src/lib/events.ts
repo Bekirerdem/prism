@@ -8,11 +8,13 @@ const WATCHED = [TREASURY_ID, VERIFIER_ID];
 
 export interface FeedEvent {
   id: string;
-  kind: string; // topic symbol: paid / attested / escrowed / released / refunded
+  kind: string; // topic symbol: paid / attested / escrowed / payee_add / paused / …
   label: string; // human summary
   txHash: string;
   at: string; // ISO timestamp (ledgerClosedAt)
   amountXlm?: number; // for `paid` events — the XLM amount, used by analytics
+  treasuryId?: string; // emitting contract (or the activity row's treasury) — per-treasury filters
+  payee?: string; // for payee_add / payee_rm — the whitelisted/removed address
 }
 
 const short = (s: unknown) => {
@@ -45,6 +47,16 @@ export function formatEvent(topics: unknown[], data: unknown): { kind: string; l
       return { kind, label: `Escrow #${topics[1]} released to ${short(d?.[0])}` };
     case "refunded":
       return { kind, label: `Escrow #${topics[1]} refunded` };
+    case "payee_add":
+      return { kind, label: `Payee whitelisted: ${short(data)}` };
+    case "payee_rm":
+      return { kind, label: `Payee removed: ${short(data)}` };
+    case "paused":
+      return { kind, label: data ? "Treasury paused" : "Treasury resumed" };
+    case "revoked":
+      return { kind, label: "Leash revoked" };
+    case "agent":
+      return { kind, label: `Root agent rotated to ${short(data)}` };
     default:
       return { kind, label: kind };
   }
@@ -70,7 +82,17 @@ export async function fetchEventsPage(
     const { kind, label } = formatEvent(topics, data);
     const d = data as unknown[];
     const amountXlm = kind === "paid" ? Number(d?.[1]) / 1e7 : undefined;
-    return { id: e.id, kind, label, txHash: e.txHash, at: e.ledgerClosedAt, amountXlm };
+    const payee = kind === "payee_add" || kind === "payee_rm" ? String(data) : undefined;
+    return {
+      id: e.id,
+      kind,
+      label,
+      txHash: e.txHash,
+      at: e.ledgerClosedAt,
+      amountXlm,
+      treasuryId: e.contractId?.toString(),
+      payee,
+    };
   });
   return {
     events,

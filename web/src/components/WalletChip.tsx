@@ -88,7 +88,7 @@ export default function WalletChip({
               }}
               type="button"
             >
-              Wallet view
+              Wallet details
             </button>
           )}
           <button

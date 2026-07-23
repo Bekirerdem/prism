@@ -96,6 +96,9 @@ export function fmtUSDC(stroops: bigint, maxFrac = 2): string {
   return (neg ? "-" : "") + wholeStr + (fracStr ? "." + fracStr : "");
 }
 
+/** XLM and USDC are both 7-decimal; fmtUSDC is pure math, so reuse it and label XLM. */
+export const fmtXlm = (stroops: bigint) => fmtUSDC(stroops, 4);
+
 export function shortAddr(a: string): string {
   return a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a;
 }

@@ -72,6 +72,11 @@ describe("activityToFeedEvent", () => {
     expect(e.amountXlm).toBe(7.5);
   });
 
+  it("carries the row's treasury_id so feeds can filter per treasury", () => {
+    expect(activityToFeedEvent(row()).treasuryId).toBe("CTREASURY");
+    expect(activityToFeedEvent(row({ treasury_id: null })).treasuryId).toBeUndefined();
+  });
+
   it("falls back gracefully on unknown actions", () => {
     const e = activityToFeedEvent(row({ action: "mystery" }));
     expect(e.kind).toBe("mystery");

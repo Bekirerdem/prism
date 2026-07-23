@@ -15,6 +15,23 @@ describe("formatEvent", () => {
     expect(r.kind).toBe("attested");
     expect(r.label).toMatch(/period 2/);
   });
+
+  it("formats payee_add / payee_rm with the payee address", () => {
+    const add = formatEvent(["payee_add"], "GBGHC3E4WM4JAIRTFHIYOHRDSYHYQXFEHBCJT2SNTZWORHLQI4TDQABC");
+    expect(add.kind).toBe("payee_add");
+    expect(add.label).toMatch(/whitelisted/i);
+    expect(add.label).toMatch(/GBGH…QABC/);
+    const rm = formatEvent(["payee_rm"], "GBGHC3E4WM4JAIRTFHIYOHRDSYHYQXFEHBCJT2SNTZWORHLQI4TDQABC");
+    expect(rm.kind).toBe("payee_rm");
+    expect(rm.label).toMatch(/removed/i);
+  });
+
+  it("formats paused / revoked / agent lifecycle events", () => {
+    expect(formatEvent(["paused"], true).label).toMatch(/paused/i);
+    expect(formatEvent(["paused"], false).label).toMatch(/resumed/i);
+    expect(formatEvent(["revoked"], null).label).toMatch(/leash/i);
+    expect(formatEvent(["agent"], "GAGENTADDR").label).toMatch(/agent/i);
+  });
 });
 
 describe("bytesToInt", () => {

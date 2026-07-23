@@ -1,0 +1,141 @@
+/* App shell chrome — sidebar + topbar on desktop, top bar + bottom tabs on phones.
+   Layout lives here (media queries can't be inline); visual tokens match the app. */
+
+.shell{ display:grid; grid-template-columns:232px 1fr; min-height:100vh; }
+
+/* ---- sidebar ------------------------------------------------------------------ */
+.shell__side{
+  position:sticky; top:0; height:100vh; display:flex; flex-direction:column;
+  padding:20px 14px 16px;
+  border-right:1px solid rgba(255,255,255,0.07);
+  background:rgba(12,12,18,0.55);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+}
+.shell__brand{
+  display:flex; align-items:center; gap:9px; margin:2px 6px 22px;
+  background:none; border:none; padding:0; cursor:pointer;
+  color:#F3F1EC; font-family:'Fraunces', Georgia, serif; font-weight:600; font-size:18px;
+}
+.shell__glyph{
+  width:24px; height:24px; border-radius:6px;
+  background:url('/favicon.png') center/cover no-repeat;
+  box-shadow:0 2px 12px rgba(0,0,0,.45);
+}
+.shell__nav{ display:flex; flex-direction:column; gap:2px; }
+.shell__item{
+  position:relative; display:flex; align-items:center; gap:10px; text-align:left;
+  background:none; border:none; cursor:pointer; width:100%;
+  padding:9px 12px; border-radius:9px;
+  color:#A0A0B8; font-size:13.5px; font-weight:600; font-family:inherit;
+  transition:color .18s ease, background .18s ease;
+}
+.shell__item:hover{ color:#EDEDF4; background:rgba(255,255,255,0.04); }
+.shell__item.is-active{ color:#EDEDF4; background:rgba(255,255,255,0.05); }
+.shell__item.is-active::before{
+  content:""; position:absolute; left:0; top:8px; bottom:8px; width:2px;
+  border-radius:2px; background:#FDDA24;
+}
+.shell__icon{ width:16px; text-align:center; font-size:13px; opacity:.85; }
+
+.shell__foot{ margin-top:auto; display:flex; flex-direction:column; gap:10px; padding:0 6px; }
+.shell__demo{
+  background:none; border:none; padding:0; cursor:pointer; text-align:left;
+  color:#7C7C92; font-size:12.5px; font-family:inherit;
+}
+.shell__demo:hover{ color:#EDEDF4; }
+.shell__demo.is-active{ color:#FDDA24; }
+.shell__testnet{
+  padding:8px 10px; border-radius:9px; font-size:11.5px; line-height:1.45; color:#EDEDF4;
+  background:rgba(253,218,36,0.07); border:1px solid rgba(253,218,36,0.3);
+}
+.shell__docs{ color:#7C7C92; font-size:12.5px; text-decoration:none; }
+.shell__docs:hover{ color:#EDEDF4; }
+
+/* ---- main column -------------------------------------------------------------- */
+.shell__main{ display:flex; flex-direction:column; min-width:0; }
+.shell__top{
+  position:sticky; top:0; z-index:900;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 22px;
+  background:rgba(10,10,14,0.55);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+}
+.shell__content{ flex:1; padding:26px 26px 40px; max-width:1120px; width:100%; margin:0 auto; box-sizing:border-box; }
+
+/* ---- treasury switcher --------------------------------------------------------- */
+.tswitch{ position:relative; }
+.tswitch__chip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 12px; border-radius:9px; cursor:pointer;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+  color:#EDEDF4; font-family:ui-monospace, monospace; font-size:12.5px;
+  transition:background .18s ease;
+}
+.tswitch__chip:hover{ background:rgba(255,255,255,0.09); }
+.tswitch__caret{ font-size:10px; color:#7C7C92; }
+.tswitch__menu{
+  position:absolute; left:0; top:calc(100% + 8px); min-width:280px; padding:6px;
+  border-radius:12px; background:rgba(14,14,20,0.97);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:0 16px 40px -12px rgba(0,0,0,0.7); z-index:1200;
+}
+.tswitch__row{
+  display:flex; align-items:center; gap:8px; width:100%;
+  background:none; border:none; cursor:pointer; text-align:left;
+  padding:9px 10px; border-radius:8px;
+  color:#EDEDF4; font-family:ui-monospace, monospace; font-size:12.5px;
+}
+.tswitch__row:hover{ background:rgba(255,255,255,0.07); }
+.tswitch__row .is-unreg{ color:#7C7C92; font-size:11px; font-family:inherit; }
+.tswitch__row .is-current{ color:#FDDA24; }
+.tswitch__forget{
+  background:none; border:none; cursor:pointer; padding:2px 6px;
+  color:#7C7C92; font-size:11px; border-radius:6px; opacity:0; transition:opacity .15s ease;
+}
+.tswitch__row:hover .tswitch__forget{ opacity:1; }
+.tswitch__forget:hover{ color:#FF5D5D; }
+
+/* ---- overview layout ----------------------------------------------------------- */
+.ov__hero{ display:grid; grid-template-columns:7fr 5fr; gap:18px; align-items:stretch; }
+.ov__lower{ display:grid; grid-template-columns:7fr 5fr; gap:18px; }
+.ov__balance{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:56px; letter-spacing:-0.02em; line-height:1.05; color:#EDEDF4; }
+.ov__balance small{ font-size:17px; color:#A0A0B8; font-family:inherit; margin-left:8px; }
+
+/* skeleton pulse for loading states */
+@keyframes shellPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:.25; } }
+.shell__skel{ border-radius:10px; background:rgba(255,255,255,0.06); animation:shellPulse 1.6s ease-in-out infinite; }
+
+@media(max-width:1023px){
+  .ov__hero,.ov__lower{ grid-template-columns:1fr; }
+  .ov__balance{ font-size:40px; }
+}
+
+/* ---- mobile ------------------------------------------------------------------- */
+.shell__tabs{ display:none; }
+
+@media(max-width:1023px){
+  .shell{ grid-template-columns:1fr; }
+  .shell__side{ display:none; }
+  .shell__top{ padding:10px 14px; }
+  .shell__content{ padding:18px 14px 96px; } /* bottom-bar clearance */
+  .shell__tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:1000;
+    display:flex; justify-content:space-around; align-items:stretch;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    background:rgba(10,10,14,0.88);
+    border-top:1px solid rgba(255,255,255,0.08);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  }
+  .shell__tab{
+    display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;
+    background:none; border:none; cursor:pointer; padding:6px 2px;
+    color:#7C7C92; font-size:10.5px; font-weight:600; font-family:inherit;
+  }
+  .shell__tab .shell__icon{ font-size:16px; width:auto; }
+  .shell__tab.is-active{ color:#FDDA24; }
+  .tswitch__chip{ padding:6px 9px; font-size:11.5px; }
+  .tswitch__menu{ min-width:240px; }
+  /* Lift the global feedback FAB above the bottom tab bar (it hid the Settings tab). */
+  body:has(.shell) .feedback-fab{ bottom:calc(78px + env(safe-area-inset-bottom)) !important; }
+}
