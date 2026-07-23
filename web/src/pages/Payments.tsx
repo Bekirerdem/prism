@@ -23,17 +23,15 @@ export default function Payments() {
   const treasuryId = t.treasuryId as string;
   const [tab, setTab] = useState<Tab>("send");
 
-  // ---- payee list (derived) -----------------------------------------------------
-  const [payees, setPayees] = useState<PayeeEntry[]>([]);
+  // ---- payee list (derived, no state: refreshKey bumps after every action) -------
   const [verify, setVerify] = useState<Verify>({});
-
-  const reloadPayees = useCallback(() => {
-    setPayees(mergePayees(payeesFromEvents(loadLedger(treasuryId)), loadPayeeBook(treasuryId)));
-  }, [treasuryId]);
-
-  useEffect(() => {
-    reloadPayees();
-  }, [reloadPayees, t.refreshKey]);
+  const [payeeBump, setPayeeBump] = useState(0); // optimistic re-derive right after add/remove
+  const payees = useMemo<PayeeEntry[]>(
+    () => mergePayees(payeesFromEvents(loadLedger(treasuryId)), loadPayeeBook(treasuryId)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshKey/payeeBump invalidate the localStorage-backed derivation
+    [treasuryId, t.refreshKey, payeeBump],
+  );
+  const reloadPayees = useCallback(() => setPayeeBump((b) => b + 1), []);
 
   // Verify each derived row against the chain (read-only simulate; no signatures).
   useEffect(() => {
