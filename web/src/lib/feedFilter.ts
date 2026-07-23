@@ -34,6 +34,15 @@ export function groupOfKind(kind: string): KindGroup | null {
   return GROUP_OF.get(kind) ?? null;
 }
 
+/** Feed dot/badge colour per kind — shared by RecentActivity and the Activity page. */
+export function kindColor(kind: string): string {
+  if (kind === "blocked") return "#FF5D5D";
+  if (kind === "fund" || kind === "deploy") return "#00FF43";
+  if (kind === "leash" || kind === "revoked") return "#E0A106";
+  if (kind === "paid") return "#FDDA24";
+  return "#A0A0B8";
+}
+
 export interface FeedFilter {
   groups: ReadonlySet<KindGroup> | null; // null = every kind
   treasuryId: string | null; // null = platform-wide

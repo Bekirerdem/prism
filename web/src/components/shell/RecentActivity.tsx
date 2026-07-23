@@ -6,17 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EXPLORER } from "../../config";
 import type { FeedEvent } from "../../lib/events";
 import { fetchActivityHistory, mergeFeedEvents, subscribeActivity } from "../../lib/activity";
-import { filterFeed } from "../../lib/feedFilter";
+import { filterFeed, kindColor } from "../../lib/feedFilter";
 
 const SHOW = 5;
-
-export function kindColor(kind: string): string {
-  if (kind === "blocked") return "#FF5D5D";
-  if (kind === "fund" || kind === "deploy") return "#00FF43";
-  if (kind === "leash" || kind === "revoked") return "#E0A106";
-  if (kind === "paid") return "#FDDA24";
-  return "#A0A0B8";
-}
 
 export default function RecentActivity({
   treasuryId,
