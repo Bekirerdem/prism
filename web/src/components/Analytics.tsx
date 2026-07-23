@@ -1,93 +1,17 @@
 // Analytics + monitoring panel for the connected treasury: payment count, total spent,
-// policy violations, runtime errors, and a small spend sparkline — derived from the
-// treasury's on-chain `paid` events + the client-side monitor.
-import { useEffect, useRef, useState } from "react";
-import { rpc } from "@stellar/stellar-sdk";
-import { RPC_URL } from "../config";
-import { dedupeById, fetchAllEvents, type FeedEvent } from "../lib/events";
-import { agentScorecard, getMonitor, spendSeries } from "../lib/analytics";
-import { loadLedger, recordEvents } from "../lib/eventLedger";
+// policy violations, runtime errors, and a small spend sparkline — the data engine lives
+// in lib/useAnalytics so the shell's Overview reads the same numbers.
+import { useAnalyticsScore } from "../lib/useAnalytics";
 
 export default function Analytics({ contractId, refreshKey = 0 }: { contractId: string; refreshKey?: number }) {
-  // Seed from the persistent ledger so payments older than the RPC's event-retention
-  // window (which a fresh scan can no longer see) never drop out of the counters.
-  const [events, setEvents] = useState<FeedEvent[]>(() => loadLedger(contractId));
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
-  const [truncated, setTruncated] = useState(false);
-  const [tick, setTick] = useState(0);
-  // Last read's paging cursor + events, so a refresh continues from where the previous
-  // read stopped (typically one RPC round-trip) instead of re-scanning all history.
-  const cacheRef = useRef<{ contractId: string; cursor: string; events: FeedEvent[] } | null>(null);
-
-  // Re-fetch on contract change, after a parent action (refreshKey), or manual ↻ (tick).
-  // RPC indexes a new payment a few seconds after it lands, so the manual refresh covers
-  // the lag where an auto-refresh fires before the event is queryable.
-  useEffect(() => {
-    let alive = true;
-    setState("loading");
-    setEvents(loadLedger(contractId)); // instant paint from the ledger while the scan runs
-    (async () => {
-      const server = new rpc.Server(RPC_URL);
-
-      // Incremental: continue from the cached cursor.
-      const cached = cacheRef.current;
-      if (cached?.contractId === contractId && cached.cursor) {
-        try {
-          const page = await fetchAllEvents(server, { contractIds: [contractId], cursor: cached.cursor });
-          const merged = dedupeById([...cached.events, ...page.events]);
-          cacheRef.current = { contractId, cursor: page.cursor || cached.cursor, events: merged };
-          if (page.truncated) console.warn("Analytics: event history truncated at the page cap — totals may be partial.");
-          if (alive) {
-            setEvents(recordEvents(contractId, merged));
-            setTruncated(page.truncated);
-            setState("ready");
-          }
-          return;
-        } catch {
-          cacheRef.current = null; // stale/expired cursor — fall back to a cold load
-        }
-      }
-
-      try {
-        // Cold load: the treasury's WHOLE retained history, not a half-day window —
-        // otherwise a user returning a day later sees zeroed analytics. Start at the
-        // RPC's oldest retained ledger and page to the chain head (head-based stop,
-        // so the NEWEST events are never dropped).
-        let start = 1;
-        try {
-          const health = await server.getHealth();
-          start = Math.max(1, (health.oldestLedger ?? 1) + 1);
-        } catch {
-          const latest = await server.getLatestLedger();
-          start = Math.max(1, latest.sequence - 9000);
-        }
-        const page = await fetchAllEvents(server, { contractIds: [contractId], startLedger: start });
-        cacheRef.current = { contractId, cursor: page.cursor, events: page.events };
-        if (page.truncated) console.warn("Analytics: event history truncated at the page cap — totals may be partial.");
-        if (alive) {
-          setEvents(recordEvents(contractId, page.events));
-          setTruncated(page.truncated);
-          setState("ready");
-        }
-      } catch {
-        if (alive) setState("error");
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [contractId, refreshKey, tick]);
-
-  const score = agentScorecard(events);
-  const series = spendSeries(events);
-  const monitor = getMonitor(contractId);
+  const { score, series, monitor, status, truncated, refresh } = useAnalyticsScore(contractId, refreshKey);
   const max = Math.max(1, ...series.map((p) => p.xlm));
 
   return (
     <div style={{ marginTop: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={label}>Analytics &amp; monitoring</div>
-        <button style={refreshBtn} onClick={() => setTick((t) => t + 1)} type="button" aria-label="Refresh analytics">↻ Refresh</button>
+        <button style={refreshBtn} onClick={refresh} type="button" aria-label="Refresh analytics">↻ Refresh</button>
       </div>
       <div style={grid}>
         <Stat label="Payments" value={String(score.payments)} />
@@ -108,15 +32,15 @@ export default function Analytics({ contractId, refreshKey = 0 }: { contractId: 
       )}
 
       <div style={{ fontSize: 11.5, color: "#7C7C92", marginTop: 8 }}>
-        {state === "loading"
+        {status === "loading"
           ? "Reading on-chain activity…"
-          : state === "error"
+          : status === "error"
             ? "Couldn't reach RPC."
             : score.lastAt
               ? `Last payment ${timeAgo(score.lastAt)}`
               : "No payments yet — spend to see analytics."}
       </div>
-      {truncated && state === "ready" && (
+      {truncated && status === "ready" && (
         <div style={{ fontSize: 11.5, color: "#E0A106", marginTop: 4 }}>
           ⚠ Only the most recent events were read — totals may be partial.
         </div>
