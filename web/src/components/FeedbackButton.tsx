@@ -11,7 +11,7 @@ const FEEDBACK_FORM_URL = "https://forms.gle/7gzJWwte52SmbXei7";
 // null and the button silently did nothing. Anchor navigation is never popup-blocked.
 export default function FeedbackButton() {
   return (
-    <a style={fab} href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer">
+    <a className="feedback-fab" style={fab} href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer">
       Share feedback
     </a>
   );

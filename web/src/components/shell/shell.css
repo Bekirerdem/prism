@@ -136,4 +136,6 @@
   .shell__tab.is-active{ color:#FDDA24; }
   .tswitch__chip{ padding:6px 9px; font-size:11.5px; }
   .tswitch__menu{ min-width:240px; }
+  /* Lift the global feedback FAB above the bottom tab bar (it hid the Settings tab). */
+  body:has(.shell) .feedback-fab{ bottom:calc(78px + env(safe-area-inset-bottom)) !important; }
 }
