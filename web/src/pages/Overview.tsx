@@ -1,7 +1,8 @@
 // The hero page: at a glance — how much is in the treasury, how much of today's limit
 // is spent, is the policy live, what just happened. The forms moved to their own pages;
 // this one answers "what is my state" first (the old Workspace showed inputs instead).
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { animate, motion, useReducedMotion } from "framer-motion";
 import { EXPLORER, fmtXlm, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
 import { useAnalyticsScore } from "../lib/useAnalytics";
@@ -19,6 +20,30 @@ const STEP_LABEL: Record<SetupStep, string> = {
   whitelist: "Whitelist",
   pay: "First payment",
 };
+
+const EASE = [0.2, 0.7, 0.3, 1] as const;
+// Page-load choreography: hero first, then actions, then the lower zone.
+const fadeUp = (delay: number) => ({
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.45, delay, ease: EASE },
+});
+
+/** Balance rolls up from 0 on mount (skipped under prefers-reduced-motion). */
+function RollingBalance({ stroops }: { stroops: bigint }) {
+  const reduce = useReducedMotion();
+  const [text, setText] = useState("0");
+  useEffect(() => {
+    if (reduce) return;
+    const controls = animate(0, Number(stroops), {
+      duration: 0.7,
+      ease: EASE,
+      onUpdate: (v) => setText(fmtXlm(BigInt(Math.round(v)))),
+    });
+    return () => controls.stop();
+  }, [stroops, reduce]);
+  return <>{reduce ? fmtXlm(stroops) : text}</>;
+}
 
 export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const t = useTreasury();
@@ -124,7 +149,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
         </div>
       )}
 
-      <div className="ov__hero">
+      <motion.div className="ov__hero" {...fadeUp(0)}>
         {/* SOL — balance */}
         <div style={heroLeft}>
           <div style={label}>Balance</div>
@@ -136,7 +161,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           ) : (
             <>
               <div className="ov__balance">
-                {fmtXlm(s.balance)}
+                <RollingBalance stroops={s.balance} />
                 <small>XLM</small>
               </div>
               <div style={chipRow}>
@@ -179,7 +204,12 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           ) : (
             <>
               <div style={barTrack}>
-                <div style={{ ...barFill, width: `${spentPct}%` }} />
+                <motion.div
+                  style={barFill}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${spentPct}%` }}
+                  transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
+                />
               </div>
               <div style={todayLine}>
                 <strong style={{ color: "#EDEDF4" }}>
@@ -201,10 +231,10 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
             </>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* QUICK ACTIONS */}
-      <div style={actions}>
+      <motion.div style={actions} {...fadeUp(0.12)}>
         <button
           style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
           onClick={() => setFundOpen((o) => !o)}
@@ -219,7 +249,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
         <button style={ghostAction} onClick={() => onGo("agent")} type="button">
           {leashOn ? "⚡ Leash active →" : "⚡ Start Leash"}
         </button>
-      </div>
+      </motion.div>
       {fundOpen && (
         <div style={fundPanel}>
           <input
@@ -243,7 +273,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
       )}
 
       {/* ALT BÖLGE */}
-      <div className="ov__lower" style={{ marginTop: 18 }}>
+      <motion.div className="ov__lower" style={{ marginTop: 18 }} {...fadeUp(0.2)}>
         <RecentActivity treasuryId={treasuryId} refreshKey={t.refreshKey} onViewAll={() => onGo("activity")} />
         <StatStrip
           payments={analytics.score.payments}
@@ -252,7 +282,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           payees={payeeCount}
           truncated={analytics.truncated}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }
