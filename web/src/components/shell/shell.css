@@ -96,6 +96,21 @@
 .tswitch__row:hover .tswitch__forget{ opacity:1; }
 .tswitch__forget:hover{ color:#FF5D5D; }
 
+/* ---- overview layout ----------------------------------------------------------- */
+.ov__hero{ display:grid; grid-template-columns:7fr 5fr; gap:18px; align-items:stretch; }
+.ov__lower{ display:grid; grid-template-columns:7fr 5fr; gap:18px; }
+.ov__balance{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:56px; letter-spacing:-0.02em; line-height:1.05; color:#EDEDF4; }
+.ov__balance small{ font-size:17px; color:#A0A0B8; font-family:inherit; margin-left:8px; }
+
+/* skeleton pulse for loading states */
+@keyframes shellPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:.25; } }
+.shell__skel{ border-radius:10px; background:rgba(255,255,255,0.06); animation:shellPulse 1.6s ease-in-out infinite; }
+
+@media(max-width:1023px){
+  .ov__hero,.ov__lower{ grid-template-columns:1fr; }
+  .ov__balance{ font-size:40px; }
+}
+
 /* ---- mobile ------------------------------------------------------------------- */
 .shell__tabs{ display:none; }
 
