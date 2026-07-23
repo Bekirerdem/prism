@@ -1,3 +1,34 @@
+# Kova 4 — App Shell Redesign (2026-07-23, branch `feat/app-shell`)
+
+Spec: `docs/superpowers/specs/2026-07-23-app-shell-redesign-design.md` · Plan:
+`docs/superpowers/plans/2026-07-23-app-shell-redesign.md`. Wave 7 #13/#6/#10 bu işin
+içinde eridi (Bekir kararı: hepsi bizde; dashboard'dan çekilmeleri Bekir'de).
+
+- [x] Saf lib'ler (TDD): routes (+#workspace redirect) · feedFilter (kind grupları,
+      kindColor) · payees (payee_add/payee_rm fold + local book) · onboarding (stepper)
+      · treasuryList (local ∪ registry merge) · toastQueue — 154/154 vitest yeşil
+- [x] FeedEvent zenginleştirme: treasuryId + payee alanları; payee_add/payee_rm/paused/
+      revoked/agent olay etiketleri
+- [x] TreasuryProvider — Workspace'in tüm state/aksiyonları context'e taşındı (Seyit'in
+      parseXlmAmount ön-doğrulaması + session `registered` kurtarması korunarak);
+      validation=inline, tx sonuçları=toast
+- [x] AppShell: sidebar (5 bölüm + Guided demo + Testnet badge) · topbar (treasury
+      switcher #10 + WalletChip) · mobil bottom tab bar
+- [x] Sayfalar: Overview (balance hero + canlı limit enstrümanı + quick actions +
+      recent activity + stat şeridi + stepper) · Setup (kapı + sihirbaz) · Payments
+      (Send/Payees + canlı limit bağlamı + is_payee rozeti + history) · Agent (leash
+      countdown) · Activity (#6: çipler + my-treasury + load more) · Settings (telafi
+      register + limits + danger zone)
+- [x] Cutover: Workspace.tsx + AppNav.tsx emekli; hash normalize (#workspace→#overview);
+      lint 7 warning = redesign öncesi baseline (0 error, CI gate yeşil)
+- [x] Motion: stagger + rolling balance + bar dolumu + blocked flaş (reduced-motion saygılı)
+- [x] Duman testi (chrome-devtools): kapı/Activity/redirect/mobil 375px + FAB-tab bar
+      çakışması fixlendi; screenshot'lar `docs/screenshots/appshell-*.png`
+- [ ] Gerçek Freighter E2E (Bekir): deploy→fund→whitelist→pay→BLOCKED→leash→switcher
+      → bağlı-durum screenshot'ları + ayna kapısı (hero) → merge + `vercel --prod`
+      (deploy zamanlaması: 24 Tem etkinliği gözetilerek Bekir kararı)
+- [ ] Wave 7 dashboard'ından #13/#6/#10 çekilsin (Bekir)
+
 # Kova 2 — Dokümantasyon / kredibilite (2026-07-03) ✅
 
 - [x] SECURITY.md — güvenlik modeli + 2026-06-03 audit bulgularının durumu (fixed/open)
