@@ -56,6 +56,11 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
   // ---- creation wizard ----------------------------------------------------------
   return (
     <div style={wizWrap}>
+      {t.creatingNew && t.treasuryId && (
+        <button style={backLink} onClick={t.cancelNewTreasury} type="button">
+          ← Back to your current treasury
+        </button>
+      )}
       <h1 style={wizTitle}>Set up your treasury</h1>
       <p style={wizSub}>Two steps: choose your limits, then deploy. The contract does the rest.</p>
 
@@ -142,6 +147,10 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
   );
 }
 
+const backLink: React.CSSProperties = {
+  background: "none", border: "none", padding: 0, marginBottom: 14, cursor: "pointer",
+  color: "#7C7C92", fontSize: 13, fontFamily: "inherit",
+};
 const gateWrap: React.CSSProperties = { minHeight: "70vh", display: "grid", placeItems: "center" };
 const gateCard: React.CSSProperties = { maxWidth: 440, textAlign: "center", padding: "24px 16px" };
 const gateGlyph: React.CSSProperties = { fontSize: 40, color: "#FDDA24", marginBottom: 14 };

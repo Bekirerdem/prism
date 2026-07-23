@@ -6,7 +6,7 @@ import { shortAddr } from "../../config";
 import { useTreasury } from "../../state/useTreasury";
 
 export default function TreasurySwitcher() {
-  const { address, treasuryId, treasuries, switchTreasury, forgetTreasury } = useTreasury();
+  const { address, treasuryId, treasuries, switchTreasury, forgetTreasury, startNewTreasury } = useTreasury();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -61,6 +61,16 @@ export default function TreasurySwitcher() {
               </span>
             </button>
           ))}
+          <button
+            className="tswitch__row tswitch__new"
+            onClick={() => {
+              setOpen(false);
+              startNewTreasury();
+            }}
+            type="button"
+          >
+            ＋ New treasury
+          </button>
         </div>
       )}
     </div>

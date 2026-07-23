@@ -65,6 +65,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState<Busy>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryIds, setRegistryIds] = useState<string[]>([]);
+  const [creatingNew, setCreatingNew] = useState(false);
   const [localIds, setLocalIds] = useState<string[]>(() => {
     const a = getAddress();
     return a ? listTreasuries(a) : [];
@@ -145,7 +146,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       const found = await discoverTreasuries(address);
       if (!alive) return;
       setRegistryIds(found);
-      if (!treasuryId && found.length > 0) {
+      if (!treasuryId && !creatingNew && found.length > 0) {
         const latest = found[found.length - 1];
         setTreasuryId(address, latest);
         setTreasuryIdState(latest);
@@ -156,7 +157,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     return () => {
       alive = false;
     };
-  }, [address, treasuryId, syncLocalIds, toast]);
+  }, [address, treasuryId, creatingNew, syncLocalIds, toast]);
 
   const refresh = useCallback(async () => {
     if (address && treasuryId) await loadState(treasuryId, address);
@@ -218,6 +219,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         const id = await deployTreasury(address, walletSignerFor(address), dailyLimit.value, perTaskLimit.value);
         setTreasuryId(address, id);
         setTreasuryIdState(id);
+        setCreatingNew(false);
         syncLocalIds(address);
         void logActivity({ walletAddress: address, treasuryId: id, action: "deploy" });
         // Best-effort on-chain registration (a second wallet prompt). A decline only
@@ -257,6 +259,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       }
       setTreasuryId(address, id);
       setTreasuryIdState(id);
+      setCreatingNew(false);
       syncLocalIds(address);
       return { ok: true, msg: "" };
     },
@@ -627,6 +630,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const switchTreasury = useCallback(
     (id: string) => {
       if (!address || id === treasuryId) return;
+      setCreatingNew(false);
       setTreasuryId(address, id); // adds if unknown (registry-only entries), sets active
       setTreasuryIdState(id);
       setState(null);
@@ -694,6 +698,9 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     registerActive,
     switchTreasury,
     forgetTreasury,
+    creatingNew,
+    startNewTreasury: () => setCreatingNew(true),
+    cancelNewTreasury: () => setCreatingNew(false),
   };
 
   return <TreasuryContext.Provider value={value}>{children}</TreasuryContext.Provider>;

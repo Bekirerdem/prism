@@ -1,47 +1,23 @@
-// The Overview's "last 5 things that happened to THIS treasury" — durable history from
-// Supabase (survives RPC retention) plus the Realtime INSERT stream, filtered per
-// treasury. Full platform feed stays on the Activity page.
-import { useEffect, useState } from "react";
+// The Overview's "last 5 things that happened to THIS treasury" — pure display; the
+// data (durable history + live stream) comes from useTreasuryActivity in the parent,
+// which also feeds the stat counters, so both always agree.
 import { AnimatePresence, motion } from "framer-motion";
 import { EXPLORER } from "../../config";
 import type { FeedEvent } from "../../lib/events";
-import { fetchActivityHistory, mergeFeedEvents, subscribeActivity } from "../../lib/activity";
-import { filterFeed, kindColor } from "../../lib/feedFilter";
+import { kindColor } from "../../lib/feedFilter";
 
 const SHOW = 5;
 
 export default function RecentActivity({
-  treasuryId,
-  refreshKey,
+  rows,
+  freshId,
   onViewAll,
 }: {
-  treasuryId: string;
-  refreshKey: number;
+  rows: FeedEvent[];
+  freshId: string | null;
   onViewAll: () => void;
 }) {
-  const [events, setEvents] = useState<FeedEvent[]>([]);
-  const [flash, setFlash] = useState<string | null>(null); // id of a just-arrived event
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const rows = await fetchActivityHistory(40);
-      if (alive) setEvents(filterFeed(rows, { groups: null, treasuryId }));
-    })();
-    const unsub = subscribeActivity((e) => {
-      const [mine] = filterFeed([e], { groups: null, treasuryId });
-      if (!mine) return;
-      setEvents((list) => mergeFeedEvents([mine], list, 40));
-      setFlash(mine.id);
-      setTimeout(() => setFlash(null), 1200);
-    });
-    return () => {
-      alive = false;
-      unsub();
-    };
-  }, [treasuryId, refreshKey]);
-
-  const shown = events.slice(0, SHOW);
+  const shown = rows.slice(0, SHOW);
 
   return (
     <div style={panel}>
@@ -65,7 +41,7 @@ export default function RecentActivity({
                   opacity: 1,
                   y: 0,
                   backgroundColor:
-                    flash === e.id && e.kind === "blocked"
+                    freshId === e.id && e.kind === "blocked"
                       ? ["rgba(255,93,93,0.18)", "rgba(255,93,93,0)"]
                       : "rgba(255,93,93,0)",
                 }}

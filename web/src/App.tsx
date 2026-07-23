@@ -101,18 +101,11 @@ export default function App() {
             <ToastProvider>
               <TreasuryProvider>
                 <Suspense fallback={null}>
+                  {/* No per-page AnimatePresence here: a lazily-loaded page that suspends
+                      mid-enter gets stuck at the animation's initial opacity (blank page on
+                      first visit). Pages that want load motion own it (Overview's stagger). */}
                   <AppShell page={view} onGo={go}>
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={view}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25, ease: [0.2, 0.7, 0.3, 1] }}
-                      >
-                        <ShellRouter view={view} onGo={go} />
-                      </motion.div>
-                    </AnimatePresence>
+                    <ShellRouter view={view} onGo={go} />
                   </AppShell>
                 </Suspense>
               </TreasuryProvider>

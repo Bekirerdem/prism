@@ -23,7 +23,7 @@ export default function ShellRouter({ view, onGo }: { view: View; onGo: (v: View
     if (view === "wallet") return <Wallet />;
     if (view === "activity") return <ActivityPage />;
     // Treasury-scoped pages: overview / payments / agent / settings.
-    if (!t.address || !t.treasuryId) return <Setup onGo={onGo} />;
+    if (!t.address || !t.treasuryId || t.creatingNew) return <Setup onGo={onGo} />;
     if (view === "payments") return <Payments />;
     if (view === "agent") return <Agent />;
     if (view === "settings") return <Settings />;

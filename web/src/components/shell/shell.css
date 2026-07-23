@@ -95,6 +95,10 @@
 }
 .tswitch__row:hover .tswitch__forget{ opacity:1; }
 .tswitch__forget:hover{ color:#FF5D5D; }
+.tswitch__new{
+  margin-top:4px; border-top:1px solid rgba(255,255,255,0.08); border-radius:0 0 8px 8px;
+  color:#FDDA24; font-family:inherit;
+}
 
 /* ---- overview layout ----------------------------------------------------------- */
 .ov__hero{ display:grid; grid-template-columns:7fr 5fr; gap:18px; align-items:stretch; }

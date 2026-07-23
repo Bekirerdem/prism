@@ -62,6 +62,11 @@ export interface TreasuryContextValue {
   registerActive: () => Promise<ActionOutcome>;
   switchTreasury: (id: string) => void;
   forgetTreasury: (id: string) => void;
+  /** True while the user deliberately walks the create-new wizard despite having a
+   *  treasury open — suppresses the registry auto-adopt so Setup can render. */
+  creatingNew: boolean;
+  startNewTreasury: () => void;
+  cancelNewTreasury: () => void;
 }
 
 export const TreasuryContext = createContext<TreasuryContextValue | null>(null);

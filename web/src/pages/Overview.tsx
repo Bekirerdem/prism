@@ -6,6 +6,7 @@ import { animate, motion, useReducedMotion } from "framer-motion";
 import { EXPLORER, fmtXlm, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
 import { useAnalyticsScore } from "../lib/useAnalytics";
+import { useTreasuryActivity } from "../lib/useTreasuryActivity";
 import { loadPayeeBook, mergePayees, payeesFromEvents } from "../lib/payees";
 import { setupProgress, type SetupStep } from "../lib/onboarding";
 import { needsFunding, MIN_XLM } from "../lib/funding";
@@ -49,6 +50,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const t = useTreasury();
   const treasuryId = t.treasuryId as string; // the shell only renders Overview with one open
   const analytics = useAnalyticsScore(treasuryId, t.refreshKey);
+  const { rows, freshId } = useTreasuryActivity(treasuryId, t.refreshKey);
 
   const [copied, setCopied] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
@@ -60,12 +62,18 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
     return mergePayees(payeesFromEvents(analytics.events), loadPayeeBook(treasuryId)).length;
   }, [analytics.events, analytics.status, treasuryId]);
 
+  // Durable truths from the activity log — chain events older than the RPC's retention
+  // window can't be re-scanned, but the Supabase log remembers them.
+  const blockedCount = useMemo(() => rows.filter((e) => e.kind === "blocked").length, [rows]);
+  const whitelistSeen = rows.some((e) => e.kind === "whitelist");
+  const paidSeen = rows.some((e) => e.kind === "paid");
+
   const progress = setupProgress({
     connected: !!t.address,
     hasTreasury: true,
     balance: t.state?.balance ?? null,
-    payeeCount,
-    hasPaid: analytics.score.payments > 0 || (t.state ? t.state.daySpent > 0n : false),
+    payeeCount: payeeCount || (whitelistSeen ? 1 : payeeCount),
+    hasPaid: analytics.score.payments > 0 || paidSeen || (t.state ? t.state.daySpent > 0n : false),
   });
 
   const copyId = async () => {
@@ -219,10 +227,9 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
               </div>
               <div style={todaySub}>per-payment ≤ {fmtXlm(s.perTaskLimit)} XLM</div>
               <div style={todaySub}>remaining today: {fmtXlm(remaining)} XLM</div>
-              {analytics.monitor.violations > 0 && (
+              {blockedCount > 0 && (
                 <div style={{ ...todaySub, color: "#FF5D5D" }}>
-                  {analytics.monitor.violations} drain attempt{analytics.monitor.violations > 1 ? "s" : ""} blocked by
-                  the contract
+                  {blockedCount} drain attempt{blockedCount > 1 ? "s" : ""} blocked by the contract
                 </div>
               )}
               {t.lifecycle?.paused && (
@@ -274,11 +281,11 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
 
       {/* ALT BÖLGE */}
       <motion.div className="ov__lower" style={{ marginTop: 18 }} {...fadeUp(0.2)}>
-        <RecentActivity treasuryId={treasuryId} refreshKey={t.refreshKey} onViewAll={() => onGo("activity")} />
+        <RecentActivity rows={rows} freshId={freshId} onViewAll={() => onGo("activity")} />
         <StatStrip
           payments={analytics.score.payments}
           totalXlm={analytics.score.totalXlm}
-          blocked={analytics.monitor.violations}
+          blocked={blockedCount}
           payees={payeeCount}
           truncated={analytics.truncated}
         />
