@@ -147,6 +147,13 @@ export async function readState(treasury: Client): Promise<PrismState> {
   };
 }
 
+/** Read-only whitelist probe (simulation, no signature) — the chain-truth behind the
+ *  "verified" badge on the derived payee list. */
+export async function isPayee(treasury: Client, payee: string): Promise<boolean> {
+  const tx = await treasury.is_payee({ payee });
+  return tx.result;
+}
+
 export async function addPayee(treasury: Client, payee: string): Promise<void> {
   const tx = await treasury.add_payee({ payee });
   await tx.signAndSend();
