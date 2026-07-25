@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Asset, BASE_FEE, Horizon, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
 import { EXPLORER, HORIZON_URL, NETWORK_PASSPHRASE, shortAddr } from "../config";
 import { connectErr, sendErr } from "../lib/wallet-errors";
-import { kit, connect as kitConnect, disconnect as kitDisconnect, walletSignerFor } from "../lib/walletKit";
+import { kit, connect as kitConnect, disconnect as kitDisconnect } from "../lib/walletKit";
 import { useWalletAddress } from "../lib/useWalletAddress";
 import { getXlmBalance } from "../lib/funding";
 import { isValidPaymentDest, parseXlmAmount } from "../lib/validate";
@@ -47,13 +47,20 @@ export default function Wallet() {
       // failure (throws) — so a transient RPC outage no longer masquerades as a "0" balance.
       const xlm = await getXlmBalance(addr);
       setBalance(xlm ?? 0);
+      // Clear a previous failure on success: the refresh button and the post-send reload
+      // both call this with the SAME address, so the address-change reset above never fires
+      // for them — without this the error state would stick until reconnect.
+      setBalanceError(false);
     } catch {
       setBalanceError(true);
     }
   }, []);
 
   useEffect(() => {
-    if (address) void loadBalance(address);
+    if (!address) return;
+    void (async () => {
+      await loadBalance(address);
+    })();
   }, [address, loadBalance]);
 
   const connect = useCallback(async () => {

@@ -134,11 +134,17 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   // (Handled during render via prevAddress above.)
 
   useEffect(() => {
-    if (address && treasuryId) void loadState(treasuryId, address, { markLoading: false });
+    if (!address || !treasuryId) return;
+    void (async () => {
+      await loadState(treasuryId, address, { markLoading: false });
+    })();
   }, [address, treasuryId, trackedLoadKey, loadState]);
 
   useEffect(() => {
-    if (address) void refreshWalletXlm(address);
+    if (!address) return;
+    void (async () => {
+      await refreshWalletXlm(address);
+    })();
   }, [address, refreshWalletXlm]);
 
   // Registry discovery: fills the switcher and (on a fresh device with no localStorage
