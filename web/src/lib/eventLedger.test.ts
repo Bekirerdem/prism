@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mergeLedger, loadLedger, recordEvents, type KVStore } from "./eventLedger";
+import { mergeLedger, loadLedger, recordEvents, computeAnomaly, type KVStore } from "./eventLedger";
 import type { FeedEvent } from "./events";
 
 const ev = (id: string, at: string, kind = "paid", amountXlm = 1): FeedEvent => ({
@@ -74,5 +74,56 @@ describe("loadLedger / recordEvents", () => {
     const store = fakeStore();
     store.setItem("prism_ledger:C1", "{not json");
     expect(loadLedger("C1", store)).toEqual([]);
+  });
+});
+
+describe("computeAnomaly", () => {
+  it("returns false for an empty window", () => {
+    expect(computeAnomaly([])).toBe(false);
+  });
+
+  it("returns false when below the minimum sample size", () => {
+    // 4 blocked payments, threshold is 0.5, but min sample is 5
+    const events = [
+      ev("1", "t1", "blocked"),
+      ev("2", "t2", "blocked"),
+      ev("3", "t3", "blocked"),
+      ev("4", "t4", "blocked"),
+    ];
+    expect(computeAnomaly(events, 20, 5, 0.5)).toBe(false);
+  });
+
+  it("returns true when ratio is exactly at threshold", () => {
+    // 5 events total: 3 blocked, 2 paid -> 0.6 >= 0.5
+    const events = [
+      ev("1", "t1", "blocked"),
+      ev("2", "t2", "blocked"),
+      ev("3", "t3", "blocked"),
+      ev("4", "t4", "paid"),
+      ev("5", "t5", "paid"),
+    ];
+    expect(computeAnomaly(events, 20, 5, 0.6)).toBe(true);
+  });
+
+  it("returns true when ratio is above threshold", () => {
+    const events = [
+      ev("1", "t1", "blocked"),
+      ev("2", "t2", "blocked"),
+      ev("3", "t3", "blocked"),
+      ev("4", "t4", "blocked"),
+      ev("5", "t5", "paid"),
+    ];
+    expect(computeAnomaly(events, 20, 5, 0.5)).toBe(true);
+  });
+
+  it("returns false when ratio is below threshold", () => {
+    const events = [
+      ev("1", "t1", "blocked"),
+      ev("2", "t2", "paid"),
+      ev("3", "t3", "paid"),
+      ev("4", "t4", "paid"),
+      ev("5", "t5", "paid"),
+    ];
+    expect(computeAnomaly(events, 20, 5, 0.5)).toBe(false);
   });
 });
