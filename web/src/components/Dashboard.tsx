@@ -71,7 +71,11 @@ export default function Dashboard({ onHome }: { onHome: () => void }) {
       setErr(e instanceof Error ? e.message : "RPC error");
     }
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    void (async () => {
+      await refresh();
+    })();
+  }, []);
 
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

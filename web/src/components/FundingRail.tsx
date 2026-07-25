@@ -14,7 +14,11 @@ export default function FundingRail() {
   async function refresh() {
     try { setDeposits(await readDeposits()); } catch { /* offline — ignore */ }
   }
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    void (async () => {
+      await refresh();
+    })();
+  }, []);
 
   async function fund(id: bigint) {
     setBusy(id.toString()); setFundErr(null);
