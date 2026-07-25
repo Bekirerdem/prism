@@ -8,8 +8,8 @@ import { EXPLORER, RPC_URL, TREASURY_ID, VERIFIER_ID } from "../config";
 import { dedupeById, fetchAllEvents, fetchEventsPage, type FeedEvent } from "../lib/events";
 import { fetchActivityHistory, mergeFeedEvents, subscribeActivity } from "../lib/activity";
 import { filterFeed, type FeedFilter } from "../lib/feedFilter";
-import { getAddress, onAddressChange } from "../lib/walletKit";
 import { getTreasuryId } from "../lib/treasuryStore";
+import { useWalletAddress } from "../lib/useWalletAddress";
 
 const POLL_MS = 6000; // ~1 testnet ledger
 const MAX_ITEMS = 120;
@@ -22,15 +22,8 @@ export default function ActivityFeed({ filter }: { filter?: FeedFilter }) {
 
   // Watch the connected user's own treasury alongside the demo treasury + verifier —
   // otherwise a user's payments never show up here and the feed looks broken.
-  const [myTreasury, setMyTreasury] = useState<string | null>(() => {
-    const addr = getAddress();
-    return addr ? getTreasuryId(addr) : null;
-  });
-
-  // Re-evaluate the user's own treasury whenever the wallet connects/disconnects, so a
-  // wallet connected AFTER this view mounted still gets its payments streamed in (the
-  // polling effect below re-subscribes because contractIds is in its dependency list).
-  useEffect(() => onAddressChange((a) => setMyTreasury(a ? getTreasuryId(a) : null)), []);
+  const address = useWalletAddress();
+  const myTreasury = address ? getTreasuryId(address) : null;
 
   const contractIds = useMemo(
     () => (myTreasury ? [TREASURY_ID, VERIFIER_ID, myTreasury] : [TREASURY_ID, VERIFIER_ID]),

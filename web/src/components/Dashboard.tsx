@@ -5,7 +5,7 @@
     entrance: head → stat bar → console/gauge → activity/map (tasteful stagger)
 */
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate, useMotionValue, useMotionValueEvent } from "framer-motion";
 import FundingRail from "./FundingRail";
 import {
   readState, readTaskSpent, agentPay, type PrismState, type PayResult,
@@ -27,22 +27,13 @@ type Stat = "idle" | "running" | "ok" | "rej";
 interface LedgerRow { key: string; name: string; payee: string; amount: bigint; ok: boolean; hash?: string; error?: string; }
 
 function useCountUp(target: number, ms = 700) {
+  const mv = useMotionValue(target);
   const [v, setV] = useState(target);
-  const from = useRef(target);
+  useMotionValueEvent(mv, "change", (latest) => setV(latest));
   useEffect(() => {
-    const start = performance.now();
-    const a = from.current;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / ms);
-      const e = 1 - Math.pow(1 - p, 3);
-      setV(a + (target - a) * e);
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else from.current = target;
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, ms]);
+    const controls = animate(mv, target, { duration: ms / 1000, ease: EASE });
+    return () => controls.stop();
+  }, [target, ms, mv]);
   return v;
 }
 
@@ -51,7 +42,8 @@ const usd = (stroops: bigint) => Number(stroops) / 1e7;
 export default function Dashboard({ onHome }: { onHome: () => void }) {
   const [state, setState] = useState<PrismState | null>(null);
   const [spent, setSpent] = useState<Record<string, bigint>>({});
-  const baseline = useRef<Record<string, bigint> | null>(null); // on-chain task_spent at load
+  const [baseline, setBaseline] = useState<Record<string, bigint> | null>(null);
+  const baselineCaptured = useRef(false);
   const [status, setStatus] = useState<Record<string, Stat>>({});
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [reject, setReject] = useState<{ name: string; error: string } | null>(null);
@@ -69,7 +61,10 @@ export default function Dashboard({ onHome }: { onHome: () => void }) {
       // TaskSpent is an all-time on-chain counter. Capture it once at load so the
       // "auto-reconciled" panel shows THIS session's spend (the delta) — starting
       // clean at 0 and matching the agent console's per-task amounts after a run.
-      if (!baseline.current) baseline.current = map;
+      if (!baselineCaptured.current) {
+        baselineCaptured.current = true;
+        setBaseline(map);
+      }
       setSpent(map);
       setErr(null);
     } catch (e) {
@@ -139,7 +134,7 @@ export default function Dashboard({ onHome }: { onHome: () => void }) {
   const sessionSpent = (k: string): bigint | undefined => {
     const now = spent[k];
     if (now === undefined) return undefined;
-    const d = now - (baseline.current?.[k] ?? now);
+    const d = now - (baseline?.[k] ?? now);
     return d > 0n ? d : 0n;
   };
 

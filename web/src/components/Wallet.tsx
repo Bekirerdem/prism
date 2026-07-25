@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Asset, BASE_FEE, Horizon, Operation, TransactionBuilder } from "@stellar/stellar-sdk";
 import { EXPLORER, HORIZON_URL, NETWORK_PASSPHRASE, shortAddr } from "../config";
 import { connectErr, sendErr } from "../lib/wallet-errors";
-import { kit, connect as kitConnect, disconnect as kitDisconnect, getAddress, onAddressChange } from "../lib/walletKit";
+import { kit, connect as kitConnect, disconnect as kitDisconnect, walletSignerFor } from "../lib/walletKit";
+import { useWalletAddress } from "../lib/useWalletAddress";
 import { getXlmBalance } from "../lib/funding";
 import { isValidPaymentDest, parseXlmAmount } from "../lib/validate";
 
@@ -16,9 +17,7 @@ const server = new Horizon.Server(HORIZON_URL);
 type Status = { kind: "idle" | "info" | "success" | "error"; msg: string; hash?: string };
 
 export default function Wallet() {
-  // Hydrate from the shared kit state — a wallet connected in the Workspace (or before
-  // a reload) is the same session-wide connection, so show it here too.
-  const [address, setAddress] = useState<string | null>(getAddress());
+  const address = useWalletAddress();
   const [balance, setBalance] = useState<number | null>(null);
   const [balanceError, setBalanceError] = useState(false);
   const [dest, setDest] = useState("");
@@ -27,8 +26,22 @@ export default function Wallet() {
   const [busy, setBusy] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
+  const [prevAddress, setPrevAddress] = useState(address);
+  if (address !== prevAddress) {
+    setPrevAddress(address);
+    if (!address) {
+      setBalance(null);
+      setBalanceError(false);
+      setDest("");
+      setAmount("");
+      setStatus({ kind: "idle", msg: "" });
+    } else {
+      setBalance(null);
+      setBalanceError(false);
+    }
+  }
+
   const loadBalance = useCallback(async (addr: string) => {
-    setBalanceError(false);
     try {
       // getXlmBalance distinguishes an unfunded account (404 → null) from a network/Horizon
       // failure (throws) — so a transient RPC outage no longer masquerades as a "0" balance.
@@ -43,30 +56,11 @@ export default function Wallet() {
     if (address) void loadBalance(address);
   }, [address, loadBalance]);
 
-  // Stay in sync with the global connection (nav chip connect/disconnect).
-  useEffect(
-    () =>
-      onAddressChange((a) => {
-        setAddress(a);
-        if (!a) {
-          // Disconnected elsewhere (nav chip) — clear derived + form state so nothing
-          // (stale dest/amount/status) leaks into the next wallet that connects.
-          setBalance(null);
-          setBalanceError(false);
-          setDest("");
-          setAmount("");
-          setStatus({ kind: "idle", msg: "" });
-        }
-      }),
-    [],
-  );
-
   const connect = useCallback(async () => {
     setConnecting(true);
     setStatus({ kind: "info", msg: "Choose a wallet…" });
     try {
-      const addr = await kitConnect();
-      setAddress(addr);
+      await kitConnect();
       setStatus({ kind: "idle", msg: "" });
       // Balance loads via the [address] effect — no need to fetch it a second time here.
     } catch (e) {
@@ -78,7 +72,6 @@ export default function Wallet() {
 
   const disconnect = useCallback(async () => {
     await kitDisconnect();
-    setAddress(null);
     setBalance(null);
     setBalanceError(false);
     setDest("");
