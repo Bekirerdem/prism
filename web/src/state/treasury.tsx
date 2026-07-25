@@ -3,7 +3,8 @@
 // Workspace so all shell pages read one context. Transaction progress/results surface as
 // toasts; validation failures return `{ validation: true }` and render inline at the form.
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { connect as kitConnect, getAddress, onAddressChange, walletSignerFor } from "../lib/walletKit";
+import { connect as kitConnect, walletSignerFor } from "../lib/walletKit";
+import { useWalletAddress } from "../lib/useWalletAddress";
 import {
   clearTreasuryId,
   getTreasuryId,
@@ -52,9 +53,9 @@ const invalid = (msg: string): ActionOutcome => ({ ok: false, msg, validation: t
 export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
-  const [address, setAddress] = useState<string | null>(getAddress());
+  const address = useWalletAddress();
   const [treasuryId, setTreasuryIdState] = useState<string | null>(
-    getAddress() ? getTreasuryId(getAddress() as string) : null,
+    () => (address ? getTreasuryId(address) : null),
   );
   const [state, setState] = useState<PrismState | null>(null);
   const [lifecycle, setLifecycle] = useState<Lifecycle | null>(null);
@@ -66,10 +67,27 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [registryIds, setRegistryIds] = useState<string[]>([]);
   const [creatingNew, setCreatingNew] = useState(false);
-  const [localIds, setLocalIds] = useState<string[]>(() => {
-    const a = getAddress();
-    return a ? listTreasuries(a) : [];
-  });
+  const [localIds, setLocalIds] = useState<string[]>(() => (address ? listTreasuries(address) : []));
+
+  const [prevAddress, setPrevAddress] = useState(address);
+  if (address !== prevAddress) {
+    setPrevAddress(address);
+    setTreasuryIdState(address ? getTreasuryId(address) : null);
+    setState(null);
+    setLifecycle(null);
+    setLegacy(false);
+    setSessionSecret(null);
+    setWalletXlm(undefined);
+    setRegistryIds([]);
+    setLocalIds(address ? listTreasuries(address) : []);
+  }
+
+  const loadKey = address && treasuryId ? `${address}:${treasuryId}:${refreshKey}` : "";
+  const [trackedLoadKey, setTrackedLoadKey] = useState("");
+  if (loadKey !== trackedLoadKey) {
+    setTrackedLoadKey(loadKey);
+    setLoading(!!loadKey);
+  }
 
   // The single-spender rule: while a session is active, payments must be signed
   // by the session key — the wallet's signature would be rejected on-chain.
@@ -79,8 +97,8 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
 
   const bump = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  const loadState = useCallback(async (id: string, addr: string) => {
-    setLoading(true);
+  const loadState = useCallback(async (id: string, addr: string, opts?: { markLoading?: boolean }) => {
+    if (opts?.markLoading !== false) setLoading(true);
     try {
       const t = makeTreasury(id, addr, walletSignerFor(addr));
       setState(await readState(t));
@@ -113,25 +131,11 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   // Stay in sync with the global connection (nav chip connect/disconnect). On ANY
   // address change, clear everything derived from the previous wallet — otherwise a
   // stale session key, balance, or treasury list can leak into the new context.
-  useEffect(
-    () =>
-      onAddressChange((a) => {
-        setAddress(a);
-        setTreasuryIdState(a ? getTreasuryId(a) : null);
-        setState(null);
-        setLifecycle(null);
-        setLegacy(false);
-        setSessionSecret(null);
-        setWalletXlm(undefined);
-        setRegistryIds([]);
-        syncLocalIds(a);
-      }),
-    [syncLocalIds],
-  );
+  // (Handled during render via prevAddress above.)
 
   useEffect(() => {
-    if (address && treasuryId) void loadState(treasuryId, address);
-  }, [address, treasuryId, loadState]);
+    if (address && treasuryId) void loadState(treasuryId, address, { markLoading: false });
+  }, [address, treasuryId, trackedLoadKey, loadState]);
 
   useEffect(() => {
     if (address) void refreshWalletXlm(address);
@@ -159,8 +163,8 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     };
   }, [address, treasuryId, creatingNew, syncLocalIds, toast]);
 
-  const refresh = useCallback(async () => {
-    if (address && treasuryId) await loadState(treasuryId, address);
+  const refresh = useCallback(async (opts?: { markLoading?: boolean }) => {
+    if (address && treasuryId) await loadState(treasuryId, address, opts);
     if (address) void refreshWalletXlm(address);
   }, [address, treasuryId, loadState, refreshWalletXlm]);
 
@@ -170,7 +174,6 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     setBusy("connect");
     try {
       const addr = await kitConnect();
-      setAddress(addr);
       setTreasuryIdState(getTreasuryId(addr));
       syncLocalIds(addr);
     } catch (e) {

@@ -2,7 +2,7 @@
 // is spent, is the policy live, what just happened. The forms moved to their own pages;
 // this one answers "what is my state" first (the old Workspace showed inputs instead).
 import { useEffect, useMemo, useState } from "react";
-import { animate, motion, useReducedMotion } from "framer-motion";
+import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import { EXPLORER, fmtXlm, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
 import { useAnalyticsScore } from "../lib/useAnalytics";
@@ -33,16 +33,14 @@ const fadeUp = (delay: number) => ({
 /** Balance rolls up from 0 on mount (skipped under prefers-reduced-motion). */
 function RollingBalance({ stroops }: { stroops: bigint }) {
   const reduce = useReducedMotion();
-  const [text, setText] = useState("0");
+  const mv = useMotionValue(Number(stroops));
+  const [text, setText] = useState(() => fmtXlm(stroops));
+  useMotionValueEvent(mv, "change", (v) => setText(fmtXlm(BigInt(Math.round(v)))));
   useEffect(() => {
     if (reduce) return;
-    const controls = animate(0, Number(stroops), {
-      duration: 0.7,
-      ease: EASE,
-      onUpdate: (v) => setText(fmtXlm(BigInt(Math.round(v)))),
-    });
+    const controls = animate(mv, Number(stroops), { duration: 0.7, ease: EASE });
     return () => controls.stop();
-  }, [stroops, reduce]);
+  }, [stroops, reduce, mv]);
   return <>{reduce ? fmtXlm(stroops) : text}</>;
 }
 

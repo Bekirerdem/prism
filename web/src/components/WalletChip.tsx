@@ -3,12 +3,8 @@
 // the landing nav so the connection reads the same everywhere.
 import { useEffect, useRef, useState } from "react";
 import { shortAddr } from "../config";
-import {
-  connect as kitConnect,
-  disconnect as kitDisconnect,
-  getAddress,
-  onAddressChange,
-} from "../lib/walletKit";
+import { connect as kitConnect, disconnect as kitDisconnect } from "../lib/walletKit";
+import { useWalletAddress } from "../lib/useWalletAddress";
 import "./appnav.css";
 
 export default function WalletChip({
@@ -18,13 +14,11 @@ export default function WalletChip({
   onWalletView?: () => void;
   variant?: "solid" | "ghost";
 }) {
-  const [address, setAddress] = useState<string | null>(getAddress());
+  const address = useWalletAddress();
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const walletRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => onAddressChange(setAddress), []);
 
   useEffect(() => {
     if (!menuOpen) return;

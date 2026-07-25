@@ -4,6 +4,7 @@
 // "registered but unfunded key" recovery path live in the provider.
 import { useEffect, useState } from "react";
 import { fmtXlm, shortAddr } from "../config";
+import { useNow } from "../lib/useNow";
 import { useTreasury } from "../state/useTreasury";
 
 export default function Agent() {
@@ -11,20 +12,16 @@ export default function Agent() {
   const [cap, setCap] = useState("25");
   const [hours, setHours] = useState("24");
   const [err, setErr] = useState("");
-  const [now, setNow] = useState(() => Date.now());
 
   const session = t.lifecycle?.session ?? null;
   const active = t.sessionActive && session;
+  const now = useNow(!!active);
 
-  // Countdown tick + auto-refresh once the session lapses so the UI flips itself.
+  // Auto-refresh once the session lapses so the UI flips itself.
   useEffect(() => {
-    if (!active) return;
-    const iv = setInterval(() => {
-      setNow(Date.now());
-      if (session && Number(session.valid_until) * 1000 < Date.now()) void t.refresh();
-    }, 1000);
-    return () => clearInterval(iv);
-  }, [active, session, t]);
+    if (!active || !session) return;
+    if (Number(session.valid_until) * 1000 < Date.now()) void t.refresh({ markLoading: false });
+  }, [active, session, now, t]);
 
   const doStart = async () => {
     setErr("");
