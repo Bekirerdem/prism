@@ -4,7 +4,7 @@ import Background from "./components/Background";
 import Landing from "./components/Landing";
 import FeedbackButton from "./components/FeedbackButton";
 import { logFunnel } from "./lib/funnel";
-import { hashForView, viewFromHash, type View } from "./lib/routes";
+import { hashForView, isLandingAnchor, viewFromHash, type View } from "./lib/routes";
 import { ToastProvider } from "./state/toast";
 import { TreasuryProvider } from "./state/treasury";
 
@@ -48,11 +48,14 @@ export default function App() {
   // and deploys can be read as a fraction of who actually arrived.
   useEffect(() => {
     logFunnel({ event: "page_view" });
-    normalizeHash(viewFromHash(window.location.hash));
+    if (!isLandingAnchor(window.location.hash)) normalizeHash(viewFromHash(window.location.hash));
   }, []);
 
   useEffect(() => {
     const onHash = () => {
+      // #how / #prism are landing sections, not routes — let the browser do its anchor
+      // jump instead of erasing the hash and scrolling back to the top.
+      if (isLandingAnchor(window.location.hash)) return;
       const v = viewFromHash(window.location.hash);
       normalizeHash(v);
       setView(v);
