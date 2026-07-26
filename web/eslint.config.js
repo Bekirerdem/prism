@@ -20,13 +20,5 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
-    rules: {
-      // Deferred (2026-07-09): the treasury/session views chain several loads through
-      // effects that setState synchronously; untangling them is a behaviour-risky refactor
-      // tracked in tasks/todo.md. Downgraded to warn so lint gates real errors without
-      // hiding these — restore to error once the effect refactor lands.
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/refs': 'warn',
-    },
   },
 ])

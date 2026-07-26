@@ -44,7 +44,7 @@ export interface TreasuryContextValue {
   busy: Busy;
   refreshKey: number;
   treasuries: TreasuryRef[];
-  refresh: () => Promise<void>;
+  refresh: (opts?: { markLoading?: boolean }) => Promise<void>;
   connect: () => Promise<void>;
   friendbot: () => Promise<ActionOutcome>;
   deploy: (daily: string, perTask: string) => Promise<ActionOutcome>;

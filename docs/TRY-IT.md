@@ -10,14 +10,29 @@ leave the policy.
 Everything below runs on **testnet**: no real money, zero risk. Every action is signed
 by your own wallet — non-custodial, funds stay under your control the whole time.
 
-**App:** [prism-stellar.vercel.app](https://prism-stellar.vercel.app) → **Open app** (top right)
+**App:** [prism-stellar.vercel.app](https://prism-stellar.vercel.app)
+
+## Connecting from mobile
+
+The steps below work the same from a phone. Instead of a browser extension:
+
+1. **Install Freighter mobile** (or another WalletConnect-capable Stellar wallet)
+   from your app store.
+2. **Set it to Testnet** — open the wallet's settings and switch the network to
+   **Testnet**.
+3. **Connect via WalletConnect** — in the app tap *Connect wallet* → pick
+   **WalletConnect** from the modal → scan the QR code with your phone wallet →
+   approve.
+
+Now follow the numbered steps below — everything works the same.
 
 ## Steps
 
-1. **Install a wallet** — add the [Freighter](https://www.freighter.app/) browser
-   extension and switch it to **Testnet** in its settings. (Already have a Stellar
-   wallet? Skip this step.)
-2. **Connect** — *Open app* → *Connect a wallet* → pick Freighter.
+1. **Install a wallet** — on **desktop**, add the [Freighter](https://www.freighter.app/)
+   browser extension and switch it to **Testnet** in its settings. On a **phone** see
+   *Connecting from mobile* above. (Already have a Stellar wallet? Skip this step.)
+2. **Connect** — click *Connect wallet* (top right) or *Open app* → pick
+   **Freighter** (desktop) or **WalletConnect** (phone).
 3. **Get free testnet XLM** — if your wallet is empty, the app detects it and shows a
    **"Get free testnet XLM"** button; one click funds you via friendbot.
 4. **Create your treasury** — set your daily and per-payment limits → *Create treasury* →
@@ -31,14 +46,14 @@ by your own wallet — non-custodial, funds stay under your control the whole ti
 8. **Now watch the real show** — try an amount **over** your limit, or a payment to an
    address you never whitelisted: the contract **rejects it on-chain** and funds never
    move. That rejection is the product working. 🔴
-9. **Hand it to an agent (no more popups)** — in **Agent session**, set a spending cap
-   and a duration → *Start agent session* (one wallet approval). From then on payments
+9. **Hand it to an agent (no more popups)** — in the **Agent** tab, set a spending cap
+   and a duration → *Start Leash* (one wallet approval). From then on payments
    sign with the session key — try **Run autonomous task**: 1 XLM settles on-chain with
-   **zero wallet popups**, and every limit still applies. *Revoke session* takes control
+   **zero wallet popups**, and every limit still applies. *Revoke Leash* takes control
    back instantly.
-10. **Owner controls** — in **Controls** you can *Pause spending* (freezes the agent,
-    withdraw still works), *Withdraw* your funds back out, and *Update limits* on the
-    fly — the owner always has an exit.
+10. **Owner controls** — in the **Settings** tab you can *Pause spending* (freezes the
+     agent, withdraw still works), *Withdraw* your funds back out, and *Update limits*
+     on the fly — the owner always has an exit.
 
 ## If something goes wrong
 
