@@ -7,6 +7,7 @@ import { EXPLORER, fmtXlm, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
 import { useAnalyticsScore } from "../lib/useAnalytics";
 import { useTreasuryActivity } from "../lib/useTreasuryActivity";
+import { computeAnomaly, mergeLedger } from "../lib/eventLedger";
 import { loadPayeeBook, mergePayees, payeesFromEvents } from "../lib/payees";
 import { setupProgress, type SetupStep } from "../lib/onboarding";
 import { needsFunding, MIN_XLM } from "../lib/funding";
@@ -65,6 +66,13 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const blockedCount = useMemo(() => rows.filter((e) => e.kind === "blocked").length, [rows]);
   const whitelistSeen = rows.some((e) => e.kind === "whitelist");
   const paidSeen = rows.some((e) => e.kind === "paid");
+
+  // Anomaly runs on the MERGED, deduped ledger (chain scan + durable activity log) so a
+  // Realtime row arriving before the RPC re-scan can't make the banner flicker on and off.
+  const anomaly = useMemo(
+    () => computeAnomaly(mergeLedger(analytics.events, rows)),
+    [analytics.events, rows],
+  );
 
   const progress = setupProgress({
     connected: !!t.address,
@@ -286,6 +294,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           blocked={blockedCount}
           payees={payeeCount}
           truncated={analytics.truncated}
+          anomaly={anomaly}
         />
       </motion.div>
     </div>

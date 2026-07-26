@@ -1,18 +1,10 @@
 // Analytics + monitoring panel for the connected treasury: payment count, total spent,
 // policy violations, runtime errors, and a small spend sparkline — the data engine lives
 // in lib/useAnalytics so the shell's Overview reads the same numbers.
-import { useMemo } from "react";
 import { useAnalyticsScore } from "../lib/useAnalytics";
-import { useTreasuryActivity } from "../lib/useTreasuryActivity";
-import { computeAnomaly, mergeLedger } from "../lib/eventLedger";
 
 export default function Analytics({ contractId, refreshKey = 0 }: { contractId: string; refreshKey?: number }) {
-  const { score, series, monitor, status, truncated, refresh, events: onChainEvents } = useAnalyticsScore(contractId, refreshKey);
-  const { rows } = useTreasuryActivity(contractId, refreshKey);
-  
-  const mergedEvents = useMemo(() => mergeLedger(onChainEvents, rows), [onChainEvents, rows]);
-  const isAnomaly = computeAnomaly(mergedEvents);
-  
+  const { score, series, monitor, status, truncated, refresh } = useAnalyticsScore(contractId, refreshKey);
   const max = Math.max(1, ...series.map((p) => p.xlm));
 
   return (
@@ -21,17 +13,6 @@ export default function Analytics({ contractId, refreshKey = 0 }: { contractId: 
         <div style={label}>Analytics &amp; monitoring</div>
         <button style={refreshBtn} onClick={refresh} type="button" aria-label="Refresh analytics">↻ Refresh</button>
       </div>
-
-      {isAnomaly && (
-        <div style={{ ...statBox, background: "rgba(255,93,93,0.1)", border: "1px solid rgba(255,93,93,0.3)", marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontSize: 20 }}>⚠</div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#FF5D5D" }}>Anomaly detected</div>
-            <div style={{ fontSize: 12, color: "#EDEDF4", marginTop: 2 }}>Spike in blocked payments detected in recent window.</div>
-          </div>
-        </div>
-      )}
-
       <div style={grid}>
         <Stat label="Payments" value={String(score.payments)} />
         <Stat label="Total spent" value={`${score.totalXlm.toFixed(2)} XLM`} />
