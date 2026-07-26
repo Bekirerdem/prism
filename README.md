@@ -11,7 +11,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 [![CI](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml)
 ![Stellar testnet](https://img.shields.io/badge/Stellar-testnet-FDDA24?style=flat-square)
 ![Rust · Soroban](https://img.shields.io/badge/Rust_·_Soroban-FDDA24?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_156%2F156-FDDA24?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_161%2F161-FDDA24?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-3a3a3a?style=flat-square)
 
 **[▶ Live demo](https://prism-stellar.vercel.app) · [🎥 Demo video](https://youtu.be/R7mw9ZTh94U) · [🎤 Pitch deck](https://deck-bice-omega.vercel.app) · [🗺 Roadmap](ROADMAP.md) · [🔗 Contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) · [📄 Deployment & proofs](DEPLOYMENT.md)**
