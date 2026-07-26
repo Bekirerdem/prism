@@ -8,8 +8,8 @@ PRISM is moving from a proven testnet product to **mainnet agent-payments infras
 - [x] Per-user product: connect a wallet → deploy your own treasury → fund → whitelist → spend
 - [x] ZK compliance layer — Circom/Groth16 proofs, hardened on-chain BN254 verifier (policy binding + replay guard)
 - [x] Analytics & monitoring + in-app feedback + on-chain activity logging (proof of usage)
-- [ ] 10+ real user wallets with on-chain interactions (risein Journey-to-Mastery Level 4) — distribution in progress
-- [ ] Published user-feedback summary
+- [x] 10+ real user wallets with on-chain interactions (risein Journey-to-Mastery Level 4) — 12 external testers, 10 with on-chain proof, 11 tester-deployed treasuries
+- [x] Published user-feedback summary — [README → Testers & traction](README.md#testers--traction)
 
 ## M2 — Agent infrastructure *(shipped 2026-07-07)*
 

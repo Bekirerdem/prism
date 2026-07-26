@@ -11,7 +11,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 [![CI](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml)
 ![Stellar testnet](https://img.shields.io/badge/Stellar-testnet-FDDA24?style=flat-square)
 ![Rust · Soroban](https://img.shields.io/badge/Rust_·_Soroban-FDDA24?style=flat-square)
-![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_107%2F107-FDDA24?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_156%2F156-FDDA24?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-3a3a3a?style=flat-square)
 
 **[▶ Live demo](https://prism-stellar.vercel.app) · [🎥 Demo video](https://youtu.be/R7mw9ZTh94U) · [🎤 Pitch deck](https://deck-bice-omega.vercel.app) · [🗺 Roadmap](ROADMAP.md) · [🔗 Contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) · [📄 Deployment & proofs](DEPLOYMENT.md)**
@@ -213,13 +213,41 @@ Every action is signed by your own wallet — non-custodial end to end. Feedback
 
 The first treasury is the transparent "public mode" demo; **Treasury v2** adds the reputation gate + escrow. Full addresses + verified on-chain results: [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
-## User feedback & how we act on it
+## Testers & traction
 
-Prism is dogfooded by real testers. Structured feedback is collected through a **[Google Form](https://forms.gle/7gzJWwte52SmbXei7)** — name, email, Stellar wallet, rating, most‑valuable feature, production intent, and improvements — with responses flowing to a private review sheet (wallet/email kept private; only aggregates are shared here).
+Prism is used by people who are not us. Every treasury below was deployed by someone
+connecting their own Stellar wallet on testnet — no seeded accounts, no scripted users.
 
-**Early signal:** 4.7 / 5 average, 100% *would use in production* — top-rated feature so far is the **bounded treasury**, and testers explicitly asked for deeper agent tooling (e.g. *"openclaw skills"*, @yamancan of Trion Labs).
+| | On testnet, as of 26 Jul 2026 |
+|---|---|
+| External testers | **12** — 10 with on-chain proof, 2 who explored and reported back |
+| Treasuries deployed by testers | **11** (13 including ours) |
+| Funding & payment transactions | **24**, each recorded with its tx hash |
+| Payments **blocked by the contract** | **17** — over-limit or non-whitelisted, funds never moved |
+| Wallet connections | 27 successful sessions (25 desktop · 2 mobile via WalletConnect) |
 
-**What testers hit → what we shipped** (the onboarding wave came straight from a first-time user getting stuck on live testnet):
+Usage is provable from two independent sources, neither of which we can quietly edit:
+the **on-chain [TreasuryRegistry](https://stellar.expert/explorer/testnet/contract/CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7)**,
+where each deploy registers its owner wallet, and a telemetry table recording every treasury
+action with its tx hash. Both are reconciled by [`web/scripts/user-count.mjs`](web/scripts/user-count.mjs)
+into [`docs/metrics/registered-users.json`](docs/metrics/registered-users.json) — a cumulative
+snapshot of owner wallets and the treasuries they deployed, checked into the repo. Every tx
+hash opens in Stellar Expert and settles.
+
+Rejections are the interesting half: 17 attempts hit the policy gate and reverted. That is the
+product working, not failing.
+
+### Feedback & how we act on it
+
+Structured feedback comes through a **[Google Form](https://forms.gle/7gzJWwte52SmbXei7)** —
+name, email, Stellar wallet, rating, most-valuable feature, production intent, improvements —
+flowing to a private review sheet (wallet/email kept private; only aggregates are shared here).
+
+**Signal from 9 external responses:** **4.9 / 5** average · **6 yes / 3 maybe** on *would you
+use this in production*, none said no · most-valued features split between **confidential mode
+(ZK)** (4), the **bounded treasury** (3) and **x402 agentic payments** (2).
+
+**What testers hit → what we shipped:**
 
 | Feedback | What we shipped | Commit |
 |---|---|---|
@@ -227,8 +255,10 @@ Prism is dogfooded by real testers. Structured feedback is collected through a *
 | The treasury contract ID was easy to lose after deploy | "Copy ID" + save reminder + StrKey validation | [`19d563c`](https://github.com/Bekirerdem/prism/commit/19d563c) |
 | First run was unclear — *what do I whitelist / pay?* | "Use the sample vendor" prefill + whitelist→spend autofill + human-readable errors | [`c0c3680`](https://github.com/Bekirerdem/prism/commit/c0c3680) |
 | Mobile visitors couldn't see the nav | Compact, responsive mobile nav | [`528d22d`](https://github.com/Bekirerdem/prism/commit/528d22d) |
-| *"more agent action options"* (production intent: yes) | On the roadmap → agent tooling / MCP integration ([`ROADMAP.md`](ROADMAP.md) M2/M4) |
-| *"openclaw skills"* — richer agent capability | On the roadmap → stellar-8004 + OpenClaw skill ([`ROADMAP.md`](ROADMAP.md) M4) |
+| *"UX is kinda cluttered"* · *"maybe work on user flow"* | Full app shell — five sections, sidebar on desktop, bottom tabs on mobile, one job per screen | [`074a76c`](https://github.com/Bekirerdem/prism/commit/074a76c) |
+| *"multi wallet"* — testers ran more than one treasury | Treasury switcher + "New treasury", with cross-device recovery from the on-chain registry | [`9f798a0`](https://github.com/Bekirerdem/prism/commit/9f798a0) |
+| *"'how it works' isnt functioning"* | Landing anchors no longer swallowed by the hash router | [`cba88a4`](https://github.com/Bekirerdem/prism/commit/cba88a4) |
+| *"more agent action options"* · *"openclaw skills"* | On the roadmap → agent tooling / MCP + stellar-8004 ([`ROADMAP.md`](ROADMAP.md) M2/M4) | |
 
 **Tried Prism?** Tell us what to fix next: **[share feedback →](https://forms.gle/7gzJWwte52SmbXei7)**
 
@@ -249,9 +279,9 @@ The dashboard reads live testnet state, and the embedded agent key (testnet-only
 
 ### Screenshots
 
-**Your own treasury (per-user product)** — connect a wallet, deploy your own bounded treasury, fund it, whitelist payees, spend within policy — with analytics & monitoring read from your treasury's on-chain events:
+**Your own treasury (per-user product)** — connect a wallet, deploy your own bounded treasury, fund it, whitelist payees, spend within policy. The app shell splits that into five sections (Overview · Payments · Agent · Activity · Settings); **Activity** is the live platform feed, every row a real tester's on-chain action — including the drain attempts the contract turned down:
 
-![Your Prism workspace — own treasury, policy limits, analytics & monitoring](docs/screenshots/10-workspace.png)
+![Prism app shell — Activity feed with blocked drain attempts, payments, funding and deploys](docs/screenshots/appshell-desktop-activity.png)
 
 **The agent dashboard — an AI agent spent real money, safely** (treasury balance, per-task & daily limits, live on-chain settlement):
 
@@ -261,9 +291,9 @@ The dashboard reads live testnet state, and the embedded agent key (testnet-only
 
 ![Confidential mode — commitments, proven per-task/daily bounds, on-chain attestation](docs/screenshots/08-confidential.png)
 
-**Mobile responsive** (390 px):
+**Mobile responsive** (390 px) — the sidebar becomes bottom tabs, and mobile wallets connect over WalletConnect:
 
-![Your Prism workspace on mobile](docs/screenshots/11-mobile-workspace.png)
+![Prism on mobile — bottom tab navigation](docs/screenshots/appshell-mobile-gate.png)
 
 **Continuous integration** — every push runs three jobs: Soroban contracts (`cargo test`), frontend (Vitest + build), and the x402 + prover package tests.
 
