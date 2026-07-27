@@ -218,13 +218,13 @@ The first treasury is the transparent "public mode" demo; **Treasury v2** adds t
 Prism is used by people who are not us. Every treasury below was deployed by someone
 connecting their own Stellar wallet on testnet — no seeded accounts, no scripted users.
 
-| | On testnet, as of 26 Jul 2026 |
+| | On testnet, as of 28 Jul 2026 |
 |---|---|
-| External testers | **12** — 10 with on-chain proof, 2 who explored and reported back |
-| Treasuries deployed by testers | **11** (13 including ours) |
-| Funding & payment transactions | **24**, each recorded with its tx hash |
-| Payments **blocked by the contract** | **17** — over-limit or non-whitelisted, funds never moved |
-| Wallet connections | 27 successful sessions (25 desktop · 2 mobile via WalletConnect) |
+| External testers | **14** — 12 with on-chain proof, 2 who explored and reported back |
+| Treasuries deployed by testers | **13** (15 including ours) |
+| Funding & payment transactions | **25**, each recorded with its tx hash |
+| Payments **blocked by the contract** | **18** — over-limit or non-whitelisted, funds never moved |
+| Wallet connections | 31 successful sessions (28 desktop · 3 mobile via WalletConnect) |
 
 Usage is provable from two independent sources, neither of which we can quietly edit:
 the **on-chain [TreasuryRegistry](https://stellar.expert/explorer/testnet/contract/CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7)**,
@@ -234,7 +234,7 @@ into [`docs/metrics/registered-users.json`](docs/metrics/registered-users.json) 
 snapshot of owner wallets and the treasuries they deployed, checked into the repo. Every tx
 hash opens in Stellar Expert and settles.
 
-Rejections are the interesting half: 17 attempts hit the policy gate and reverted. That is the
+Rejections are the interesting half: 18 attempts hit the policy gate and reverted. That is the
 product working, not failing.
 
 ### Feedback & how we act on it
@@ -243,9 +243,9 @@ Structured feedback comes through a **[Google Form](https://forms.gle/7gzJWwte52
 name, email, Stellar wallet, rating, most-valuable feature, production intent, improvements —
 flowing to a private review sheet (wallet/email kept private; only aggregates are shared here).
 
-**Signal from 9 external responses:** **4.9 / 5** average · **6 yes / 3 maybe** on *would you
-use this in production*, none said no · most-valued features split between **confidential mode
-(ZK)** (4), the **bounded treasury** (3) and **x402 agentic payments** (2).
+**Signal from 11 external responses:** **4.9 / 5** average · **7 yes / 4 maybe** on *would you
+use this in production*, none said no · most-valued features split between the **bounded
+treasury** (5), **confidential mode (ZK)** (4) and **x402 agentic payments** (2).
 
 **What testers hit → what we shipped:**
 
