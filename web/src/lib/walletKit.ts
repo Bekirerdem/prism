@@ -167,7 +167,9 @@ export async function disconnect(): Promise<void> {
   notifyAddress();
 }
 
-/** A contract-client `signTransaction` bound to the connected wallet. */
+/** A contract-client `signTransaction` bound to the connected wallet. A session the wallet
+ *  has already dropped is cleared here, so the chip falls back to "Connect wallet" rather
+ *  than leaving the user tapping actions that never reach a wallet. */
 export function walletSignerFor(address: string): ContractSigner {
-  return makeWalletSigner(StellarWalletsKit, address, NETWORK_PASSPHRASE);
+  return makeWalletSigner(StellarWalletsKit, address, NETWORK_PASSPHRASE, () => void disconnect());
 }

@@ -22,8 +22,27 @@ export function connectErr(e: unknown): string {
   return errText(e) || "Couldn't connect a wallet.";
 }
 
+/** The user-facing text for a wallet session the wallet no longer honours. */
+export const STALE_SESSION_MSG =
+  "Wallet connection expired — reconnect your wallet and try again.";
+
+/** A WalletConnect session the wallet dropped (deleted, expired or never paired). The app
+ *  keeps signing against a topic that no longer exists, so nothing ever opens on the phone.
+ *  Detected here so callers can clear the session instead of showing the raw core error. */
+export function isStaleSessionError(e: unknown): boolean {
+  const m = errText(e).toLowerCase();
+  if (!m.includes("session")) return false;
+  return (
+    m.includes("recently deleted") ||
+    m.includes("no matching key") ||
+    m.includes("missing or invalid") ||
+    m.includes("expired")
+  );
+}
+
 /** send: insufficient balance (type 3) or signature rejected (type 2). */
 export function sendErr(e: unknown): string {
+  if (isStaleSessionError(e)) return STALE_SESSION_MSG;
   const codes = (e as {
     response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } };
   })?.response?.data?.extras?.result_codes;

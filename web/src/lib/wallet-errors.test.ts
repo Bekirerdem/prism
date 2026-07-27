@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { connectErr, CONTRACT_ERRORS, contractErr, errText, sendErr } from "./wallet-errors";
+import {
+  connectErr,
+  CONTRACT_ERRORS,
+  contractErr,
+  errText,
+  isStaleSessionError,
+  sendErr,
+} from "./wallet-errors";
 
 describe("errText", () => {
   it("returns an Error's message", () => {
@@ -74,5 +81,33 @@ describe("contractErr", () => {
   });
   it("parses the variant without a # prefix", () => {
     expect(contractErr("Error(Contract, 5)")?.errorCode).toBe(5);
+  });
+});
+
+// The wallet dropped the WalletConnect session, but the app kept signing against its
+// topic. The raw @walletconnect/core text reached the toast verbatim (2026-07-28).
+describe("isStaleSessionError", () => {
+  it("recognises a deleted WalletConnect session", () => {
+    expect(
+      isStaleSessionError(
+        new Error("Missing or invalid. Record was recently deleted - session: 7e677fb9caa3008f"),
+      ),
+    ).toBe(true);
+  });
+
+  it("recognises an expired session pairing", () => {
+    expect(isStaleSessionError(new Error("No matching key. session topic doesn't exist: abc"))).toBe(true);
+  });
+
+  it("leaves a normal rejection alone", () => {
+    expect(isStaleSessionError(new Error("User declined the request"))).toBe(false);
+  });
+});
+
+describe("sendErr on a dead session", () => {
+  it("tells the user to reconnect instead of printing the session topic", () => {
+    const msg = sendErr(new Error("Missing or invalid. Record was recently deleted - session: 7e677fb9caa3008f"));
+    expect(msg).toMatch(/wallet connection expired.*reconnect/i);
+    expect(msg).not.toContain("7e677fb9");
   });
 });
