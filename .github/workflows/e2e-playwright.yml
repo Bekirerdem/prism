@@ -1,0 +1,56 @@
+name: E2E — Playwright smoke (testnet)
+
+on:
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: Browser project to run (matches playwright.config.ts projects)
+        required: false
+        default: chromium
+        type: choice
+        options:
+          - chromium
+
+# Cancel superseded manual runs on the same ref.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: Playwright · ${{ inputs.browser }} · testnet
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: testnet-e2e
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install
+
+      - name: Install Playwright browsers (${{ inputs.browser }} + system deps)
+        working-directory: web
+        run: npx playwright install --with-deps ${{ inputs.browser }}
+
+      - name: Run Playwright smoke spec
+        working-directory: web
+        env:
+          PLAYWRIGHT_TEST_WALLET_SECRET: ${{ secrets.PLAYWRIGHT_TEST_WALLET_SECRET }}
+        run: npx playwright test --project=${{ inputs.browser }}
+
+      - name: Upload Playwright artifacts (trace/screenshot/video on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 14
