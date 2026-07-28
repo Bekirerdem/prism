@@ -4,17 +4,18 @@
 import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
 import { FreighterModule, FREIGHTER_ID } from "@creit.tech/stellar-wallets-kit/modules/freighter";
 import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
-import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
+import { AlbedoModule, ALBEDO_ID } from "@creit.tech/stellar-wallets-kit/modules/albedo";
 import { LobstrModule } from "@creit.tech/stellar-wallets-kit/modules/lobstr";
 import { RabetModule } from "@creit.tech/stellar-wallets-kit/modules/rabet";
 import { HanaModule } from "@creit.tech/stellar-wallets-kit/modules/hana";
 import {
   WalletConnectModule,
   WalletConnectTargetChain,
+  WALLET_CONNECT_ID,
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { NETWORK_PASSPHRASE } from "../config";
 import { makeWalletSigner, type ContractSigner } from "./walletSigner";
-import { logFunnel } from "./funnel";
+import { currentDevice, logFunnel, showsExtensionWallets } from "./funnel";
 import { errText } from "./wallet-errors";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
@@ -27,14 +28,17 @@ const WC_PROJECT_ID =
   (import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string | undefined)?.replace(/[^\x20-\x7E]/g, "") ||
   undefined;
 
-const modules = [
-  new FreighterModule(),
-  new xBullModule(),
-  new AlbedoModule(),
-  new LobstrModule(),
-  new RabetModule(),
-  new HanaModule(),
-];
+// Albedo is web-based, so it is the one non-WalletConnect option a phone can actually use.
+const modules = showsExtensionWallets(currentDevice())
+  ? [
+      new FreighterModule(),
+      new xBullModule(),
+      new AlbedoModule(),
+      new LobstrModule(),
+      new RabetModule(),
+      new HanaModule(),
+    ]
+  : [new AlbedoModule()];
 
 if (WC_PROJECT_ID) {
   modules.unshift(
@@ -52,9 +56,17 @@ if (WC_PROJECT_ID) {
 }
 
 // One-time kit setup. `authModal()` lists these as the available "wallet options".
+// The default selection must be a module that is actually loaded — naming an absent one
+// throws ("Wallet id … is not an existing module") and the app never renders.
+const defaultWalletId = modules.some((m) => m.productId === FREIGHTER_ID)
+  ? FREIGHTER_ID
+  : WC_PROJECT_ID
+    ? WALLET_CONNECT_ID
+    : ALBEDO_ID;
+
 StellarWalletsKit.init({
   network: Networks.TESTNET,
-  selectedWalletId: FREIGHTER_ID,
+  selectedWalletId: defaultWalletId,
   modules,
 });
 
