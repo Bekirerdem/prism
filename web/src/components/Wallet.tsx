@@ -238,7 +238,7 @@ const row: React.CSSProperties = { display: "flex", justifyContent: "space-betwe
 const balanceBox: React.CSSProperties = { marginTop: 16, padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.04)" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 16, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",

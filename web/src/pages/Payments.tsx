@@ -312,7 +312,7 @@ const card: React.CSSProperties = {
 const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const primaryBtn: React.CSSProperties = {
   marginTop: 14, padding: "12px 18px", borderRadius: 11, border: "none", cursor: "pointer",

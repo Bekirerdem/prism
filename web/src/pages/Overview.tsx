@@ -372,7 +372,7 @@ const fundPanelStyle: React.CSSProperties = {
 };
 const input: React.CSSProperties = {
   flex: 1, minWidth: 180, boxSizing: "border-box", padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const inlineErr: React.CSSProperties = { width: "100%", fontSize: 12.5, color: "#FF5D5D" };
 const fundGate: React.CSSProperties = {
