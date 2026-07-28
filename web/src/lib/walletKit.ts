@@ -12,6 +12,7 @@ import {
   WalletConnectModule,
   WalletConnectTargetChain,
   WALLET_CONNECT_ID,
+  type TWalletConnectModuleParams as WalletConnectModuleParams,
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { NETWORK_PASSPHRASE } from "../config";
 import { makeWalletSigner, type ContractSigner } from "./walletSigner";
@@ -40,6 +41,16 @@ const modules = showsExtensionWallets(currentDevice())
     ]
   : [new AlbedoModule()];
 
+// Reown's modal defaults to its EVM catalogue: picking WalletConnect listed dozens of
+// Ethereum wallets (`getWallets?chains=eip155:1`), none of which can sign a Stellar
+// transaction. Restricting it costs nothing — of the ten Stellar-capable wallets in
+// Reown's registry, nine are `stellar:pubnet` only; Freighter is the only one that also
+// declares `stellar:testnet`. LOBSTR stays listed for the mainnet milestone.
+const STELLAR_WC_WALLETS = [
+  "997a355c8f682468706a76cff1b004a7115f505fb962dac54b6e9b442dd1c380", // Freighter
+  "76a3d548a08cf402f5c7d021f24fd2881d767084b387a5325df88bc3d4b6f21b", // LOBSTR
+];
+
 if (WC_PROJECT_ID) {
   modules.unshift(
     new WalletConnectModule({
@@ -51,6 +62,9 @@ if (WC_PROJECT_ID) {
         icons: ["https://prism-stellar.vercel.app/apple-touch-icon.png"],
       },
       allowedChains: [WalletConnectTargetChain.TESTNET],
+      appKitOptions: {
+        includeWalletIds: STELLAR_WC_WALLETS,
+      } as WalletConnectModuleParams["appKitOptions"],
     }),
   );
 }
