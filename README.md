@@ -218,13 +218,16 @@ The first treasury is the transparent "public mode" demo; **Treasury v2** adds t
 Prism is used by people who are not us. Every treasury below was deployed by someone
 connecting their own Stellar wallet on testnet — no seeded accounts, no scripted users.
 
+Counts below are what **testers** did — our own testing is excluded and shown separately,
+so the numbers reconcile against the two sources named underneath.
+
 | | On testnet, as of 28 Jul 2026 |
 |---|---|
 | External testers | **14** — 12 with on-chain proof, 2 who explored and reported back |
 | Treasuries deployed by testers | **13** (15 including ours) |
-| Funding & payment transactions | **25**, each recorded with its tx hash |
-| Payments **blocked by the contract** | **18** — over-limit or non-whitelisted, funds never moved |
-| Wallet connections | 31 successful sessions (28 desktop · 3 mobile via WalletConnect) |
+| Funding & payment transactions | **19** by testers (28 including ours), each recorded with its tx hash |
+| Payments **blocked by the contract** | **13** by testers (20 including ours) — over-limit or non-whitelisted, funds never moved |
+| Wallet connections | 36 successful sessions (29 desktop · 7 mobile via WalletConnect) |
 
 Usage is provable from two independent sources, neither of which we can quietly edit:
 the **on-chain [TreasuryRegistry](https://stellar.expert/explorer/testnet/contract/CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7)**,
@@ -234,8 +237,8 @@ into [`docs/metrics/registered-users.json`](docs/metrics/registered-users.json) 
 snapshot of owner wallets and the treasuries they deployed, checked into the repo. Every tx
 hash opens in Stellar Expert and settles.
 
-Rejections are the interesting half: 18 attempts hit the policy gate and reverted. That is the
-product working, not failing.
+Rejections are the interesting half: 13 tester attempts hit the policy gate and reverted.
+That is the product working, not failing.
 
 ### Feedback & how we act on it
 
