@@ -111,3 +111,20 @@ describe("sendErr on a dead session", () => {
     expect(msg).not.toContain("7e677fb9");
   });
 });
+
+// The pay/leash paths prefix rejections with "Blocked by policy: ", so a message that also
+// ends in "blocked by policy" read as "Blocked by policy: Over the per-task limit — blocked
+// by policy." on screen (caught in a submission screenshot, 2026-07-28).
+describe("policy rejection messages", () => {
+  it("does not repeat the caller's 'Blocked by policy' prefix", () => {
+    for (const code of [3, 4, 10]) {
+      expect(CONTRACT_ERRORS[code].toLowerCase()).not.toContain("blocked by policy");
+    }
+  });
+
+  it("still names what the limit was", () => {
+    expect(CONTRACT_ERRORS[3]).toMatch(/per-task limit/i);
+    expect(CONTRACT_ERRORS[4]).toMatch(/daily limit/i);
+    expect(CONTRACT_ERRORS[10]).toMatch(/session/i);
+  });
+});

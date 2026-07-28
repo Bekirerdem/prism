@@ -68,14 +68,14 @@ export function sendErr(e: unknown): string {
 export const CONTRACT_ERRORS: Record<number, string> = {
   1: "Amount must be greater than zero.",
   2: "Payee isn't approved — not on the whitelist.",
-  3: "Over the per-task limit — blocked by policy.",
-  4: "Over today's daily limit — blocked by policy.",
+  3: "Over the per-task limit — the payment never left the treasury.",
+  4: "Over today's daily limit — the payment never left the treasury.",
   5: "Payee's reputation score is below the required threshold.",
   6: "Not enough free balance — funds are locked in open escrows.",
   7: "Escrow not found — it may already be released or refunded.",
   8: "Escrow deadline hasn't passed yet — refund isn't available.",
   9: "Treasury is paused — spending is temporarily frozen by the owner.",
-  10: "Over the agent session's spending cap — blocked by policy.",
+  10: "Over the agent session's spending cap — the payment never left the treasury.",
   11: "Invalid limits — both must be positive and per-payment can't exceed daily.",
   12: "Escrow deadline must be in the future.",
 };
