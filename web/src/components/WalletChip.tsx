@@ -1,10 +1,13 @@
 // Shared wallet-connection chip — "Connect wallet" when disconnected; the address plus
 // a copy / wallet-view / disconnect menu when connected. Used by both the app nav and
 // the landing nav so the connection reads the same everywhere.
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { shortAddr } from "../config";
-import { connect as kitConnect, disconnect as kitDisconnect } from "../lib/walletKit";
+import { connect as kitConnect, disconnect as kitDisconnect, wcConfigured } from "../lib/walletKit";
 import { useWalletAddress } from "../lib/useWalletAddress";
+import { currentDevice } from "../lib/funnel";
+import { MOBILE_WALLET_HINT } from "../lib/walletDevice";
+import { ToastContext } from "../state/toastContext";
 import "./appnav.css";
 
 export default function WalletChip({
@@ -19,6 +22,9 @@ export default function WalletChip({
   const [copied, setCopied] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const walletRef = useRef<HTMLDivElement>(null);
+  // Direct context read, not useToast(): the landing nav renders this chip outside
+  // ToastProvider, where the hint is simply skipped.
+  const toastApi = useContext(ToastContext);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -31,6 +37,11 @@ export default function WalletChip({
 
   const connect = async () => {
     setConnecting(true);
+    // On a phone the modal leads with WalletConnect (issue #9) — pairing happens in the
+    // wallet app, and it must be on Testnet, so say that before the modal opens.
+    if (currentDevice() === "mobile" && wcConfigured) {
+      toastApi?.toast("info", MOBILE_WALLET_HINT);
+    }
     try {
       await kitConnect();
     } catch {

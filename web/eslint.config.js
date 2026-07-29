@@ -21,4 +21,13 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // Playwright specs: fixtures destructure `{}` and name their setup param `use`,
+  // which the React hook rules misread as a hook call — neither applies outside React.
+  {
+    files: ['tests/e2e/**/*.ts'],
+    rules: {
+      'no-empty-pattern': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 ])

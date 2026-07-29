@@ -19,8 +19,9 @@ import {
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { NETWORK_PASSPHRASE } from "../config";
 import { makeWalletSigner, type ContractSigner } from "./walletSigner";
-import { currentDevice, logFunnel, showsExtensionWallets } from "./funnel";
+import { currentDevice, logFunnel } from "./funnel";
 import { errText } from "./wallet-errors";
+import { sortWalletsForDevice } from "./walletDevice";
 import { testSignerAvailable, getTestSigner } from "./testSigner";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
@@ -34,17 +35,24 @@ const WC_PROJECT_ID =
     import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string | undefined
   )?.replace(/[^\x20-\x7E]/g, "") || undefined;
 
-// Albedo is web-based, so it is the one non-WalletConnect option a phone can actually use.
-const modules = showsExtensionWallets(currentDevice())
-  ? [
-      new FreighterModule(),
-      new xBullModule(),
-      new AlbedoModule(),
-      new LobstrModule(),
-      new RabetModule(),
-      new HanaModule(),
-    ]
-  : [new AlbedoModule()];
+/** Whether WalletConnect is available — the UI uses this to decide if the mobile
+ *  pairing hint is worth showing. */
+export const wcConfigured = !!WC_PROJECT_ID;
+
+// The full catalogue; walletDevice.ts owns which of these are viable per device —
+// mobile drops the extension-only set, keeping web-based Albedo.
+const allModules = [
+  new FreighterModule(),
+  new xBullModule(),
+  new AlbedoModule(),
+  new LobstrModule(),
+  new RabetModule(),
+  new HanaModule(),
+];
+const modules = sortWalletsForDevice(
+  currentDevice(),
+  allModules.map((module) => ({ id: module.productId, module })),
+).map((entry) => entry.module);
 
 // Reown's modal defaults to its EVM catalogue: picking WalletConnect listed dozens of
 // Ethereum wallets (`getWallets?chains=eip155:1`), none of which can sign a Stellar
