@@ -18,12 +18,8 @@ import {
   type TWalletConnectModuleParams as WalletConnectModuleParams,
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { NETWORK_PASSPHRASE } from "../config";
-import {
-  makeWalletSigner,
-  type ContractSigner,
-  type KitSigner,
-} from "./walletSigner";
-import { logFunnel } from "./funnel";
+import { makeWalletSigner, type ContractSigner } from "./walletSigner";
+import { currentDevice, logFunnel, showsExtensionWallets } from "./funnel";
 import { errText } from "./wallet-errors";
 import { testSignerAvailable, getTestSigner } from "./testSigner";
 
@@ -226,7 +222,9 @@ export async function disconnect(): Promise<void> {
   notifyAddress();
 }
 
-/** A contract-client `signTransaction` bound to the connected wallet.
+/** A contract-client `signTransaction` bound to the connected wallet. A session the wallet
+ *  has already dropped is cleared here, so the chip falls back to "Connect wallet" rather
+ *  than leaving the user tapping actions that never reach a wallet.
  *
  *  When the test-signer build flag is set AND the connected address matches the
  *  injected test key, sign directly with the injected secret — no wallet popup. */
@@ -234,16 +232,8 @@ export function walletSignerFor(address: string): ContractSigner {
   if (testSignerAvailable()) {
     const ts = getTestSigner();
     if (ts && ts.address === address) {
-      return makeWalletSigner(
-        ts.kitSigner as KitSigner,
-        address,
-        NETWORK_PASSPHRASE,
-      );
+      return makeWalletSigner(ts.kitSigner, address, NETWORK_PASSPHRASE);
     }
   }
-  return makeWalletSigner(
-    StellarWalletsKit as unknown as KitSigner,
-    address,
-    NETWORK_PASSPHRASE,
-  );
+  return makeWalletSigner(StellarWalletsKit, address, NETWORK_PASSPHRASE, () => void disconnect());
 }

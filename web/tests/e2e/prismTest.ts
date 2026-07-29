@@ -1,3 +1,4 @@
+import { expect } from "@playwright/test";
 import type { Page, BrowserContext, Locator } from "@playwright/test";
 import { Keypair } from "@stellar/stellar-sdk";
 
@@ -78,7 +79,10 @@ export class PrismPage {
 
   async waitForNoBusyButtons(timeoutMs = 180_000): Promise<void> {
     const start = Date.now();
-    const busyRe = /(…|ing\s*$)/i;
+    // Busy buttons in this app end with an ellipsis ("Connecting…", "Funding…").
+    // Match only a TRAILING ellipsis — the connected-wallet chip ("GDT6…JSJH")
+    // carries one mid-string and must not read as busy.
+    const busyRe = /(…|\.\.\.)\s*$/;
     while (Date.now() - start < timeoutMs) {
       const btns = await this.page.getByRole("button").all();
       let anyBusy = false;
@@ -170,9 +174,9 @@ export class PrismPage {
     await input.waitFor({ state: "visible" });
     await input.fill(amountXlm);
 
-    const fundBtn = this.page
-      .getByRole("button", { name: /^fund(ing…)?$/i })
-      .nth(1);
+    // The submit inside the fund panel is named exactly "Fund" — the toggle above it
+    // is "+ Fund", which /^fund/ does not match, so this resolves to one button.
+    const fundBtn = this.page.getByRole("button", { name: /^fund$/i }).first();
     await fundBtn.click();
 
     await this.page.waitForFunction(
@@ -259,10 +263,19 @@ export class PrismPage {
   }
 
   async readBalanceStroops(): Promise<bigint> {
+    // goto("/#overview") is a no-op when the app is already on that hash, so the stale
+    // pre-transaction balance would be read back. Reload for a fresh on-chain fetch,
+    // then wait out the async balance query (it first renders as 0).
     await this.page.goto("/#overview");
+    await this.page.reload();
     await this.page.waitForLoadState("networkidle");
     const bal = this.page.locator(".ov__balance").first();
     await bal.waitFor({ state: "visible" });
+    await this.page.waitForFunction(
+      () => /[1-9]/.test(document.querySelector(".ov__balance")?.textContent ?? ""),
+      null,
+      { timeout: 60_000 },
+    );
     const text = (await bal.textContent()) ?? "";
     const match = text.match(/([\d][\d.]*)/);
     if (!match) throw new Error(`Could not read balance from: "${text}"`);
