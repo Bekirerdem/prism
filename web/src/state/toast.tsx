@@ -5,9 +5,14 @@ import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { EXPLORER } from "../config";
 import { ToastContext } from "./toastContext";
-import { dismissToast, pushToast, type ToastItem, type ToastKind } from "./toastQueue";
+import { dismissDelay, dismissToast, pushToast, type ToastItem, type ToastKind } from "./toastQueue";
+import { toastColor, toastStyles } from "./toastStyles";
+import { currentDevice } from "../lib/funnel";
 
-const AUTO_DISMISS_MS = 5000; // success/info; errors stay until dismissed
+const { stack, box, msg: msgStyle, closeBtn } = toastStyles;
+
+// A phone shows far less than a laptop: four stacked toasts covered the controls under them.
+const capFor = () => (currentDevice() === "mobile" ? 2 : 4);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
@@ -20,8 +25,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = useCallback(
     (kind: ToastKind, msg: string, opts?: { hash?: string }) => {
       const id = nextId.current++;
-      setItems((list) => pushToast(list, { kind, msg, hash: opts?.hash }, id));
-      if (kind !== "error") setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
+      setItems((list) => pushToast(list, { kind, msg, hash: opts?.hash }, id, capFor()));
+      setTimeout(() => dismiss(id), dismissDelay(kind));
     },
     [dismiss],
   );
@@ -40,12 +45,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
-              style={{ ...box, borderColor: color(t.kind) + "55", color: color(t.kind) }}
+              style={{ ...box, borderColor: toastColor(t.kind) + "55", color: toastColor(t.kind) }}
             >
-              <span style={{ flex: 1 }}>{t.msg}</span>
+              <span style={msgStyle}>{t.msg}</span>
               {t.hash && (
                 <a
-                  style={{ color: color(t.kind), whiteSpace: "nowrap" }}
+                  style={{ color: toastColor(t.kind), whiteSpace: "nowrap" }}
                   href={`${EXPLORER}/tx/${t.hash}`}
                   target="_blank"
                   rel="noreferrer"
@@ -64,38 +69,3 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const color = (k: ToastKind) => (k === "success" ? "#00FF43" : k === "error" ? "#FF5D5D" : "#A0A0B8");
-
-const stack: React.CSSProperties = {
-  position: "fixed",
-  top: 64,
-  right: 16,
-  zIndex: 2000,
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
-  width: "min(360px, calc(100vw - 32px))",
-  pointerEvents: "none",
-};
-const box: React.CSSProperties = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: 10,
-  padding: "10px 13px",
-  borderRadius: 10,
-  border: "1px solid",
-  background: "rgba(18,18,28,0.92)",
-  backdropFilter: "blur(8px)",
-  fontSize: 13.5,
-  lineHeight: 1.4,
-  pointerEvents: "auto",
-};
-const closeBtn: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  color: "inherit",
-  cursor: "pointer",
-  fontSize: 12,
-  padding: 0,
-  opacity: 0.7,
-};

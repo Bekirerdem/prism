@@ -164,7 +164,7 @@ const barTrack: React.CSSProperties = { height: 8, borderRadius: 100, background
 const barFill: React.CSSProperties = { height: "100%", borderRadius: 100, background: "#E0A106", transition: "width .5s ease" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 14, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",

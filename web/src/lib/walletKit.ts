@@ -7,13 +7,15 @@ import {
   FREIGHTER_ID,
 } from "@creit.tech/stellar-wallets-kit/modules/freighter";
 import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
-import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
+import { AlbedoModule, ALBEDO_ID } from "@creit.tech/stellar-wallets-kit/modules/albedo";
 import { LobstrModule } from "@creit.tech/stellar-wallets-kit/modules/lobstr";
 import { RabetModule } from "@creit.tech/stellar-wallets-kit/modules/rabet";
 import { HanaModule } from "@creit.tech/stellar-wallets-kit/modules/hana";
 import {
   WalletConnectModule,
   WalletConnectTargetChain,
+  WALLET_CONNECT_ID,
+  type TWalletConnectModuleParams as WalletConnectModuleParams,
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
 import { NETWORK_PASSPHRASE } from "../config";
 import {
@@ -36,13 +38,26 @@ const WC_PROJECT_ID =
     import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string | undefined
   )?.replace(/[^\x20-\x7E]/g, "") || undefined;
 
-const modules = [
-  new FreighterModule(),
-  new xBullModule(),
-  new AlbedoModule(),
-  new LobstrModule(),
-  new RabetModule(),
-  new HanaModule(),
+// Albedo is web-based, so it is the one non-WalletConnect option a phone can actually use.
+const modules = showsExtensionWallets(currentDevice())
+  ? [
+      new FreighterModule(),
+      new xBullModule(),
+      new AlbedoModule(),
+      new LobstrModule(),
+      new RabetModule(),
+      new HanaModule(),
+    ]
+  : [new AlbedoModule()];
+
+// Reown's modal defaults to its EVM catalogue: picking WalletConnect listed dozens of
+// Ethereum wallets (`getWallets?chains=eip155:1`), none of which can sign a Stellar
+// transaction. Restricting it costs nothing — of the ten Stellar-capable wallets in
+// Reown's registry, nine are `stellar:pubnet` only; Freighter is the only one that also
+// declares `stellar:testnet`. LOBSTR stays listed for the mainnet milestone.
+const STELLAR_WC_WALLETS = [
+  "997a355c8f682468706a76cff1b004a7115f505fb962dac54b6e9b442dd1c380", // Freighter
+  "76a3d548a08cf402f5c7d021f24fd2881d767084b387a5325df88bc3d4b6f21b", // LOBSTR
 ];
 
 if (WC_PROJECT_ID) {
@@ -56,14 +71,25 @@ if (WC_PROJECT_ID) {
         icons: ["https://prism-stellar.vercel.app/apple-touch-icon.png"],
       },
       allowedChains: [WalletConnectTargetChain.TESTNET],
+      appKitOptions: {
+        includeWalletIds: STELLAR_WC_WALLETS,
+      } as WalletConnectModuleParams["appKitOptions"],
     }),
   );
 }
 
 // One-time kit setup. `authModal()` lists these as the available "wallet options".
+// The default selection must be a module that is actually loaded — naming an absent one
+// throws ("Wallet id … is not an existing module") and the app never renders.
+const defaultWalletId = modules.some((m) => m.productId === FREIGHTER_ID)
+  ? FREIGHTER_ID
+  : WC_PROJECT_ID
+    ? WALLET_CONNECT_ID
+    : ALBEDO_ID;
+
 StellarWalletsKit.init({
   network: Networks.TESTNET,
-  selectedWalletId: FREIGHTER_ID,
+  selectedWalletId: defaultWalletId,
   modules,
 });
 

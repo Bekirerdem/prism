@@ -22,8 +22,27 @@ export function connectErr(e: unknown): string {
   return errText(e) || "Couldn't connect a wallet.";
 }
 
+/** The user-facing text for a wallet session the wallet no longer honours. */
+export const STALE_SESSION_MSG =
+  "Wallet connection expired — reconnect your wallet and try again.";
+
+/** A WalletConnect session the wallet dropped (deleted, expired or never paired). The app
+ *  keeps signing against a topic that no longer exists, so nothing ever opens on the phone.
+ *  Detected here so callers can clear the session instead of showing the raw core error. */
+export function isStaleSessionError(e: unknown): boolean {
+  const m = errText(e).toLowerCase();
+  if (!m.includes("session")) return false;
+  return (
+    m.includes("recently deleted") ||
+    m.includes("no matching key") ||
+    m.includes("missing or invalid") ||
+    m.includes("expired")
+  );
+}
+
 /** send: insufficient balance (type 3) or signature rejected (type 2). */
 export function sendErr(e: unknown): string {
+  if (isStaleSessionError(e)) return STALE_SESSION_MSG;
   const codes = (e as {
     response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } };
   })?.response?.data?.extras?.result_codes;
@@ -49,14 +68,14 @@ export function sendErr(e: unknown): string {
 export const CONTRACT_ERRORS: Record<number, string> = {
   1: "Amount must be greater than zero.",
   2: "Payee isn't approved — not on the whitelist.",
-  3: "Over the per-task limit — blocked by policy.",
-  4: "Over today's daily limit — blocked by policy.",
+  3: "Over the per-task limit — the payment never left the treasury.",
+  4: "Over today's daily limit — the payment never left the treasury.",
   5: "Payee's reputation score is below the required threshold.",
   6: "Not enough free balance — funds are locked in open escrows.",
   7: "Escrow not found — it may already be released or refunded.",
   8: "Escrow deadline hasn't passed yet — refund isn't available.",
   9: "Treasury is paused — spending is temporarily frozen by the owner.",
-  10: "Over the agent session's spending cap — blocked by policy.",
+  10: "Over the agent session's spending cap — the payment never left the treasury.",
   11: "Invalid limits — both must be positive and per-payment can't exceed daily.",
   12: "Escrow deadline must be in the future.",
 };

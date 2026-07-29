@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { connectErr, CONTRACT_ERRORS, contractErr, errText, sendErr } from "./wallet-errors";
+import {
+  connectErr,
+  CONTRACT_ERRORS,
+  contractErr,
+  errText,
+  isStaleSessionError,
+  sendErr,
+} from "./wallet-errors";
 
 describe("errText", () => {
   it("returns an Error's message", () => {
@@ -74,5 +81,50 @@ describe("contractErr", () => {
   });
   it("parses the variant without a # prefix", () => {
     expect(contractErr("Error(Contract, 5)")?.errorCode).toBe(5);
+  });
+});
+
+// The wallet dropped the WalletConnect session, but the app kept signing against its
+// topic. The raw @walletconnect/core text reached the toast verbatim (2026-07-28).
+describe("isStaleSessionError", () => {
+  it("recognises a deleted WalletConnect session", () => {
+    expect(
+      isStaleSessionError(
+        new Error("Missing or invalid. Record was recently deleted - session: 7e677fb9caa3008f"),
+      ),
+    ).toBe(true);
+  });
+
+  it("recognises an expired session pairing", () => {
+    expect(isStaleSessionError(new Error("No matching key. session topic doesn't exist: abc"))).toBe(true);
+  });
+
+  it("leaves a normal rejection alone", () => {
+    expect(isStaleSessionError(new Error("User declined the request"))).toBe(false);
+  });
+});
+
+describe("sendErr on a dead session", () => {
+  it("tells the user to reconnect instead of printing the session topic", () => {
+    const msg = sendErr(new Error("Missing or invalid. Record was recently deleted - session: 7e677fb9caa3008f"));
+    expect(msg).toMatch(/wallet connection expired.*reconnect/i);
+    expect(msg).not.toContain("7e677fb9");
+  });
+});
+
+// The pay/leash paths prefix rejections with "Blocked by policy: ", so a message that also
+// ends in "blocked by policy" read as "Blocked by policy: Over the per-task limit — blocked
+// by policy." on screen (caught in a submission screenshot, 2026-07-28).
+describe("policy rejection messages", () => {
+  it("does not repeat the caller's 'Blocked by policy' prefix", () => {
+    for (const code of [3, 4, 10]) {
+      expect(CONTRACT_ERRORS[code].toLowerCase()).not.toContain("blocked by policy");
+    }
+  });
+
+  it("still names what the limit was", () => {
+    expect(CONTRACT_ERRORS[3]).toMatch(/per-task limit/i);
+    expect(CONTRACT_ERRORS[4]).toMatch(/daily limit/i);
+    expect(CONTRACT_ERRORS[10]).toMatch(/session/i);
   });
 });

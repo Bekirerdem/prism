@@ -101,8 +101,12 @@
 }
 
 /* ---- overview layout ----------------------------------------------------------- */
-.ov__hero{ display:grid; grid-template-columns:7fr 5fr; gap:18px; align-items:stretch; }
-.ov__lower{ display:grid; grid-template-columns:7fr 5fr; gap:18px; }
+/* minmax(0,…) rather than a bare fr: a plain `1fr` is `minmax(auto,1fr)`, so a grid item
+   can never shrink below its min-content. An activity row ("Drain attempt blocked on
+   GBGH…TDQS's treasury" + timestamp) made the card 394px inside a 390px phone, the
+   document scrolled sideways and the browser zoomed the page out to fit. */
+.ov__hero{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:18px; align-items:stretch; }
+.ov__lower{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:18px; }
 .ov__balance{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:56px; letter-spacing:-0.02em; line-height:1.05; color:#EDEDF4; }
 .ov__balance small{ font-size:17px; color:#A0A0B8; font-family:inherit; margin-left:8px; }
 
@@ -111,7 +115,7 @@
 .shell__skel{ border-radius:10px; background:rgba(255,255,255,0.06); animation:shellPulse 1.6s ease-in-out infinite; }
 
 @media(max-width:1023px){
-  .ov__hero,.ov__lower{ grid-template-columns:1fr; }
+  .ov__hero,.ov__lower{ grid-template-columns:minmax(0,1fr); }
   .ov__balance{ font-size:40px; }
 }
 
