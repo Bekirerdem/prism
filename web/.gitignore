@@ -29,3 +29,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Playwright E2E — browser binaries + per-run artifacts (reports/traces uploaded from CI only)
+playwright-report/
+test-results/
+
