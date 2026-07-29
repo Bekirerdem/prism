@@ -194,7 +194,7 @@ const smallLink: React.CSSProperties = { fontSize: 12.5, color: "#A0A0B8" };
 const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 12, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",

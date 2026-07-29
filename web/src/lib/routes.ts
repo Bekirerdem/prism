@@ -7,6 +7,9 @@ export type View = AppPage | "landing" | "dashboard" | "wallet";
 export const APP_PAGES = ["overview", "payments", "agent", "activity", "settings"] as const;
 const STANDALONE = ["dashboard", "wallet"] as const;
 const LEGACY: Record<string, View> = { workspace: "overview" };
+// In-page section ids on the landing page. They live in the hash too, so the router has
+// to leave them alone: rewriting or scrolling on these kills the anchor jump.
+const LANDING_ANCHORS = ["how", "prism"] as const;
 
 export function viewFromHash(hash: string): View {
   const h = hash.replace(/^#/, "");
@@ -18,6 +21,10 @@ export function viewFromHash(hash: string): View {
 
 export function hashForView(v: View): string {
   return v === "landing" ? "" : v;
+}
+
+export function isLandingAnchor(hash: string): boolean {
+  return (LANDING_ANCHORS as readonly string[]).includes(hash.replace(/^#/, ""));
 }
 
 export function isAppPage(v: View): v is AppPage {

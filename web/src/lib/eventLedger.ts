@@ -64,3 +64,32 @@ export function recordEvents(
   }
   return merged;
 }
+
+/**
+ * Constants for the anomaly detection helper.
+ * We use an event-count window (last N attempts) instead of a time window (e.g. 24h)
+ * because transaction velocity is highly variable; a fixed-size window guarantees a
+ * statistically meaningful sample before alerting.
+ */
+export const ANOMALY_WINDOW = 20; // Last 20 payment attempts (paid + blocked)
+export const ANOMALY_MIN_EVENTS = 5; // Guard against false alarms at very low sample sizes
+export const ANOMALY_THRESHOLD = 0.5; // Alert if >= 50% of the recent window was blocked
+
+/**
+ * Pure helper to detect an anomaly (spike in blocked payments) over a recent window.
+ */
+export function computeAnomaly(
+  events: FeedEvent[],
+  windowSize = ANOMALY_WINDOW,
+  minSamples = ANOMALY_MIN_EVENTS,
+  threshold = ANOMALY_THRESHOLD,
+): boolean {
+  // Isolate payment attempts (successful + blocked)
+  const attempts = events.filter((e) => e.kind === "paid" || e.kind === "blocked");
+  const window = attempts.slice(-windowSize);
+
+  if (window.length < minSamples) return false;
+
+  const blockedCount = window.filter((e) => e.kind === "blocked").length;
+  return blockedCount / window.length >= threshold;
+}

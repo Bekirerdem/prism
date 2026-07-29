@@ -32,28 +32,40 @@ per-user treasuries run on native testnet XLM — Circle USDC is the mainnet pat
    sub-budgets." → attributed deposit appears.
 6. **Close:** "Bounded. Accounted. Funded. All Stellar-native. All live."
 
-## Level 5 full demo — per-user product (screen-recording script)
+## Full product demo — app shell (screen-recording script)
 
-Goal: prove Prism is a **usable product**, not just a demo — a first-time user connects a
-wallet and deploys their **own** bounded treasury, then the contract rejects a real over-spend.
-**Real screen recording** (Freighter + live testnet, real tx hashes) with voiceover *or*
-captions — no static-screenshot zoom/pan. Target ~2:15.
+Goal: prove Prism is a **usable product**, not a scripted demo — a first-time user connects a
+wallet, deploys their **own** bounded treasury, the contract rejects a real over-spend, and an
+agent then spends on a revocable **Leash** with no wallet popups. **Real screen recording**
+(Freighter + live testnet, real tx hashes) with voiceover *or* captions — no static-screenshot
+zoom/pan. Target ~3:10.
 
 | Time | Screen | Say / caption |
 |---|---|---|
-| 0:00–0:12 | Landing hero | "The wallet your AI agent can't drain. And it's not just a demo — let me deploy my own, live, in two minutes." |
-| 0:12–0:28 | Open app → **Connect wallet** → Freighter approve | "I connect my own Stellar wallet. This address becomes the treasury admin — nobody custodies my funds." |
-| 0:28–0:50 | Workspace → **Deploy treasury**, set per-task 10 / daily 50 → sign | "One click deploys my own bounded treasury on-chain. I set the rules: 10 USDC per task, 50 per day." *(show the tx link)* |
-| 0:50–1:05 | **Fund** the budget (friendbot if needed → fund) | "I fund it with real testnet XLM — attributed on-chain through a muxed sub-address, no memo." |
-| 1:05–1:20 | **Whitelist** the sample vendor | "I approve exactly one payee. Only this address can ever receive funds." |
-| 1:20–1:40 | **Pay** the whitelisted vendor → settles | "The agent pays — inside the limit, to an approved payee. Settled on-chain." *(tx link, balance drops)* |
-| 1:40–2:00 | **Pay** over the limit / a non-whitelisted address → 🔴 rejected | "Now I try to overspend. The contract rejects it on-chain — `ExceedsTaskLimit`. The funds never moved. The model can misbehave; the contract doesn't care." |
-| 2:00–2:12 | **Analytics** panel (payments / spent / violations) | "Every payment tagged to its task, every violation counted — read straight off-chain." |
-| 2:12–2:25 | Landing footer / QR | "Bounded. Confidential. Live on Stellar. Deploy your own at prism-stellar.vercel.app." |
+| 0:00–0:12 | Landing hero | "The wallet your AI agent can't drain. Not a mockup — I'll deploy my own in three minutes, live." |
+| 0:12–0:26 | **Open app** → Connect wallet → Freighter approve | "I connect my own Stellar wallet. This address becomes the treasury owner — nobody custodies my funds." |
+| 0:26–0:50 | **Setup** wizard → limits (per-payment 10 / daily 50) → sign | "One signature deploys *my* bounded treasury on-chain. I set the rules; the contract keeps them." *(show the tx)* |
+| 0:50–1:05 | **Overview** — balance, limit bar, next-step stepper | "This is my treasury. Balance, remaining daily allowance, and what to do next — read live from chain." |
+| 1:05–1:18 | **Fund** it from the wallet | "I fund it with testnet XLM. The funds live in my contract, never with Prism." |
+| 1:18–1:33 | **Payments** → add payee (sample vendor) | "I approve exactly one payee. Only this address can ever receive money." |
+| 1:33–1:52 | **Payments** → pay the payee, in-policy → settles | "In-policy payment: inside the limit, to an approved payee. Settled on-chain in seconds." *(tx link, balance drops)* |
+| **1:52–2:15** | **Payments** → pay over the limit **→ 🔴 blocked** | **The climax — hold on this.** "Now I overspend. The contract rejects it: `ExceedsTaskLimit`. The funds never moved. The model can misbehave — the contract doesn't care." *(open the failed tx in Stellar Expert)* |
+| 2:15–2:40 | **Agent** → start a Leash (duration + cap) → run autonomous task | "I hand an agent a Leash: time-bound, spend-capped, revocable. It signs its own payments — no popups — and it still can't cross the policy." |
+| 2:40–2:52 | **Agent** → revoke the Leash | "One click and the agent's authority is gone. Revocation is on-chain, not a promise." |
+| 2:52–3:05 | **Activity** — full platform feed, BLOCKED rows | "Every action by every user, streamed live — including the drain attempts the contract turned down." |
+| 3:05–3:15 | **Settings** → pause / limits, then landing CTA | "Pause the treasury or withdraw at any time. Deploy your own at prism-stellar.vercel.app." |
 
-**Recording notes:** pre-fund a second wallet so friendbot waits are cut; keep Freighter on
-testnet; let each tx confirm on camera (the real hash is the proof); 1080p, cursor visible.
-Optional confidential-mode beat (ZK proof → attested) can slot before Analytics if time allows.
+**Recording notes**
+
+- **Start from a fresh treasury** — switcher → **＋ New treasury**. Older treasuries run legacy
+  WASM where the Leash beat (Agent section) won't work.
+- Pre-fund the wallet before recording so friendbot waits don't land on camera; keep Freighter
+  on **Testnet**; let each tx confirm on camera — the real hash is the proof.
+- 1080p, cursor visible, no browser notifications on screen.
+- **Grab stills while you're in there** (submission needs them): Overview (connected), Payments
+  with the blocked attempt, Activity, and one mobile screen at 390 px.
+- Optional confidential-mode beat (ZK proof → attested) slots in before Activity if the cut
+  runs short.
 
 ## Why Stellar (have this ready)
 

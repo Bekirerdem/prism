@@ -1,12 +1,13 @@
 // The hero page: at a glance — how much is in the treasury, how much of today's limit
 // is spent, is the policy live, what just happened. The forms moved to their own pages;
 // this one answers "what is my state" first (the old Workspace showed inputs instead).
-import { useEffect, useMemo, useState } from "react";
-import { animate, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import { EXPLORER, fmtXlm, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
 import { useAnalyticsScore } from "../lib/useAnalytics";
 import { useTreasuryActivity } from "../lib/useTreasuryActivity";
+import { computeAnomaly, mergeLedger } from "../lib/eventLedger";
 import { loadPayeeBook, mergePayees, payeesFromEvents } from "../lib/payees";
 import { setupProgress, type SetupStep } from "../lib/onboarding";
 import { needsFunding, MIN_XLM } from "../lib/funding";
@@ -33,16 +34,14 @@ const fadeUp = (delay: number) => ({
 /** Balance rolls up from 0 on mount (skipped under prefers-reduced-motion). */
 function RollingBalance({ stroops }: { stroops: bigint }) {
   const reduce = useReducedMotion();
-  const [text, setText] = useState("0");
+  const mv = useMotionValue(Number(stroops));
+  const [text, setText] = useState(() => fmtXlm(stroops));
+  useMotionValueEvent(mv, "change", (v) => setText(fmtXlm(BigInt(Math.round(v)))));
   useEffect(() => {
     if (reduce) return;
-    const controls = animate(0, Number(stroops), {
-      duration: 0.7,
-      ease: EASE,
-      onUpdate: (v) => setText(fmtXlm(BigInt(Math.round(v)))),
-    });
+    const controls = animate(mv, Number(stroops), { duration: 0.7, ease: EASE });
     return () => controls.stop();
-  }, [stroops, reduce]);
+  }, [stroops, reduce, mv]);
   return <>{reduce ? fmtXlm(stroops) : text}</>;
 }
 
@@ -54,6 +53,8 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
 
   const [copied, setCopied] = useState(false);
   const [fundOpen, setFundOpen] = useState(false);
+  const fundPanel = useRef<HTMLDivElement>(null);
+  const fundInput = useRef<HTMLInputElement>(null);
   const [fundAmt, setFundAmt] = useState("");
   const [fundErr, setFundErr] = useState("");
 
@@ -67,6 +68,13 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const blockedCount = useMemo(() => rows.filter((e) => e.kind === "blocked").length, [rows]);
   const whitelistSeen = rows.some((e) => e.kind === "whitelist");
   const paidSeen = rows.some((e) => e.kind === "paid");
+
+  // Anomaly runs on the MERGED, deduped ledger (chain scan + durable activity log) so a
+  // Realtime row arriving before the RPC re-scan can't make the banner flicker on and off.
+  const anomaly = useMemo(
+    () => computeAnomaly(mergeLedger(analytics.events, rows)),
+    [analytics.events, rows],
+  );
 
   const progress = setupProgress({
     connected: !!t.address,
@@ -97,8 +105,19 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
     }
   };
 
+  // The fund panel sits below the quick actions, near the bottom of a long page. On a phone
+  // opening it from the stepper at the top changed nothing on screen — the panel landed
+  // under the bottom tab bar, so the button read as dead. Bring it into view and focus it.
+  const openFund = () => {
+    setFundOpen(true);
+    requestAnimationFrame(() => {
+      fundPanel.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      fundInput.current?.focus({ preventScroll: true });
+    });
+  };
+
   const stepCta = () => {
-    if (progress.next === "fund") setFundOpen(true);
+    if (progress.next === "fund") openFund();
     else if (progress.next === "whitelist" || progress.next === "pay") onGo("payments");
   };
 
@@ -244,7 +263,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
       <motion.div style={actions} {...fadeUp(0.12)}>
         <button
           style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
-          onClick={() => setFundOpen((o) => !o)}
+          onClick={() => (fundOpen ? setFundOpen(false) : openFund())}
           disabled={!!t.busy && t.busy !== "fund"}
           type="button"
         >
@@ -258,9 +277,10 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
         </button>
       </motion.div>
       {fundOpen && (
-        <div style={fundPanel}>
+        <div style={fundPanelStyle} ref={fundPanel}>
           <input
             style={input}
+            ref={fundInput}
             inputMode="decimal"
             placeholder="Amount (XLM)"
             aria-label="Fund amount in XLM"
@@ -288,6 +308,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           blocked={blockedCount}
           payees={payeeCount}
           truncated={analytics.truncated}
+          anomaly={anomaly}
         />
       </motion.div>
     </div>
@@ -345,13 +366,13 @@ const ghostAction: React.CSSProperties = {
   padding: "11px 18px", borderRadius: 11, cursor: "pointer", fontSize: 14, fontFamily: "inherit",
   background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#EDEDF4",
 };
-const fundPanel: React.CSSProperties = {
+const fundPanelStyle: React.CSSProperties = {
   display: "flex", gap: 10, alignItems: "flex-start", marginTop: 10, flexWrap: "wrap",
   padding: 14, borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
 };
 const input: React.CSSProperties = {
   flex: 1, minWidth: 180, boxSizing: "border-box", padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const inlineErr: React.CSSProperties = { width: "100%", fontSize: 12.5, color: "#FF5D5D" };
 const fundGate: React.CSSProperties = {

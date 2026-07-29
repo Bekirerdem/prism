@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashForView, isAppPage, viewFromHash } from "./routes";
+import { hashForView, isAppPage, isLandingAnchor, viewFromHash } from "./routes";
 
 describe("viewFromHash", () => {
   it("maps each app page", () => {
@@ -37,5 +37,20 @@ describe("isAppPage", () => {
     expect(isAppPage("settings")).toBe(true);
     expect(isAppPage("dashboard")).toBe(false);
     expect(isAppPage("landing")).toBe(false);
+  });
+});
+
+describe("isLandingAnchor", () => {
+  it("recognises the landing section anchors", () => {
+    expect(isLandingAnchor("#how")).toBe(true);
+    expect(isLandingAnchor("#prism")).toBe(true);
+    expect(isLandingAnchor("how")).toBe(true);
+  });
+  it("rejects routes, unknown hashes and the empty hash", () => {
+    expect(isLandingAnchor("#overview")).toBe(false);
+    expect(isLandingAnchor("#workspace")).toBe(false);
+    expect(isLandingAnchor("#nope")).toBe(false);
+    expect(isLandingAnchor("")).toBe(false);
+    expect(isLandingAnchor("#")).toBe(false);
   });
 });

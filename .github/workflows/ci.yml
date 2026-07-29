@@ -30,11 +30,15 @@ jobs:
           node-version: 22
       # npm install (not `npm ci`): the lockfile is generated on Windows, and a Linux
       # runner needs its own platform-specific optional deps (esbuild/rollup/etc).
-      - name: Install, lint, test & build
+      - name: Install dependencies
+        working-directory: web
+        run: npm install
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+      - name: Test & build
         working-directory: web
         run: |
-          npm install
-          npm run lint
           npm test
           npm run build
 

@@ -4,6 +4,7 @@
 // "registered but unfunded key" recovery path live in the provider.
 import { useEffect, useState } from "react";
 import { fmtXlm, shortAddr } from "../config";
+import { useNow } from "../lib/useNow";
 import { useTreasury } from "../state/useTreasury";
 
 export default function Agent() {
@@ -11,20 +12,16 @@ export default function Agent() {
   const [cap, setCap] = useState("25");
   const [hours, setHours] = useState("24");
   const [err, setErr] = useState("");
-  const [now, setNow] = useState(() => Date.now());
 
   const session = t.lifecycle?.session ?? null;
   const active = t.sessionActive && session;
+  const now = useNow(!!active);
 
-  // Countdown tick + auto-refresh once the session lapses so the UI flips itself.
+  // Auto-refresh once the session lapses so the UI flips itself.
   useEffect(() => {
-    if (!active) return;
-    const iv = setInterval(() => {
-      setNow(Date.now());
-      if (session && Number(session.valid_until) * 1000 < Date.now()) void t.refresh();
-    }, 1000);
-    return () => clearInterval(iv);
-  }, [active, session, t]);
+    if (!active || !session) return;
+    if (Number(session.valid_until) * 1000 < Date.now()) void t.refresh({ markLoading: false });
+  }, [active, session, now, t]);
 
   const doStart = async () => {
     setErr("");
@@ -167,7 +164,7 @@ const barTrack: React.CSSProperties = { height: 8, borderRadius: 100, background
 const barFill: React.CSSProperties = { height: "100%", borderRadius: 100, background: "#E0A106", transition: "width .5s ease" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4", fontSize: 14,
+  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 14, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",

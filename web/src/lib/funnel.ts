@@ -23,6 +23,14 @@ export function detectDevice(width: number): Device {
   return width < 768 ? "mobile" : "desktop";
 }
 
+/** Which wallet options are worth offering. Listing extension wallets on a phone gave
+ *  five dead ends out of seven — their "Install" link opens the Chrome Web Store, which a
+ *  phone browser can't use. Mobile keeps WalletConnect (Freighter, LOBSTR and the rest
+ *  pair through it) and Albedo (web-based, no extension needed). */
+export function showsExtensionWallets(device: Device): boolean {
+  return device === "desktop";
+}
+
 /** Shape + clamp a funnel row to the table's column limits (pure, testable). */
 export function buildFunnelRow(input: FunnelInput) {
   return {

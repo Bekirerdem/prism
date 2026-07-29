@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildFunnelRow, detectDevice } from "./funnel";
+import { buildFunnelRow, detectDevice, showsExtensionWallets } from "./funnel";
 
 describe("buildFunnelRow", () => {
   it("maps a full input to the funnel_events row shape", () => {
@@ -55,5 +55,18 @@ describe("detectDevice", () => {
   it("classifies wide viewports as desktop", () => {
     expect(detectDevice(768)).toBe("desktop");
     expect(detectDevice(1280)).toBe("desktop");
+  });
+});
+
+// A phone browser can't run extension wallets, but the kit still listed five of them:
+// Freighter and LOBSTR rendered an "Install" link that leads to the Chrome Web Store,
+// which is a dead end on a phone (reported 2026-07-28).
+describe("showsExtensionWallets", () => {
+  it("offers extension wallets on desktop", () => {
+    expect(showsExtensionWallets("desktop")).toBe(true);
+  });
+
+  it("hides them on mobile, where only WalletConnect and Albedo work", () => {
+    expect(showsExtensionWallets("mobile")).toBe(false);
   });
 });

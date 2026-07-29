@@ -27,12 +27,20 @@ export interface AnalyticsData {
 }
 
 export function useAnalyticsScore(contractId: string, refreshKey = 0): AnalyticsData {
-  // Seed from the persistent ledger so payments older than the RPC's event-retention
-  // window (which a fresh scan can no longer see) never drop out of the counters.
+  const [tick, setTick] = useState(0);
+  const fetchKey = `${contractId}:${refreshKey}:${tick}`;
+
+  const [trackedFetchKey, setTrackedFetchKey] = useState("");
   const [events, setEvents] = useState<FeedEvent[]>(() => loadLedger(contractId));
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [truncated, setTruncated] = useState(false);
-  const [tick, setTick] = useState(0);
+
+  if (fetchKey !== trackedFetchKey) {
+    setTrackedFetchKey(fetchKey);
+    setEvents(loadLedger(contractId));
+    setStatus("loading");
+  }
+
   // Last read's paging cursor + events, so a refresh continues from where the previous
   // read stopped (typically one RPC round-trip) instead of re-scanning all history.
   const cacheRef = useRef<{ contractId: string; cursor: string; events: FeedEvent[] } | null>(null);
@@ -42,8 +50,6 @@ export function useAnalyticsScore(contractId: string, refreshKey = 0): Analytics
   // the lag where an auto-refresh fires before the event is queryable.
   useEffect(() => {
     let alive = true;
-    setStatus("loading");
-    setEvents(loadLedger(contractId)); // instant paint from the ledger while the scan runs
     (async () => {
       const server = new rpc.Server(RPC_URL);
 
@@ -94,7 +100,7 @@ export function useAnalyticsScore(contractId: string, refreshKey = 0): Analytics
     return () => {
       alive = false;
     };
-  }, [contractId, refreshKey, tick]);
+  }, [fetchKey, contractId]);
 
   return {
     events,

@@ -64,6 +64,15 @@ body{ margin:0; background:var(--base); overflow-x:hidden; }
 a{ color:var(--lavender); text-decoration:none; }
 button{ font-family:inherit; }
 
+/* Form text: 14px reads better on a desktop form, but a mobile browser zooms the whole
+   page in whenever it focuses a field smaller than 16px — and never zooms back out, so
+   the layout stays broken for the rest of the session. Phones get 16px. Set here rather
+   than inline so the media query can win (an inline style would always override it). */
+input, textarea, select{ font-family:inherit; font-size:14px; }
+@media(max-width:1023px){
+  input, textarea, select{ font-size:16px; }
+}
+
 /* ===================== BACKGROUND (CSS-generated spectral aurora) ===================== */
 .bg{ position:fixed; inset:0; z-index:-2; overflow:hidden; background:var(--base); }
 .bg__aurora{ position:absolute; border-radius:50%; filter:blur(90px); mix-blend-mode:screen; will-change:transform; }
