@@ -40,6 +40,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <motion.div
               key={t.id}
               layout
+              data-toast-kind={t.kind}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
