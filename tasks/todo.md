@@ -7,10 +7,14 @@ isim kararı Bekir'de (bu akşam), rebrand ayrı dalga.
       desteği + test-signer modunda on-chain register atlanıyor (treasury.tsx) → organik 9/50
 - [ ] 0.2 `PLAYWRIGHT_TEST_WALLET_SECRET` repo secret (BEKİR) — sabit funded cüzdan
 - [x] 0.3 todo.md gerçeğe çekildi + issue #8 daraltıldı (countdown canlı, kalan=renewal)
-- [ ] 1. UX dalgası (spec-first): dil katmanı (web3 jargon → müşteri dili, Verglas ilkesi)
-      + onboarding netliği + fund bottom-sheet + legacy treasury rehberi →
-      spec `docs/superpowers/specs/2026-07-31-ux-customer-language.md` → Bekir onayı →
-      implement → ayna kapısı (canlı + 390px)
+- [x] 1. UX dalgası UYGULANDI+CANLI (`75b90de`): dil katmanı (terminoloji haritası, 15 toast,
+      6 sayfa + feed etiketleri) + stepper why-satırları + fund bottom-sheet (mobil) +
+      legacy çıkış rehberi. Doğrulama: 183 vitest + lint + tsc + build + **E2E smoke 44s yeşil**
+      + canlı 390px 5 sayfa taşmasız + konsol 0 hata + registry temiz (9/50, +0).
+      Ayna kapısı SS'leri scratchpad'de — Bekir'in görsel onayı bekleniyor.
+- [ ] 1b. Docs bölümü (Bekir ek isteği 07-31): Kite.ai docs yapısı incelemesi → PRISM docs;
+      sidebar'daki "Docs ↗" hedefi de bu işte netleşir
+- [ ] 1c. Landing görsel dil EN SON (Desktop/design paletleri+fontları; backend işler bitmeden başlama)
 - [ ] 2. Passkey-kit fizibilite raporu (kod yok) → karar Bekir
 - [ ] 3. SCF #45 başvuru taslağı: "policy-compliance treasury ≠ confidential payments"
       ilk cümle + temiz traction + tranche iskeleti (T1=ZK köprüsü) · Interest Form (BEKİR)
