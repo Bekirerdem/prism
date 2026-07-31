@@ -23,6 +23,18 @@ const TARGET = 50;
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SNAPSHOT = join(repoRoot, "docs", "metrics", "registered-users.json");
+const EXCLUDE = join(repoRoot, "docs", "metrics", "e2e-exclude.json");
+
+/** Wallets that must never count as users (E2E smoke throwaways) — see the file's note. */
+function loadExcluded() {
+  if (!existsSync(EXCLUDE)) return new Set();
+  try {
+    return new Set(JSON.parse(readFileSync(EXCLUDE, "utf8")).wallets ?? []);
+  } catch {
+    console.error(`! ${EXCLUDE} is not valid JSON — excluding nothing this run.`);
+    return new Set();
+  }
+}
 
 /** The ledger a getEvents paging cursor points at (TOID's high 32 bits); 0 if unparsable. */
 function cursorLedger(cursor) {
@@ -68,12 +80,22 @@ function loadSnapshot() {
 }
 
 const registrations = await fetchRegistrations();
+const excluded = loadExcluded();
 const snap = loadSnapshot();
 snap.target = TARGET;
+
+let pruned = 0;
+for (const owner of Object.keys(snap.owners)) {
+  if (excluded.has(owner)) {
+    delete snap.owners[owner];
+    pruned++;
+  }
+}
 
 let newOwners = 0;
 let newTreasuries = 0;
 for (const { owner, treasury, at } of registrations) {
+  if (excluded.has(owner)) continue;
   const entry = (snap.owners[owner] ??= { treasuries: [], firstSeen: at });
   if (!entry.treasuries.includes(treasury)) {
     if (entry.treasuries.length === 0) newOwners++; // first treasury ⇒ new wallet
@@ -91,6 +113,7 @@ const bar = "█".repeat(Math.min(count, TARGET)) + "░".repeat(Math.max(0, TAR
 console.log(`\nPrism registered wallets: ${count} / ${TARGET}`);
 console.log(bar);
 console.log(`(this run: +${newOwners} new wallet(s), +${newTreasuries} treasury registration(s) in the RPC window)`);
+if (excluded.size > 0) console.log(`(excluding ${excluded.size} E2E wallet(s); pruned ${pruned} from the snapshot this run)`);
 console.log(`snapshot: ${SNAPSHOT}\n`);
 for (const [owner, e] of Object.entries(snap.owners)) {
   console.log(`  ${owner}  treasuries: ${e.treasuries.length}  first seen: ${e.firstSeen}`);

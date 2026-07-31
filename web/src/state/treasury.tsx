@@ -43,6 +43,7 @@ import {
   sessionPay,
 } from "../lib/session";
 import { discoverTreasuries, registerTreasury } from "../lib/registry";
+import { testSignerAvailable } from "../lib/testSigner";
 import { mergeTreasuries } from "../lib/treasuryList";
 import { useToast } from "./toastContext";
 import { TreasuryContext, type ActionOutcome, type Busy, type TreasuryContextValue } from "./treasuryContext";
@@ -233,15 +234,19 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         void logActivity({ walletAddress: address, treasuryId: id, action: "deploy" });
         // Best-effort on-chain registration (a second wallet prompt). A decline only
         // means this device's localStorage stays the sole copy of the id.
+        // E2E runs must never touch the registry — it feeds the user-count evidence,
+        // and throwaway Playwright wallets were inflating it (docs/metrics/e2e-exclude.json).
         let registered = false;
-        try {
-          toast("info", "Registering on-chain for cross-device recovery — confirm in your wallet…");
-          await registerTreasury(address, walletSignerFor(address), id);
-          registered = true;
-          setRegistryIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
-          void logActivity({ walletAddress: address, treasuryId: id, action: "register" });
-        } catch {
-          /* declined / RPC hiccup — the localStorage mapping still works */
+        if (!testSignerAvailable()) {
+          try {
+            toast("info", "Registering on-chain for cross-device recovery — confirm in your wallet…");
+            await registerTreasury(address, walletSignerFor(address), id);
+            registered = true;
+            setRegistryIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+            void logActivity({ walletAddress: address, treasuryId: id, action: "register" });
+          } catch {
+            /* declined / RPC hiccup — the localStorage mapping still works */
+          }
         }
         const msg = registered
           ? "Treasury deployed ✓ and registered on-chain — recoverable from any device."
