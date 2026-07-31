@@ -13,3 +13,15 @@
   taste-independent and safe to keep improving.
 - Matches the standing pattern: visual design is Bekir (+ Gemini); Claude holds the
   backend/infra line until a spec arrives.
+
+## Docs are authored pages, not wrapped includes — and verify CONTENT, not status
+- 2026-07-31: Shipped a docs site whose reference pages were `@include`s of repo-root
+  markdown. Two failures stacked: (1) `vercel --cwd web` uploads ONLY web/ — the include
+  sources didn't exist in Vercel's build, VitePress silently dropped them, every page
+  rendered as a bare H1; (2) live verification checked HTTP 200 + sidebar, not page
+  content, so "boş sayfalar" shipped as "verified". Bekir caught it.
+- **Why:** build-time file reads outside the deploy root are invisible landmines; and a
+  200 response proves routing, not content.
+- **How to apply:** anything the Vercel build consumes must live under web/. Docs pages
+  are real authored content (Verglas bar: 34-127 lines each), never thin wrappers.
+  Live checks must assert rendered text length/keywords on EVERY page, not fetch status.

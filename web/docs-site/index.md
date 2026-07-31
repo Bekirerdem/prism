@@ -31,5 +31,6 @@ you can verify, not something you have to trust.
 
 - [Try it in 5 minutes](/try-it) — testnet, free XLM, real contract.
 - [Türkçe hızlı başlangıç](/try-it-tr)
-- [Deployed contracts & addresses](/contracts)
-- [Security model](/security)
+- [Architecture](/architecture) — the four contracts and how they fit.
+- [Confidential compliance (ZK)](/zk) — prove the rules held, reveal nothing.
+- [Deployed contracts & addresses](/contracts) · [Security model](/security)

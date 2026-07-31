@@ -20,6 +20,13 @@ export default defineConfig({
         text: "Concepts",
         items: [
           { text: `What is ${NAME}?`, link: "/" },
+          { text: "Architecture", link: "/architecture" },
+          { text: "Confidential compliance (ZK)", link: "/zk" },
+        ],
+      },
+      {
+        text: "Use it",
+        items: [
           { text: "Try it (5 minutes)", link: "/try-it" },
           { text: "Hızlı başlangıç (TR)", link: "/try-it-tr" },
         ],
@@ -30,7 +37,7 @@ export default defineConfig({
           { text: "Contracts & Addresses", link: "/contracts" },
           { text: "Security Model", link: "/security" },
           { text: "Roadmap", link: "/roadmap" },
-          { text: "Changelog", link: "/changelog" },
+          { text: "Changelog ↗", link: "https://github.com/Bekirerdem/prism/blob/main/CHANGELOG.md" },
         ],
       },
     ],
