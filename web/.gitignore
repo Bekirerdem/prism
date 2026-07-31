@@ -34,3 +34,8 @@ dist-ssr
 playwright-report/
 test-results/
 
+
+# VitePress docs build output (generated into public/ by npm run docs:build)
+public/docs/
+
+docs-site/.vitepress/cache/

@@ -51,7 +51,7 @@ export default function AppShell({
           <div className="shell__testnet">⚠ Testnet — free test XLM, no real funds.</div>
           <a
             className="shell__docs"
-            href="https://github.com/Bekirerdem/prism#readme"
+            href="/docs/"
             target="_blank"
             rel="noreferrer"
           >

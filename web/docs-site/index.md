@@ -1,0 +1,35 @@
+# Give your agent a budget — not your wallet.
+
+PRISM is a **bounded treasury** for autonomous agents on Stellar. You set the rules
+once — a daily cap, a per-payment cap, an approved payee list — and every payment is
+checked and enforced on Stellar. Anything outside the rules is blocked, automatically.
+
+## How it works
+
+1. **Create** a treasury from your wallet — the rules are built into it at creation.
+2. **Fund** it — the treasury pays from its own balance, never from your wallet.
+3. **Approve payees** — payments can only go to addresses you've approved.
+4. **Hand it to your agent on a Leash** — a spending cap and a time limit. The agent
+   pays on its own, no popups; every payment is still checked against your rules,
+   and you can revoke instantly.
+
+When a payment breaks the rules, the network rejects it — that's the product working,
+not a failure. The block is visible on-chain, so "my agent can't drain me" is something
+you can verify, not something you have to trust.
+
+## What makes it different
+
+- **Rules are enforced on Stellar, not by promise** — no backend of ours can override them.
+- **Self-custodial** — funds live in your own treasury contract. Never with us, never
+  with the agent.
+- **Pause, withdraw, revoke** — the owner's exits always work, even while spending is
+  frozen.
+- **Confidential compliance (ZK)** — spending can be *proven* in-policy without
+  disclosing amounts or payees, via Groth16 proofs verified on-chain.
+
+## Start here
+
+- [Try it in 5 minutes](/try-it) — testnet, free XLM, real contract.
+- [Türkçe hızlı başlangıç](/try-it-tr)
+- [Deployed contracts & addresses](/contracts)
+- [Security model](/security)
