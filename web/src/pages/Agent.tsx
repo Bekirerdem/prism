@@ -35,8 +35,9 @@ export default function Agent() {
         <div style={card}>
           <div style={label}>Leash — agent session</div>
           <div style={body}>
-            This treasury predates M2 — pause, withdraw, limit updates, and agent sessions
-            need a freshly deployed treasury.
+            This is an early treasury — Leash sessions arrived later. Create a fresh
+            treasury from the switcher to use the agent features; your funds are safe,
+            and Settings shows the exit path.
           </div>
         </div>
       </div>
@@ -105,9 +106,8 @@ export default function Agent() {
         <div style={card}>
           <div style={label}>Leash — agent session</div>
           <div style={body}>
-            Hand this treasury to an autonomous agent on a Leash: a time-bound, spend-capped
-            key signs payments with no wallet popups — the contract still enforces every
-            limit, and you can revoke instantly.
+            Put your agent on a Leash: a spending cap and a time limit. It pays on its own —
+            no popups — and every payment is still checked against your rules. Revoke any time.
           </div>
           <div style={fieldLabel}>Session cap (XLM)</div>
           <input

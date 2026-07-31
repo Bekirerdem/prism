@@ -60,12 +60,12 @@ export default function Settings() {
         </div>
         <div style={{ marginTop: 14 }}>
           {registered ? (
-            <div style={{ fontSize: 13, color: "#00FF43" }}>Registered on-chain ✓ — recoverable from any device.</div>
+            <div style={{ fontSize: 13, color: "#00FF43" }}>Backed up on Stellar ✓ — open it from any device.</div>
           ) : (
             <>
               <div style={{ fontSize: 13, color: "#E0A106" }}>
-                ⚠ Not registered on-chain — this device's storage is the only key to this
-                treasury. Back up the ID, or register it now.
+                ⚠ Not backed up on Stellar — this device's storage is the only key to this
+                treasury. Save the ID, or back it up now.
               </div>
               <button
                 style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
@@ -73,7 +73,7 @@ export default function Settings() {
                 disabled={!!t.busy}
                 type="button"
               >
-                {t.busy === "register" ? "Registering…" : "Register on-chain"}
+                {t.busy === "register" ? "Backing up…" : "Back up on Stellar"}
               </button>
             </>
           )}
@@ -118,8 +118,8 @@ export default function Settings() {
           {t.busy === "limits" ? "Updating…" : "Update limits"}
         </button>
         {limitsErr && <div style={inlineErr}>{limitsErr}</div>}
-        {t.legacy && <div style={hint}>This treasury predates M2 — limit updates need a fresh deploy.</div>}
-        {!t.legacy && <div style={hint}>Effective immediately, enforced by the contract.</div>}
+        {t.legacy && <div style={hint}>This is an early treasury — limit updates need a fresh treasury.</div>}
+        {!t.legacy && <div style={hint}>Effective immediately, enforced on Stellar.</div>}
       </div>
 
       {/* ---- danger zone ---- */}
@@ -127,7 +127,15 @@ export default function Settings() {
         <div style={{ ...label, color: "#FF5D5D" }}>Danger zone</div>
 
         {t.legacy ? (
-          <div style={hint}>Pause and withdraw need a post-M2 treasury.</div>
+          <div style={hint}>
+            This early treasury has no withdraw of its own. To move funds out: approve your
+            own wallet as a payee (Payments → Payees), then pay yourself within the limits
+            {t.state
+              ? ` (≤ ${fmtXlm(t.state.perTaskLimit)} XLM per payment · ≤ ${fmtXlm(t.state.dailyLimit)} XLM per day)`
+              : ""}
+            . Or create a fresh treasury from the switcher — pause, withdraw and the Leash
+            all live there.
+          </div>
         ) : (
           <>
             <button

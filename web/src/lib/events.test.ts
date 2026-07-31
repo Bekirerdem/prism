@@ -19,7 +19,7 @@ describe("formatEvent", () => {
   it("formats payee_add / payee_rm with the payee address", () => {
     const add = formatEvent(["payee_add"], "GBGHC3E4WM4JAIRTFHIYOHRDSYHYQXFEHBCJT2SNTZWORHLQI4TDQABC");
     expect(add.kind).toBe("payee_add");
-    expect(add.label).toMatch(/whitelisted/i);
+    expect(add.label).toMatch(/approved/i);
     expect(add.label).toMatch(/GBGH…QABC/);
     const rm = formatEvent(["payee_rm"], "GBGHC3E4WM4JAIRTFHIYOHRDSYHYQXFEHBCJT2SNTZWORHLQI4TDQABC");
     expect(rm.kind).toBe("payee_rm");

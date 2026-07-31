@@ -193,7 +193,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const friendbot = useCallback(async (): Promise<ActionOutcome> => {
     if (!address) return fail("Connect a wallet first.");
     setBusy("friendbot");
-    toast("info", "Requesting testnet XLM from friendbot…");
+    toast("info", "Requesting free testnet XLM…");
     try {
       await fundWithFriendbot(address);
       await refreshWalletXlm(address);
@@ -224,7 +224,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         return invalid("Per-payment limit can't exceed the daily limit.");
       }
       setBusy("deploy");
-      toast("info", "Deploying your treasury — confirm in your wallet…");
+      toast("info", "Creating your treasury — confirm in your wallet…");
       try {
         const id = await deployTreasury(address, walletSignerFor(address), dailyLimit.value, perTaskLimit.value);
         setTreasuryId(address, id);
@@ -239,7 +239,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         let registered = false;
         if (!testSignerAvailable()) {
           try {
-            toast("info", "Registering on-chain for cross-device recovery — confirm in your wallet…");
+            toast("info", "Backing it up on Stellar so you can open it from any device — confirm in your wallet…");
             await registerTreasury(address, walletSignerFor(address), id);
             registered = true;
             setRegistryIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
@@ -249,8 +249,8 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
           }
         }
         const msg = registered
-          ? "Treasury deployed ✓ and registered on-chain — recoverable from any device."
-          : "Treasury deployed ✓ — on-chain registration was skipped, so your ID is the only key to this treasury: copy it now.";
+          ? "Treasury created ✓ and backed up on Stellar — open it from any device."
+          : "Treasury created ✓ — backup was skipped, so your ID is the only key to this treasury: copy it now.";
         toast("success", msg);
         return { ok: true, msg };
       } catch (e) {
@@ -312,12 +312,12 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       const p = payeeAddr.trim();
       if (!p) return invalid("Enter a payee address.");
       setBusy("whitelist");
-      toast("info", "Whitelisting payee — confirm in your wallet…");
+      toast("info", "Approving payee — confirm in your wallet…");
       try {
         const t = makeTreasury(treasuryId, address, walletSignerFor(address));
         await addPayee(t, p);
         void logActivity({ walletAddress: address, treasuryId, action: "whitelist" });
-        const msg = `Payee whitelisted: ${shortAddr(p)}`;
+        const msg = `Payee approved: ${shortAddr(p)}`;
         toast("success", msg);
         bump();
         return { ok: true, msg };
@@ -362,11 +362,11 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       if (!amt.ok) return invalid(amt.msg);
       if (sessionActive && !sessionSecret) {
         return invalid(
-          "An agent session is active but its key isn't on this device — revoke the session (Agent page) to spend with your wallet.",
+          "A Leash is active but its key isn't on this device — revoke it (Agent page) to spend with your wallet.",
         );
       }
       setBusy("spend");
-      toast("info", sessionActive ? "Sending payment — signed by the session agent…" : "Sending payment — confirm in your wallet…");
+      toast("info", sessionActive ? "Sending payment — the Leash signs, no popup…" : "Sending payment — confirm in your wallet…");
       try {
         // Single-spender rule: an active session's key signs instead of the wallet.
         const res =
@@ -387,8 +387,8 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
             amountXlm: amt.value,
           });
           const msg = sessionActive
-            ? "Payment settled ✓ — signed by the session agent, no wallet popup."
-            : "Payment settled ✓";
+            ? "Payment sent ✓ — signed by the Leash, no wallet popup."
+            : "Payment sent ✓";
           toast("success", msg, { hash: res.hash });
           bump();
           await loadState(treasuryId, address);
@@ -420,21 +420,21 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       const hoursV = parseXlmAmount(hours, "duration");
       if (!hoursV.ok) return invalid(hoursV.msg);
       setBusy("session");
-      toast("info", "Starting agent session — confirm in your wallet…");
+      toast("info", "Starting the Leash session — confirm in your wallet…");
       try {
         const t = makeTreasury(treasuryId, address, walletSignerFor(address));
         const res = await createSession(t, treasuryId, capV.value, hoursV.value, (phase) =>
           toast(
             "info",
             phase === "registering"
-              ? "Registering the session — confirm in your wallet…"
+              ? "Registering the Leash key — confirm in your wallet…"
               : "Funding the agent's key on testnet…",
           ),
         );
         if (res.ok) {
           setSessionSecret(loadSessionSecret(treasuryId));
           void logActivity({ walletAddress: address, treasuryId, action: "session_start", txHash: res.hash });
-          const msg = "Agent session started ✓ — payments now sign without wallet popups.";
+          const msg = "Leash on ✓ — the agent now pays without wallet popups.";
           toast("success", msg, { hash: res.hash });
           await loadState(treasuryId, address);
           return { ok: true, msg, hash: res.hash };
@@ -444,7 +444,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
           // and refresh state so the UI matches the chain (active session + revoke control).
           setSessionSecret(loadSessionSecret(treasuryId));
           void logActivity({ walletAddress: address, treasuryId, action: "session_start" });
-          const msg = res.errorMessage ?? "Session registered but its key couldn't be funded — revoke it and start a new one.";
+          const msg = res.errorMessage ?? "The Leash was registered but its key couldn't be funded — revoke it and start a new one.";
           toast("error", msg);
           await loadState(treasuryId, address);
           return fail(msg);
@@ -466,7 +466,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const revokeLeash = useCallback(async (): Promise<ActionOutcome> => {
     if (!address || !treasuryId) return fail("No treasury open.");
     setBusy("revoke");
-    toast("info", "Revoking session — confirm in your wallet…");
+    toast("info", "Revoking the Leash — confirm in your wallet…");
     try {
       const t = makeTreasury(treasuryId, address, walletSignerFor(address));
       const res = await revokeSession(t);
@@ -474,7 +474,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         clearSessionSecret(treasuryId);
         setSessionSecret(null);
         void logActivity({ walletAddress: address, treasuryId, action: "session_revoke", txHash: res.hash });
-        const msg = "Session revoked ✓ — your wallet is the spender again.";
+        const msg = "Leash revoked ✓ — your wallet is the spender again.";
         toast("success", msg, { hash: res.hash });
         await loadState(treasuryId, address);
         return { ok: true, msg, hash: res.hash };
@@ -493,7 +493,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
 
   const runAutonomousTask = useCallback(
     async (to?: string): Promise<ActionOutcome> => {
-      if (!address || !treasuryId || !sessionSecret) return fail("No active session key on this device.");
+      if (!address || !treasuryId || !sessionSecret) return fail("No active Leash key on this device.");
       const dest = (to ?? "").trim() || SERVICE;
       setBusy("task");
       toast("info", "Agent is paying autonomously — no wallet popup…");
@@ -624,12 +624,12 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const registerActive = useCallback(async (): Promise<ActionOutcome> => {
     if (!address || !treasuryId) return fail("No treasury open.");
     setBusy("register");
-    toast("info", "Registering on-chain — confirm in your wallet…");
+    toast("info", "Backing up on Stellar — confirm in your wallet…");
     try {
       await registerTreasury(address, walletSignerFor(address), treasuryId);
       setRegistryIds((ids) => (ids.includes(treasuryId) ? ids : [...ids, treasuryId]));
       void logActivity({ walletAddress: address, treasuryId, action: "register" });
-      const msg = "Registered on-chain ✓ — recoverable from any device.";
+      const msg = "Backed up on Stellar ✓ — open it from any device.";
       toast("success", msg);
       return { ok: true, msg };
     } catch (e) {

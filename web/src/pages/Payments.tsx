@@ -165,7 +165,7 @@ export default function Payments() {
                 <button style={inlineLink} type="button" onClick={() => setPayTo(SERVICE)}>
                   use the sample vendor ({shortAddr(SERVICE)})
                 </button>{" "}
-                or whitelist one in the Payees tab.
+                or approve one in the Payees tab.
               </div>
             )}
 
@@ -182,8 +182,8 @@ export default function Payments() {
               <div style={{ ...hint, color: overPerTask || overDaily ? "#E0A106" : "#7C7C92" }}>
                 per-payment ≤ {fmtXlm(s.perTaskLimit)} XLM · {remaining !== null ? fmtXlm(remaining) : "—"} XLM left
                 today
-                {overPerTask && " — above the per-payment cap; the contract will block it"}
-                {!overPerTask && overDaily && " — above what's left today; the contract will block it"}
+                {overPerTask && " — above your per-payment cap; it will be blocked"}
+                {!overPerTask && overDaily && " — above what's left today; it will be blocked"}
               </div>
             )}
 
@@ -195,7 +195,7 @@ export default function Payments() {
                   borderColor: t.sessionActive ? "rgba(224,161,6,0.45)" : "rgba(255,255,255,0.12)",
                 }}
               >
-                {t.sessionActive ? "⚡ agent session signs — no popup" : "wallet signs"}
+                {t.sessionActive ? "⚡ the Leash signs — no popups" : "you approve each payment in your wallet"}
               </span>
             </div>
 
@@ -220,7 +220,7 @@ export default function Payments() {
                   <span style={{ ...dot, background: kindColor(e.kind), boxShadow: `0 0 6px ${kindColor(e.kind)}66` }} />
                   <span style={histLabel}>{e.label}</span>
                   <span style={{ ...histBadge, color: e.kind === "blocked" ? "#FF5D5D" : "#00FF43" }}>
-                    {e.kind === "blocked" ? "BLOCKED" : "settled ✓"}
+                    {e.kind === "blocked" ? "BLOCKED" : "paid ✓"}
                   </span>
                   {e.txHash && (
                     <a style={txLink} href={`${EXPLORER}/tx/${e.txHash}`} target="_blank" rel="noreferrer">
@@ -235,7 +235,7 @@ export default function Payments() {
       ) : (
         <div style={card}>
           {payees.length === 0 ? (
-            <div style={hint}>No payees yet — whitelist an address to start paying it.</div>
+            <div style={hint}>No payees yet — approve an address to start paying it.</div>
           ) : (
             payees.map((p) => (
               <div key={p.address} style={histRow}>
@@ -250,7 +250,7 @@ export default function Payments() {
                   {verify[p.address] === true
                     ? "verified ✓"
                     : verify[p.address] === false
-                      ? "not on whitelist"
+                      ? "not approved"
                       : "checking…"}
                 </span>
                 <button

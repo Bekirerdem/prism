@@ -32,10 +32,10 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
       <div style={gateWrap}>
         <div style={gateCard}>
           <div style={gateGlyph}>◭</div>
-          <h1 style={gateTitle}>Your own bounded treasury on Stellar.</h1>
+          <h1 style={gateTitle}>Give your agent a budget — not your wallet.</h1>
           <p style={gateSub}>
-            You set the limits, the contract enforces them — every payment checked on-chain,
-            every drain attempt blocked.
+            Set the rules once. Every payment is checked and enforced on Stellar —
+            anything outside the rules is blocked, automatically.
           </p>
           <button
             style={{ ...primaryBtn, opacity: t.busy === "connect" ? 0.6 : 1 }}
@@ -62,7 +62,7 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
         </button>
       )}
       <h1 style={wizTitle}>Set up your treasury</h1>
-      <p style={wizSub}>Two steps: choose your limits, then deploy. The contract does the rest.</p>
+      <p style={wizSub}>Two steps: set your rules, then create it. Enforcement is automatic.</p>
 
       {t.walletXlm !== undefined && needsFunding(t.walletXlm) && (
         <div style={stepCard}>
@@ -85,7 +85,7 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
       )}
 
       <div style={stepCard}>
-        <div style={stepTag}>Step 1 — set your limits</div>
+        <div style={stepTag}>Step 1 — set your rules</div>
         <div style={fieldLabel}>Daily limit (XLM)</div>
         <input
           style={input}
@@ -103,26 +103,26 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
           onChange={(e) => setPerTask(e.target.value)}
         />
         <div style={stepBody}>
-          Your agent can never spend more than the daily limit in any rolling 24 hours, and
-          never more than the per-payment limit at once — the contract enforces it, not a promise.
+          Your agent can never spend past the daily cap in any rolling 24 hours, and never
+          more than the per-payment cap at once — enforced on Stellar, not by promise.
         </div>
       </div>
 
       <div style={stepCard}>
-        <div style={stepTag}>Step 2 — deploy</div>
+        <div style={stepTag}>Step 2 — create</div>
         <button
           style={{ ...primaryBtn, opacity: t.busy ? 0.6 : 1 }}
           onClick={() => void doDeploy()}
           disabled={!!t.busy}
           type="button"
         >
-          {t.busy === "deploy" ? "Deploying…" : "Create treasury"}
+          {t.busy === "deploy" ? "Creating…" : "Create treasury"}
         </button>
         {err && <div style={inlineErr}>{err}</div>}
         <div style={hint}>
-          Deploying asks for <strong>two</strong> wallet approvals: ① create the treasury,
-          ② register it for cross-device recovery — ② is optional; skipping it just means
-          you should back up your treasury ID.
+          Creating asks for <strong>two</strong> wallet approvals: ① create your treasury,
+          ② back it up on Stellar so you can open it from any device — ② is optional;
+          skip it and your treasury ID is the only key: save it.
         </div>
       </div>
 

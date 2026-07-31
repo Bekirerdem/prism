@@ -70,18 +70,18 @@ export function activityToFeedEvent(row: ActivityRow): FeedEvent {
   const amt = row.amount_xlm == null ? null : Number(row.amount_xlm);
   const amtTxt = amt != null && !Number.isNaN(amt) ? ` · ${amt} XLM` : "";
   const map: Record<string, { kind: string; label: string }> = {
-    deploy: { kind: "deploy", label: `${who} deployed a treasury` },
+    deploy: { kind: "deploy", label: `${who} created a treasury` },
     fund: { kind: "fund", label: `${who} funded a treasury${amtTxt}` },
-    whitelist: { kind: "whitelist", label: `${who} whitelisted a payee` },
+    whitelist: { kind: "whitelist", label: `${who} approved a payee` },
     pay: { kind: "paid", label: `Payment from ${who}'s treasury${amtTxt}` },
     agent_pay: { kind: "paid", label: `Leash-signed agent payment · ${who}${amtTxt}` },
-    reject: { kind: "blocked", label: `Drain attempt blocked on ${who}'s treasury` },
+    reject: { kind: "blocked", label: `Payment blocked by ${who}'s rules` },
     session_start: { kind: "leash", label: `${who} started a Leash` },
     session_revoke: { kind: "leash", label: `${who} revoked a Leash` },
     pause: { kind: "lifecycle", label: `${who} paused their treasury` },
     withdraw: { kind: "lifecycle", label: `${who} withdrew from their treasury` },
     limits: { kind: "lifecycle", label: `${who} updated treasury limits` },
-    register: { kind: "lifecycle", label: `${who} registered their treasury` },
+    register: { kind: "lifecycle", label: `${who} backed up their treasury` },
   };
   const m = map[row.action] ?? { kind: row.action, label: `${who} · ${row.action}` };
   return {

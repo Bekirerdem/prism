@@ -148,7 +148,7 @@ export class PrismPage {
       () => {
         const el = document.querySelector('[data-toast-kind="success"]');
         return (
-          !!el && /deployed|registered|treasury/i.test(el.textContent ?? "")
+          !!el && /created|treasury/i.test(el.textContent ?? "")
         );
       },
       null,
@@ -225,7 +225,7 @@ export class PrismPage {
     await this.page.waitForFunction(
       () => {
         const el = document.querySelector('[data-toast-kind="success"]');
-        return !!el && /whitelisted|payee/i.test(el.textContent ?? "");
+        return !!el && /approved|payee/i.test(el.textContent ?? "");
       },
       null,
       { timeout: 120_000 },
@@ -254,7 +254,7 @@ export class PrismPage {
     await this.page.waitForFunction(
       () => {
         const el = document.querySelector('[data-toast-kind="success"]');
-        return !!el && /settled|payment/i.test(el.textContent ?? "");
+        return !!el && /paid|sent|payment/i.test(el.textContent ?? "");
       },
       null,
       { timeout: 120_000 },

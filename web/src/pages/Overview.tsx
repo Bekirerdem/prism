@@ -14,13 +14,25 @@ import { needsFunding, MIN_XLM } from "../lib/funding";
 import type { View } from "../lib/routes";
 import RecentActivity from "../components/shell/RecentActivity";
 import StatStrip from "../components/shell/StatStrip";
+import BottomSheet from "../components/shell/BottomSheet";
+import { useIsMobile } from "../lib/useIsMobile";
 
 const STEP_LABEL: Record<SetupStep, string> = {
   connect: "Connect",
-  deploy: "Deploy",
+  deploy: "Create",
   fund: "Fund",
-  whitelist: "Whitelist",
+  whitelist: "Approve payee",
   pay: "First payment",
+};
+
+// One-line "why" under the stepper for the active step — the answer to the
+// "cluttered, explain it better" tester feedback without adding UI weight.
+const STEP_WHY: Record<SetupStep, string> = {
+  connect: "Your wallet is your identity — nothing else to set up.",
+  deploy: "Create your treasury with its rules built in.",
+  fund: "Your treasury pays from its own balance — top it up to start.",
+  whitelist: "Payments can only go to payees you've approved.",
+  pay: "Send one — watch your rules check it on the way through.",
 };
 
 const EASE = [0.2, 0.7, 0.3, 1] as const;
@@ -105,16 +117,41 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
     }
   };
 
-  // The fund panel sits below the quick actions, near the bottom of a long page. On a phone
-  // opening it from the stepper at the top changed nothing on screen — the panel landed
-  // under the bottom tab bar, so the button read as dead. Bring it into view and focus it.
+  // On phones the fund form opens as a bottom sheet (the inline panel used to land under
+  // the bottom tab bar); on desktop the inline panel stays, scrolled into view.
+  const isMobile = useIsMobile();
   const openFund = () => {
     setFundOpen(true);
+    if (isMobile) return; // the sheet carries its own focus
     requestAnimationFrame(() => {
       fundPanel.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       fundInput.current?.focus({ preventScroll: true });
     });
   };
+
+  const fundForm = (inSheet: boolean) => (
+    <>
+      <input
+        style={input}
+        ref={inSheet ? undefined : fundInput}
+        autoFocus={inSheet}
+        inputMode="decimal"
+        placeholder="Amount (XLM)"
+        aria-label="Fund amount in XLM"
+        value={fundAmt}
+        onChange={(e) => setFundAmt(e.target.value)}
+      />
+      <button
+        style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
+        onClick={() => void doFund()}
+        disabled={!!t.busy}
+        type="button"
+      >
+        {t.busy === "fund" ? "Funding…" : "Fund"}
+      </button>
+      {fundErr && <div style={inlineErr}>{fundErr}</div>}
+    </>
+  );
 
   const stepCta = () => {
     if (progress.next === "fund") openFund();
@@ -128,6 +165,15 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
 
   return (
     <div>
+      {t.legacy && (
+        <div style={legacyBanner}>
+          This is an early treasury — agent sessions, pause and withdraw arrived later.
+          Your funds are safe;{" "}
+          <button style={legacyLink} onClick={() => onGo("settings")} type="button">
+            see Settings for the exit path →
+          </button>
+        </div>
+      )}
       {t.address && t.walletXlm !== undefined && needsFunding(t.walletXlm) && (
         <div style={fundGate}>
           <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
@@ -173,6 +219,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
               Next: {STEP_LABEL[progress.next]} →
             </button>
           )}
+          {progress.next && <div style={stepWhy}>{STEP_WHY[progress.next]}</div>}
         </div>
       )}
 
@@ -221,7 +268,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
 
         {/* SAĞ — today / policy live */}
         <div style={heroRight}>
-          <div style={label}>Today — policy live</div>
+          <div style={label}>Today — your rules, live</div>
           {t.loading || !s ? (
             <>
               <div className="shell__skel" style={{ height: 10, marginTop: 14 }} />
@@ -248,7 +295,7 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
               <div style={todaySub}>remaining today: {fmtXlm(remaining)} XLM</div>
               {blockedCount > 0 && (
                 <div style={{ ...todaySub, color: "#FF5D5D" }}>
-                  {blockedCount} drain attempt{blockedCount > 1 ? "s" : ""} blocked by the contract
+                  {blockedCount} payment{blockedCount > 1 ? "s" : ""} blocked by your rules
                 </div>
               )}
               {t.lifecycle?.paused && (
@@ -276,28 +323,14 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
           {leashOn ? "⚡ Leash active →" : "⚡ Start Leash"}
         </button>
       </motion.div>
-      {fundOpen && (
+      {fundOpen && !isMobile && (
         <div style={fundPanelStyle} ref={fundPanel}>
-          <input
-            style={input}
-            ref={fundInput}
-            inputMode="decimal"
-            placeholder="Amount (XLM)"
-            aria-label="Fund amount in XLM"
-            value={fundAmt}
-            onChange={(e) => setFundAmt(e.target.value)}
-          />
-          <button
-            style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
-            onClick={() => void doFund()}
-            disabled={!!t.busy}
-            type="button"
-          >
-            {t.busy === "fund" ? "Funding…" : "Fund"}
-          </button>
-          {fundErr && <div style={inlineErr}>{fundErr}</div>}
+          {fundForm(false)}
         </div>
       )}
+      <BottomSheet open={fundOpen && isMobile} onClose={() => setFundOpen(false)} title="Fund treasury">
+        <div style={sheetForm}>{fundForm(true)}</div>
+      </BottomSheet>
 
       {/* ALT BÖLGE */}
       <motion.div className="ov__lower" style={{ marginTop: 18 }} {...fadeUp(0.2)}>
@@ -394,4 +427,14 @@ const stepDot: React.CSSProperties = {
 const stepCtaBtn: React.CSSProperties = {
   padding: "8px 14px", borderRadius: 9, border: "none", cursor: "pointer",
   background: "rgba(253,218,36,0.14)", color: "#FDDA24", fontWeight: 600, fontSize: 12.5, fontFamily: "inherit",
+};
+const stepWhy: React.CSSProperties = { flexBasis: "100%", fontSize: 12.5, color: "#7C7C92", lineHeight: 1.5 };
+const sheetForm: React.CSSProperties = { display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap", paddingTop: 4 };
+const legacyBanner: React.CSSProperties = {
+  marginBottom: 16, padding: "11px 14px", borderRadius: 12, fontSize: 13, lineHeight: 1.55, color: "#EDEDF4",
+  background: "rgba(224,161,6,0.07)", border: "1px solid rgba(224,161,6,0.3)",
+};
+const legacyLink: React.CSSProperties = {
+  background: "none", border: "none", padding: 0, cursor: "pointer",
+  color: "#E0A106", textDecoration: "underline", font: "inherit",
 };

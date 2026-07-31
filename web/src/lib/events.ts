@@ -48,7 +48,7 @@ export function formatEvent(topics: unknown[], data: unknown): { kind: string; l
     case "refunded":
       return { kind, label: `Escrow #${topics[1]} refunded` };
     case "payee_add":
-      return { kind, label: `Payee whitelisted: ${short(data)}` };
+      return { kind, label: `Payee approved: ${short(data)}` };
     case "payee_rm":
       return { kind, label: `Payee removed: ${short(data)}` };
     case "paused":
