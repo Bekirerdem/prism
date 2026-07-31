@@ -12,10 +12,17 @@ isim kararı Bekir'de (bu akşam), rebrand ayrı dalga.
       legacy çıkış rehberi. Doğrulama: 183 vitest + lint + tsc + build + **E2E smoke 44s yeşil**
       + canlı 390px 5 sayfa taşmasız + konsol 0 hata + registry temiz (9/50, +0).
       Ayna kapısı SS'leri scratchpad'de — Bekir'in görsel onayı bekleniyor.
-- [ ] 1b. Docs bölümü (Bekir ek isteği 07-31): Kite.ai docs yapısı incelemesi → PRISM docs;
-      sidebar'daki "Docs ↗" hedefi de bu işte netleşir
+- [x] 1b. Docs bölümü CANLI (`80f148d`): prism-stellar.vercel.app/docs/ — VitePress
+      (Verglas kalıbı), web/docs-site/, Concepts+Reference; referans sayfaları kök
+      markdown'lardan @include (tek kaynak); sidebar "Docs ↗" artık /docs/'a gidiyor;
+      isim değişimi = config'te 2 satır
 - [ ] 1c. Landing görsel dil EN SON (Desktop/design paletleri+fontları; backend işler bitmeden başlama)
-- [ ] 2. Passkey-kit fizibilite raporu (kod yok) → karar Bekir
+- [x] 2. Passkey fizibilite raporu TAMAM → **koşullu EVET ama İSİM/DOMAIN KARARINDAN ÖNCE
+      CANLIYA ALINMAZ** (WebAuthn rp.id kilidi: domain değişirse tüm passkey'ler kopar).
+      Bulgular: passkey-kit artık stellar/passkey-kit (SDF resmi, 0.14.0) · Launchtube
+      DEPRECATED → OZ Channels (ya da sobre deseni: kendi fonlu fee-payer, relayer'sız) ·
+      kontratta SIFIR değişiklik (Address polimorfik, __check_auth) · maliyet: sdk 14→16
+      bump + ~1 adapter modülü + yedek-signer politikası ZORUNLU. Karar Bekir'de.
 - [ ] 3. SCF #45 başvuru taslağı: "policy-compliance treasury ≠ confidential payments"
       ilk cümle + temiz traction + tranche iskeleti (T1=ZK köprüsü) · Interest Form (BEKİR)
 - [ ] 4. Açık iş entegrasyonu başlangıcı: accumulator spec revizyonu (Olio referanslı)
