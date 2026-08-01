@@ -53,7 +53,7 @@ zoom/pan. Target ~3:10.
 | 2:15–2:40 | **Agent** → start a Leash (duration + cap) → run autonomous task | "I hand an agent a Leash: time-bound, spend-capped, revocable. It signs its own payments — no popups — and it still can't cross the policy." |
 | 2:40–2:52 | **Agent** → revoke the Leash | "One click and the agent's authority is gone. Revocation is on-chain, not a promise." |
 | 2:52–3:05 | **Activity** — full platform feed, BLOCKED rows | "Every action by every user, streamed live — including the drain attempts the contract turned down." |
-| 3:05–3:15 | **Settings** → pause / limits, then landing CTA | "Pause the treasury or withdraw at any time. Deploy your own at prism-stellar.vercel.app." |
+| 3:05–3:15 | **Settings** → pause / limits, then landing CTA | "Pause the treasury or withdraw at any time. Deploy your own at eunomia.finance." |
 
 **Recording notes**
 

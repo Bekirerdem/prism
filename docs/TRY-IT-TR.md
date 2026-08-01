@@ -9,7 +9,7 @@ sınırlı bir hazine (bounded treasury): günlük limit + işlem-başı limit +
 Aşağıdaki akış tamamen **testnet** üzerindedir: gerçek para yok, riskiniz sıfır.
 Her adım cüzdanınızla imzalanır — non-custodial, fonlar hep sizin kontrolünüzde.
 
-**Uygulama:** [prism-stellar.vercel.app](https://prism-stellar.vercel.app)
+**Uygulama:** [eunomia.finance](https://eunomia.finance)
 
 ## Mobil cihazdan bağlanma
 

@@ -10,7 +10,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 
 <sub>**Formerly PRISM** — renamed to Eunomia ahead of mainnet. All hackathon results, tester evidence and on-chain history in this repo refer to the same product.</sub>
 
-[![CI](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml)
+[![CI](https://github.com/eunomia-finance/eunomia/actions/workflows/ci.yml/badge.svg)](https://github.com/eunomia-finance/eunomia/actions/workflows/ci.yml)
 ![Stellar testnet](https://img.shields.io/badge/Stellar-testnet-FDDA24?style=flat-square)
 ![Rust · Soroban](https://img.shields.io/badge/Rust_·_Soroban-FDDA24?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_161%2F161-FDDA24?style=flat-square)
@@ -177,7 +177,7 @@ Three upgrades take Eunomia from a walled garden to the open agent economy — e
 
 ## Try the live demo
 
-**→ [prism-stellar.vercel.app](https://prism-stellar.vercel.app)** (Stellar testnet, no wallet needed)
+**→ [eunomia.finance](https://eunomia.finance)** (Stellar testnet, no wallet needed)
 
 1. **Run agent tasks** — the agent autonomously settles 3 vendor payments in USDC. No wallet popup; it signs its own transactions. Each lands with a real Stellar Expert tx link.
 2. **Simulate prompt-injection** — tell the agent to send funds to an unapproved wallet. The contract **rejects it on-chain** (`PayeeNotWhitelisted`). Funds never move. 🔴
@@ -187,7 +187,7 @@ Three upgrades take Eunomia from a walled garden to the open agent economy — e
 
 ## Use your own treasury (per-user product)
 
-Beyond the spectator demo, **connect a wallet and run your own** bounded treasury — [open the app](https://prism-stellar.vercel.app) and pick **Open app**. Quickstart guides: [English](docs/TRY-IT.md) · [Türkçe](docs/TRY-IT-TR.md).
+Beyond the spectator demo, **connect a wallet and run your own** bounded treasury — [open the app](https://eunomia.finance) and pick **Open app**. Quickstart guides: [English](docs/TRY-IT.md) · [Türkçe](docs/TRY-IT-TR.md).
 
 1. **Install a Stellar wallet** — e.g. [Freighter](https://www.freighter.app/), switched to **Testnet** in its settings.
 2. **Connect** — any Stellar wallet, testnet.
@@ -256,13 +256,13 @@ treasury** (5), **confidential mode (ZK)** (4) and **x402 agentic payments** (2)
 
 | Feedback | What we shipped | Commit |
 |---|---|---|
-| Zero-balance first-timers stalled before any action — no way to get testnet XLM | Funding gate + one-tap friendbot button + balance check | [`3b32062`](https://github.com/Bekirerdem/prism/commit/3b32062) |
-| The treasury contract ID was easy to lose after deploy | "Copy ID" + save reminder + StrKey validation | [`19d563c`](https://github.com/Bekirerdem/prism/commit/19d563c) |
-| First run was unclear — *what do I whitelist / pay?* | "Use the sample vendor" prefill + whitelist→spend autofill + human-readable errors | [`c0c3680`](https://github.com/Bekirerdem/prism/commit/c0c3680) |
-| Mobile visitors couldn't see the nav | Compact, responsive mobile nav | [`528d22d`](https://github.com/Bekirerdem/prism/commit/528d22d) |
-| *"UX is kinda cluttered"* · *"maybe work on user flow"* | Full app shell — five sections, sidebar on desktop, bottom tabs on mobile, one job per screen | [`074a76c`](https://github.com/Bekirerdem/prism/commit/074a76c) |
-| *"multi wallet"* — testers ran more than one treasury | Treasury switcher + "New treasury", with cross-device recovery from the on-chain registry | [`9f798a0`](https://github.com/Bekirerdem/prism/commit/9f798a0) |
-| *"'how it works' isnt functioning"* | Landing anchors no longer swallowed by the hash router | [`cba88a4`](https://github.com/Bekirerdem/prism/commit/cba88a4) |
+| Zero-balance first-timers stalled before any action — no way to get testnet XLM | Funding gate + one-tap friendbot button + balance check | [`3b32062`](https://github.com/eunomia-finance/eunomia/commit/3b32062) |
+| The treasury contract ID was easy to lose after deploy | "Copy ID" + save reminder + StrKey validation | [`19d563c`](https://github.com/eunomia-finance/eunomia/commit/19d563c) |
+| First run was unclear — *what do I whitelist / pay?* | "Use the sample vendor" prefill + whitelist→spend autofill + human-readable errors | [`c0c3680`](https://github.com/eunomia-finance/eunomia/commit/c0c3680) |
+| Mobile visitors couldn't see the nav | Compact, responsive mobile nav | [`528d22d`](https://github.com/eunomia-finance/eunomia/commit/528d22d) |
+| *"UX is kinda cluttered"* · *"maybe work on user flow"* | Full app shell — five sections, sidebar on desktop, bottom tabs on mobile, one job per screen | [`074a76c`](https://github.com/eunomia-finance/eunomia/commit/074a76c) |
+| *"multi wallet"* — testers ran more than one treasury | Treasury switcher + "New treasury", with cross-device recovery from the on-chain registry | [`9f798a0`](https://github.com/eunomia-finance/eunomia/commit/9f798a0) |
+| *"'how it works' isnt functioning"* | Landing anchors no longer swallowed by the hash router | [`cba88a4`](https://github.com/eunomia-finance/eunomia/commit/cba88a4) |
 | *"more agent action options"* · *"openclaw skills"* | On the roadmap → agent tooling / MCP + stellar-8004 ([`ROADMAP.md`](ROADMAP.md) M2/M4) | |
 
 **Tried Eunomia?** Tell us what to fix next: **[share feedback →](https://forms.gle/7gzJWwte52SmbXei7)**

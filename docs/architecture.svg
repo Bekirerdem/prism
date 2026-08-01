@@ -97,5 +97,5 @@
 
   <!-- footer note -->
   <text x="48" y="650" font-size="10.5" fill="#56555f">P·R·I·S·M — Policy-enforced · Revocable · Invisible · Self-custodial · Machine-speed</text>
-  <text x="1152" y="650" text-anchor="end" font-size="10.5" fill="#56555f">github.com/Bekirerdem/prism</text>
+  <text x="1152" y="650" text-anchor="end" font-size="10.5" fill="#56555f">github.com/eunomia-finance/eunomia</text>
 </svg>

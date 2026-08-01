@@ -123,7 +123,7 @@ Copy `.env.example` to `.env`. Beware invisible non-ASCII bytes when pasting key
 Vercel, manual (no auto-deploy on push):
 
 ```bash
-vercel --prod      # aliases prism-stellar.vercel.app
+vercel --prod      # aliases eunomia.finance
 ```
 
 Env vars must be set in the Vercel dashboard for Production.

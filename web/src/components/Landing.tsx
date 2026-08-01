@@ -141,7 +141,7 @@ export default function Landing({
           <a href="#how">How it works</a>
           <button className="navlink" onClick={onLaunch}>Demo</button>
           <button className="navlink" onClick={onActivity}>Activity</button>
-          <a href="https://github.com/Bekirerdem/prism" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a href="https://github.com/eunomia-finance/eunomia" target="_blank" rel="noreferrer">GitHub ↗</a>
         </div>
         <span className="walletslot">
           <Suspense fallback={null}>
@@ -198,10 +198,10 @@ export default function Landing({
         <Reveal className="proofstrip" delay={0.05}>
           <span className="pk">Proven in public</span>
           <span className="badge"><b className="medal">2nd place</b> IBW 2026 · BuildOn Stellar — Agentic Track</span>
-          <a className="badge" href="https://github.com/Bekirerdem/prism" target="_blank" rel="noreferrer">Open source · <b>MIT</b> — read every line ↗</a>
+          <a className="badge" href="https://github.com/eunomia-finance/eunomia" target="_blank" rel="noreferrer">Open source · <b>MIT</b> — read every line ↗</a>
           {/* snapshot 2026-07-11 — refresh from Supabase `activity` when the numbers grow */}
           <button className="badge" onClick={onActivity}><b>4</b> user treasuries · <b>5</b> payments · <b>5</b> drains blocked — all on-chain</button>
-          <a className="badge" href="https://github.com/Bekirerdem/prism" target="_blank" rel="noreferrer"><b>140+</b> tests green · contract v3.1</a>
+          <a className="badge" href="https://github.com/eunomia-finance/eunomia" target="_blank" rel="noreferrer"><b>140+</b> tests green · contract v3.1</a>
           <a className="badge" href="https://github.com/stellar/stellar-dev-skill/pull/50" target="_blank" rel="noreferrer">Stellar Dev Skills — community skill submitted ↗</a>
         </Reveal>
 
@@ -270,7 +270,7 @@ export default function Landing({
                 <div className="pts">
                   <div>Real Groth16/BN254 proofs — verified by the contract itself, not a middleware promise</div>
                   <div>Emits <span className="mono">attested</span> — a Sealed Receipt: auditable, never disclosed</div>
-                  <div><a className="accent" href="https://github.com/Bekirerdem/prism#architecture" target="_blank" rel="noreferrer">Read the technical deep dive ↗</a></div>
+                  <div><a className="accent" href="https://github.com/eunomia-finance/eunomia#architecture" target="_blank" rel="noreferrer">Read the technical deep dive ↗</a></div>
                 </div>
               </Reveal>
             </div>
@@ -406,11 +406,11 @@ export default function Landing({
             </nav>
             <nav className="fcol" aria-label="Resources">
               <h5>Resources</h5>
-              <a className="flink" href="https://github.com/Bekirerdem/prism" target="_blank" rel="noreferrer">GitHub — MIT ↗</a>
-              <a className="flink" href="https://github.com/Bekirerdem/prism/blob/main/SECURITY.md" target="_blank" rel="noreferrer">Security policy ↗</a>
-              <a className="flink" href="https://github.com/Bekirerdem/prism/blob/main/ROADMAP.md" target="_blank" rel="noreferrer">Roadmap ↗</a>
-              <a className="flink" href="https://github.com/Bekirerdem/prism/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Changelog ↗</a>
-              <a className="flink" href="https://github.com/Bekirerdem/prism/blob/main/SKILL.md" target="_blank" rel="noreferrer">SKILL.md — for AI agents ↗</a>
+              <a className="flink" href="https://github.com/eunomia-finance/eunomia" target="_blank" rel="noreferrer">GitHub — MIT ↗</a>
+              <a className="flink" href="https://github.com/eunomia-finance/eunomia/blob/main/SECURITY.md" target="_blank" rel="noreferrer">Security policy ↗</a>
+              <a className="flink" href="https://github.com/eunomia-finance/eunomia/blob/main/ROADMAP.md" target="_blank" rel="noreferrer">Roadmap ↗</a>
+              <a className="flink" href="https://github.com/eunomia-finance/eunomia/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Changelog ↗</a>
+              <a className="flink" href="https://github.com/eunomia-finance/eunomia/blob/main/SKILL.md" target="_blank" rel="noreferrer">SKILL.md — for AI agents ↗</a>
             </nav>
             <nav className="fcol" aria-label="On-chain">
               <h5>On-chain</h5>

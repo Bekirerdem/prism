@@ -23,7 +23,7 @@ PRISM is a non-custodial Soroban treasury that lets an AI agent spend real money
 payee, over-limit payment, expired session) is rejected **on-chain**. A ZK layer proves a batch of
 payments complied with policy without revealing amounts or payees.
 
-- Repo: https://github.com/Bekirerdem/prism · Live app (testnet): https://prism-stellar.vercel.app
+- Repo: https://github.com/eunomia-finance/eunomia · Live app (testnet): https://eunomia.finance
 - Deep docs in-repo: `README.md` (product tour), `DEPLOYMENT.md` (all deployed contracts),
   `SECURITY.md` (audit findings + known limitations), `ROADMAP.md`, `docs/TRY-IT.md` (5-minute walkthrough).
 
@@ -48,7 +48,7 @@ The full (historical + demo) address table lives in `DEPLOYMENT.md`.
 
 ## Quickstart
 
-**Fastest path:** open https://prism-stellar.vercel.app → connect a wallet (Freighter, xBull,
+**Fastest path:** open https://eunomia.finance → connect a wallet (Freighter, xBull,
 Albedo, LOBSTR, Rabet, Hana, or WalletConnect on mobile) → *Create your own treasury* → fund →
 whitelist a payee → pay. Over-limit payments are rejected by the contract, visibly.
 

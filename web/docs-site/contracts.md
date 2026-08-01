@@ -14,7 +14,7 @@ live and verifiable on [stellar.expert](https://stellar.expert/explorer/testnet)
 
 Treasury version history (v1 demo → v2 reputation+escrow → v3 sessions+lifecycle →
 v3.1 audit hardening → v3.2 storage-TTL hardening) is recorded with upload transactions
-in [`DEPLOYMENT.md`](https://github.com/Bekirerdem/prism/blob/main/DEPLOYMENT.md).
+in [`DEPLOYMENT.md`](https://github.com/eunomia-finance/eunomia/blob/main/DEPLOYMENT.md).
 
 ## Live on-chain proofs
 

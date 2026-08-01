@@ -13,7 +13,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: "App", link: "https://eunomia.finance/#overview" },
-      { text: "GitHub", link: "https://github.com/Bekirerdem/prism" },
+      { text: "GitHub", link: "https://github.com/eunomia-finance/eunomia" },
     ],
     sidebar: [
       {
@@ -37,10 +37,10 @@ export default defineConfig({
           { text: "Contracts & Addresses", link: "/contracts" },
           { text: "Security Model", link: "/security" },
           { text: "Roadmap", link: "/roadmap" },
-          { text: "Changelog ↗", link: "https://github.com/Bekirerdem/prism/blob/main/CHANGELOG.md" },
+          { text: "Changelog ↗", link: "https://github.com/eunomia-finance/eunomia/blob/main/CHANGELOG.md" },
         ],
       },
     ],
-    socialLinks: [{ icon: "github", link: "https://github.com/Bekirerdem/prism" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/eunomia-finance/eunomia" }],
   },
 });

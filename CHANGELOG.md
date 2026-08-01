@@ -1,7 +1,7 @@
 # Changelog
 
 Notable changes to PRISM, grouped by release wave. Full detail lives in the
-[conventional-commit history](https://github.com/Bekirerdem/prism/commits/main);
+[conventional-commit history](https://github.com/eunomia-finance/eunomia/commits/main);
 deployed addresses and on-chain proofs in [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## [0.4.1] — 2026-07-07 · Fresh-eyes review wave (treasury v3.1 + UX hardening)
@@ -116,7 +116,7 @@ Built during Stellar Hacks: Real-World ZK; submitted to DoraHacks.
   muxed-account funding rail (zero-cost sub-address attribution) · spectral landing + pitch
   deck · build-time guard refusing the demo key off-testnet
 
-[0.3.1]: https://github.com/Bekirerdem/prism/commits/main
-[0.3.0]: https://github.com/Bekirerdem/prism/commits/main
-[0.2.0]: https://github.com/Bekirerdem/prism/commits/main
-[0.1.0]: https://github.com/Bekirerdem/prism/commits/main
+[0.3.1]: https://github.com/eunomia-finance/eunomia/commits/main
+[0.3.0]: https://github.com/eunomia-finance/eunomia/commits/main
+[0.2.0]: https://github.com/eunomia-finance/eunomia/commits/main
+[0.1.0]: https://github.com/eunomia-finance/eunomia/commits/main

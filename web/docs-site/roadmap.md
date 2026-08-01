@@ -40,5 +40,5 @@ data, not assumption) · ecosystem partnerships formalized.
 ---
 
 **Where we are:** M2 is shipped and live in the app; M3 (mainnet path) is next. Progress
-is tracked in the [commit history](https://github.com/Bekirerdem/prism/commits/main) and
-[`CHANGELOG.md`](https://github.com/Bekirerdem/prism/blob/main/CHANGELOG.md).
+is tracked in the [commit history](https://github.com/eunomia-finance/eunomia/commits/main) and
+[`CHANGELOG.md`](https://github.com/eunomia-finance/eunomia/blob/main/CHANGELOG.md).
