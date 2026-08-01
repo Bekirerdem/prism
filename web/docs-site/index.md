@@ -1,6 +1,6 @@
 # Give your agent a budget — not your wallet.
 
-PRISM is a **bounded treasury** for autonomous agents on Stellar. You set the rules
+Eunomia is a **bounded treasury** for autonomous agents on Stellar. You set the rules
 once — a daily cap, a per-payment cap, an approved payee list — and every payment is
 checked and enforced on Stellar. Anything outside the rules is blocked, automatically.
 

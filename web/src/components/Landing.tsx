@@ -135,7 +135,7 @@ export default function Landing({
       {/* nav — content links in the middle; wallet state + the app CTA on the right
           (the wallet is session state, not a page, so it doesn't sit between links) */}
       <nav className="nav">
-        <div className="brand"><span className="glyph" /> Prism</div>
+        <div className="brand"><span className="glyph" /> Eunomia</div>
         <div className="links">
           <span className="live"><i /> Stellar Testnet</span>
           <a href="#how">How it works</a>
@@ -207,9 +207,9 @@ export default function Landing({
 
         {/* 00 creed — the name is the framework */}
         <section className="band creed" id="prism">
-          <Reveal><div className="kick"><span className="no">00</span><span className="eyebrow">What PRISM stands for</span></div></Reveal>
+          <Reveal><div className="kick"><span className="no">00</span><span className="eyebrow">The Eunomia framework</span></div></Reveal>
           <RevealLines tag="h2" className="title" lines={[<>A <em>leash,</em> not a wallet.</>]} />
-          <Reveal delay={0.1}><p className="lead2">Five guarantees, one name. An agent spends on a Leash — scoped, expiring authority — never with the keys to the vault.</p></Reveal>
+          <Reveal delay={0.1}><p className="lead2">Five guarantees, one framework. An agent spends on a Leash — scoped, expiring authority — never with the keys to the vault.</p></Reveal>
           <div className="creed__grid">
             {CREED.map((c, i) => (
               <Reveal className="creed__cell" key={c.k} delay={i * 0.06}>
@@ -321,7 +321,7 @@ export default function Landing({
             <div className="feat__txt">
               <Reveal><span className="eyebrow accent">New since hackathon</span></Reveal>
               <RevealLines tag="h2" delay={0.05} lines={[<>When a service says <em>402,</em> the bound still holds.</>]} />
-              <Reveal delay={0.12}><p>An agent normally pays whatever a <span className="mono">402 Payment Required</span> server asks. Prism gates that request against the treasury policy first — an over-limit or wrong-payee charge never reaches settlement.</p></Reveal>
+              <Reveal delay={0.12}><p>An agent normally pays whatever a <span className="mono">402 Payment Required</span> server asks. Eunomia gates that request against the treasury policy first — an over-limit or wrong-payee charge never reaches settlement.</p></Reveal>
               <Reveal delay={0.2}>
                 <div className="pts">
                   <div>Gate mirrors the on-chain policy before any signature</div>
@@ -393,7 +393,7 @@ export default function Landing({
         <footer className="foot2">
           <div className="foot2__grid">
             <div className="foot2__brand">
-              <div className="b"><span className="glyph" /> Prism</div>
+              <div className="b"><span className="glyph" /> Eunomia</div>
               <p>The safety layer for agent money — a non-custodial, contract-bounded agent treasury on Stellar.</p>
               <div className="op"><i /> System operational · Stellar testnet</div>
             </div>

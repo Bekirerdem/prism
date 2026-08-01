@@ -1,6 +1,6 @@
 # Roadmap
 
-PRISM is moving from a proven testnet product to **mainnet agent-payments infrastructure
+Eunomia is moving from a proven testnet product to **mainnet agent-payments infrastructure
 on Stellar**. Milestones are sequenced, not dated — each unlocks the next, and each is
 verifiable on-chain or in the repo.
 

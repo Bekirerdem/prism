@@ -1,11 +1,11 @@
 # Security Model
 
-PRISM is **testnet-only** today — do not use it with real funds. The path to mainnet is
+Eunomia is **testnet-only** today — do not use it with real funds. The path to mainnet is
 security-gated; see [Roadmap](/roadmap) for what must land first.
 
 ## The model
 
-- **Non-custodial.** Funds live in the owner's own contract. PRISM code cannot move value
+- **Non-custodial.** Funds live in the owner's own contract. Eunomia code cannot move value
   outside the on-chain rules; violations are rejected by the contract, on-chain.
 - **No front-runnable initialization.** Rules are set atomically in the constructor —
   there is no separate `initialize` to race.

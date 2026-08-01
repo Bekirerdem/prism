@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 
 // The product name lives HERE and in index.md only — the mainnet rename is a
 // two-line change, content pages stay name-agnostic.
-const NAME = "PRISM";
+const NAME = "Eunomia";
 
 export default defineConfig({
   title: `${NAME} Docs`,
@@ -12,7 +12,7 @@ export default defineConfig({
   ignoreDeadLinks: true, // included repo-root markdown carries GitHub-relative links
   themeConfig: {
     nav: [
-      { text: "App", link: "https://prism-stellar.vercel.app/#overview" },
+      { text: "App", link: "https://eunomia.finance/#overview" },
       { text: "GitHub", link: "https://github.com/Bekirerdem/prism" },
     ],
     sidebar: [

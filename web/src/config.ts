@@ -27,7 +27,7 @@ export const AGENT_SECRET = "SC6F5K7IPNX6MMN2JAV766FU7WKWYQ3M34W3MOLCPXTU55HSKS2
 const TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
 if (NETWORK_PASSPHRASE !== TESTNET_PASSPHRASE) {
   throw new Error(
-    "Prism: the embedded AGENT_SECRET is testnet-only. On a non-testnet network, signing " +
+    "Eunomia: the embedded AGENT_SECRET is testnet-only. On a non-testnet network, signing " +
       "MUST move to a backend proxy or wallet (e.g. Freighter). Refusing to load a bundled secret.",
   );
 }

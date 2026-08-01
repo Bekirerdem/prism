@@ -26,7 +26,7 @@ export default function AppShell({
     <div className="shell">
       <aside className="shell__side">
         <button className="shell__brand" onClick={() => onGo("landing")} type="button">
-          <span className="shell__glyph" /> Prism
+          <span className="shell__glyph" /> Eunomia
         </button>
         <nav className="shell__nav">
           {APP_PAGES.map((p) => (

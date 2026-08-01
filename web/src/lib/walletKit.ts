@@ -69,10 +69,10 @@ if (WC_PROJECT_ID) {
     new WalletConnectModule({
       projectId: WC_PROJECT_ID,
       metadata: {
-        name: "Prism",
+        name: "Eunomia",
         description: "The wallet your AI agent can't drain",
-        url: "https://prism-stellar.vercel.app",
-        icons: ["https://prism-stellar.vercel.app/apple-touch-icon.png"],
+        url: "https://eunomia.finance",
+        icons: ["https://eunomia.finance/apple-touch-icon.png"],
       },
       allowedChains: [WalletConnectTargetChain.TESTNET],
       appKitOptions: {

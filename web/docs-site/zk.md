@@ -2,7 +2,7 @@
 
 A business can't publish who it pays and how much on a public ledger — but its owner,
 auditor, or counterparty still needs to know the spending stayed inside the rules.
-PRISM's answer: **prove compliance, reveal nothing.**
+Eunomia's answer: **prove compliance, reveal nothing.**
 
 ## What is proven
 
@@ -38,12 +38,12 @@ Public signals: `[dailyLimit, perTaskLimit, whitelistRoot, periodId, commitments
 - The Groth16 setup is a single-party dev setup; a multi-party ceremony is a mainnet
   prerequisite.
 
-## Composability: PRISM as a policy for confidential tokens
+## Composability: Eunomia as a policy for confidential tokens
 
-PRISM's payee gate is also packaged as an OpenZeppelin Confidential Token `Policy`
+Eunomia's payee gate is also packaged as an OpenZeppelin Confidential Token `Policy`
 (`is_authorized(account, token) → bool`). Wired as a confidential token's compliance
-policy, every *private-amount* transfer is still bounded to PRISM-approved payees:
-**the confidential token hides the amount; PRISM bounds the payee.**
+policy, every *private-amount* transfer is still bounded to Eunomia-approved payees:
+**the confidential token hides the amount; Eunomia bounds the payee.**
 
 ## Toolchain
 

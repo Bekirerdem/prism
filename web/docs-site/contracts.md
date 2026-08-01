@@ -10,7 +10,7 @@ live and verifiable on [stellar.expert](https://stellar.expert/explorer/testnet)
 | **Treasury v3.2 wasm** (current — every in-app create instantiates this) | `475cfbe2ca79d7977c8e4d29438ae70b9d95a12cb2bfcd9fed4e4f7a26d798b2` |
 | **Treasury Registry** (cross-device backup) | [`CBEPVXK6…4ZE7`](https://stellar.expert/explorer/testnet/contract/CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7) |
 | **Compliance Verifier** (ZK, hardened) | [`CCOLX7NE…DBRH`](https://stellar.expert/explorer/testnet/contract/CCOLX7NEBDJRRVTPFVSK3UJLHMG3HO4UVYJW3NFBOTUG7Q7GOP63DBRH) |
-| **PRISM Policy** (OpenZeppelin ComplianceHooks) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
+| **Eunomia Policy** (OpenZeppelin ComplianceHooks) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
 
 Treasury version history (v1 demo → v2 reputation+escrow → v3 sessions+lifecycle →
 v3.1 audit hardening → v3.2 storage-TTL hardening) is recorded with upload transactions

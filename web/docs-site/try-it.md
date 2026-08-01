@@ -5,7 +5,7 @@
 Everything below runs on **testnet**: no real money, zero risk. Every action is signed
 by your own wallet — non-custodial, funds stay under your control the whole time.
 
-**App:** [prism-stellar.vercel.app](https://prism-stellar.vercel.app)
+**App:** [eunomia.finance](https://eunomia.finance)
 
 ## Connecting from a phone
 

@@ -1,6 +1,6 @@
 # Architecture
 
-PRISM is four small Soroban contracts and one web app. The design rule everywhere:
+Eunomia is four small Soroban contracts and one web app. The design rule everywhere:
 **the contract is the gate, the app is just a window onto it.**
 
 ## The pieces

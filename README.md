@@ -2,11 +2,13 @@
 
 <img src="docs/prism-logo.png" alt="Prism logo" width="120" />
 
-# Prism
+# Eunomia
 
 ### The wallet your AI agent can't drain.
 
 A non-custodial Soroban treasury that lets a business hand an autonomous AI agent **real money to spend** — where the **contract**, not the model's good behaviour, enforces the limits. Every payment is auto-accounted, and Stellar settles in sub-cents.
+
+<sub>**Formerly PRISM** — renamed to Eunomia ahead of mainnet. All hackathon results, tester evidence and on-chain history in this repo refer to the same product.</sub>
 
 [![CI](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml/badge.svg)](https://github.com/Bekirerdem/prism/actions/workflows/ci.yml)
 ![Stellar testnet](https://img.shields.io/badge/Stellar-testnet-FDDA24?style=flat-square)
@@ -14,7 +16,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 ![Tests](https://img.shields.io/badge/tests-treasury_48%2F48_·_registry_3%2F3_·_circuit_6%2F6_·_verifier_4%2F4_·_web_161%2F161-FDDA24?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-3a3a3a?style=flat-square)
 
-**[▶ Live demo](https://prism-stellar.vercel.app) · [🎥 Demo video](https://youtu.be/R7mw9ZTh94U) · [🎤 Pitch deck](https://deck-bice-omega.vercel.app) · [🗺 Roadmap](ROADMAP.md) · [🔗 Contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) · [📄 Deployment & proofs](DEPLOYMENT.md)**
+**[▶ Live demo](https://eunomia.finance) · [🎥 Demo video](https://youtu.be/R7mw9ZTh94U) · [🎤 Pitch deck](https://deck-bice-omega.vercel.app) · [🗺 Roadmap](ROADMAP.md) · [🔗 Contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) · [📄 Deployment & proofs](DEPLOYMENT.md)**
 
 <img src="docs/hero.png" alt="Prism — the wallet your AI agent can't drain" width="840" />
 
@@ -22,7 +24,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 
 ---
 
-## What P·R·I·S·M stands for
+## The Eunomia framework (P·R·I·S·M)
 
 > **A leash, not a wallet.** An agent spends on a **Leash** — scoped, expiring authority — never with the keys to the vault.
 
@@ -54,7 +56,7 @@ A non-custodial Soroban treasury that lets a business hand an autonomous AI agen
 
 ## 🏆 Built during Stellar Hacks: Real-World ZK
 
-Prism's bounded-treasury core predates this hackathon (built at IBW 2026). **Everything zero-knowledge — Prism's entire Confidential layer — was designed and built inside the Stellar Hacks: Real-World ZK window (June 18–22, 2026)**, and is the focus of this submission:
+Eunomia's bounded-treasury core predates this hackathon (built at IBW 2026). **Everything zero-knowledge — Eunomia's entire Confidential layer — was designed and built inside the Stellar Hacks: Real-World ZK window (June 18–22, 2026)**, and is the focus of this submission:
 
 | Date | Built this hackathon |
 |---|---|
@@ -85,9 +87,9 @@ AI agents can reason, plan, and act — right up until they need to **pay** for 
 1. **Safety.** One hallucination, jailbreak, or prompt-injection and the wallet is drained.
 2. **Accounting.** An agent that makes hundreds of small payments is impossible to reconcile.
 
-So agents "research and recommend" but never actually transact. **Prism removes the blocker.**
+So agents "research and recommend" but never actually transact. **Eunomia removes the blocker.**
 
-## What Prism does
+## What Eunomia does
 
 | | Guarantee | How |
 |---|---|---|
@@ -97,7 +99,7 @@ So agents "research and recommend" but never actually transact. **Prism removes 
 | **Trust** | The agent can pay *new* counterparties safely, not just a static list | Payee passes if **whitelisted OR** its on-chain ERC-8004 **reputation ≥ threshold** |
 | **Outcome** | Pay only for delivered work | **Escrow** locks funds; released on approval, refunded after a deadline |
 
-The business keeps custody the whole time — funds live in the owner's own Soroban contract. Prism is the **guardrails + accounting + rail**, never the custodian.
+The business keeps custody the whole time — funds live in the owner's own Soroban contract. Eunomia is the **guardrails + accounting + rail**, never the custodian.
 
 ## How it works
 
@@ -123,7 +125,7 @@ A prompt-injected "drain to attacker" payment is signed by the agent and still *
                             to_muxed_id            (signs)         │
                             attribution                            ▼
                                                   ┌──────────────────────────────┐
-                                                  │  PRISM TREASURY (Soroban)     │
+                                                  │  EUNOMIA TREASURY (Soroban)   │
                                                   │  • policy: whitelist / per-   │
                                                   │    task / daily limit         │
                                                   │  • rejects violations on-chain│
@@ -137,7 +139,7 @@ A prompt-injected "drain to attacker" payment is signed by the agent and still *
 
 ## Confidential mode — same guarantees, zero disclosure (ZK)
 
-Prism's policy gate is transparent: today every `pay` reveals the payee and amount on-chain. **Prism Confidential** adds a zero-knowledge layer so a business can *prove its agent obeyed policy without revealing what it spent, on what, or with whom.*
+Eunomia's policy gate is transparent: today every `pay` reveals the payee and amount on-chain. **Eunomia Confidential** adds a zero-knowledge layer so a business can *prove its agent obeyed policy without revealing what it spent, on what, or with whom.*
 
 Each payment is hidden behind a commitment `C = Poseidon(amount, payee, salt)`. A single **Groth16 proof — verified on-chain by a Soroban contract** — attests over a batch that:
 
@@ -154,11 +156,11 @@ No amount or payee is ever revealed — only the commitments and the proof go on
 - **On-chain verifier** — `soroban-verifier-gen --curve bn254`, wrapped with a raw-bytes ABI + **anchored-policy binding + replay guard** + attestation event. `cargo test -p compliance_verifier` → **4/4**.
 - **Proving** — snarkjs Groth16 over the public Hermez powers-of-tau; off-chain `snarkjs verify` is the documented fallback.
 
-> **Honesty note & how it composes.** Prism's ZK hides the *compliance ledger* — storage and events carry only commitments and a proof, never plaintext amounts or payees. **Transfer-level privacy** (hiding the USDC movement at the token layer) is a *complementary* layer, and it's exactly what [OpenZeppelin + SDF's **Confidential Tokens**](https://github.com/OpenZeppelin/stellar-contracts/tree/feat/confidential-verifier-ultrahonk) deliver — SEP-41 balances as Grumpkin/Pedersen commitments with on-chain UltraHonk proofs. The two layers slot together cleanly: their token exposes a **`ComplianceHooks` (external policy)** extension point, and Prism's bounded policy (per-task / daily / whitelist) is precisely the policy that plugs into it — *confidential token + bounded-agent compliance*. So Prism proves **the agent obeyed policy** while a Confidential Token hides **the amounts**. For this demo, real fund movement is shown in the contrasting transparent "public mode"; pairing with a Confidential Token is the integration path (their preview is testnet-only / unaudited).
+> **Honesty note & how it composes.** Eunomia's ZK hides the *compliance ledger* — storage and events carry only commitments and a proof, never plaintext amounts or payees. **Transfer-level privacy** (hiding the USDC movement at the token layer) is a *complementary* layer, and it's exactly what [OpenZeppelin + SDF's **Confidential Tokens**](https://github.com/OpenZeppelin/stellar-contracts/tree/feat/confidential-verifier-ultrahonk) deliver — SEP-41 balances as Grumpkin/Pedersen commitments with on-chain UltraHonk proofs. The two layers slot together cleanly: their token exposes a **`ComplianceHooks` (external policy)** extension point, and Eunomia's bounded policy (per-task / daily / whitelist) is precisely the policy that plugs into it — *confidential token + bounded-agent compliance*. So Eunomia proves **the agent obeyed policy** while a Confidential Token hides **the amounts**. For this demo, real fund movement is shown in the contrasting transparent "public mode"; pairing with a Confidential Token is the integration path (their preview is testnet-only / unaudited).
 
 ## Trust, outcomes & x402
 
-Three upgrades take Prism from a walled garden to the open agent economy — each enforced by the same contract, all live on testnet ([proofs](DEPLOYMENT.md)).
+Three upgrades take Eunomia from a walled garden to the open agent economy — each enforced by the same contract, all live on testnet ([proofs](DEPLOYMENT.md)).
 
 - **Reputation-gated payees.** The payee gate is no longer a static whitelist: a payment clears if the payee is whitelisted **OR** its on-chain reputation ≥ a threshold the owner sets — so an agent can safely pay *new* counterparties it was never pre-approved for. Reputation is read cross-contract from an ERC-8004-style registry. [Live: a non-whitelisted reputable payee paid on-chain](https://stellar.expert/explorer/testnet/tx/8d62132f4940f71758a351e68c8a7fe0f24b14207abf8c9c3eed6b3842c215cb).
 - **Escrow (pay-on-delivery).** `create_escrow` locks funds for a payee against a task — reserved in the treasury, not moved. The owner `release`s them on approval (daily limit + accounting applied at the real outflow), or the agent `refund`s after a deadline (the lock returns to the free balance, nothing paid). [Live: release](https://stellar.expert/explorer/testnet/tx/df742d987d85efb517a164b68e36c9302c4daf623c15dcaf416c73cbb26f6c4b) · [refund](https://stellar.expert/explorer/testnet/tx/b545aeb489e8e36f73b195f299b5926f2387979cd71701bb428a8b099a718e46).
@@ -202,20 +204,20 @@ Every action is signed by your own wallet — non-custodial end to end. Feedback
 
 | Contract | Address |
 |---|---|
-| Prism Treasury | [`CAYWNXHA…SPAZ`](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) |
+| Eunomia Treasury | [`CAYWNXHA…SPAZ`](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) |
 | USDC (SAC) | [`CDCEHPK4…3Y2W`](https://stellar.expert/explorer/testnet/contract/CDCEHPK4OJXVRA4JV7N56GR5SRD5KGGZ55BDSHKODGR72Y4KGS6A3Y2W) |
 | Funding pool | [`GD2NZKSM…3427`](https://stellar.expert/explorer/testnet/contract/GD2NZKSMQW367OIFXRM4NP7RIW6YLDZLJ4C7253MDOKCFC4Q4IOO3427) |
 | ERC-8004 Identity Registry | [`CDE3K4CO…FIWZH`](https://stellar.expert/explorer/testnet/contract/CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH) — agent #1 registered |
 | **Treasury v2** (reputation + escrow) | [`CDKQGDPL…XT5H`](https://stellar.expert/explorer/testnet/contract/CDKQGDPLRX6DOCQTI5KVMZNGMPKMSRNGJRVCQ7LAAQGB2S5JKDCHXT5H) |
 | **Compliance Verifier** (ZK) | [`CCOLX7NE…DBRH`](https://stellar.expert/explorer/testnet/contract/CCOLX7NEBDJRRVTPFVSK3UJLHMG3HO4UVYJW3NFBOTUG7Q7GOP63DBRH) |
 | Reputation Oracle (8004 stand-in) | [`CCJFIEYF…INKY`](https://stellar.expert/explorer/testnet/contract/CCJFIEYFNPRTJVCOGOSESYC5Z6FHHHYAH36V7QTZEDPKESY6O5TPINKY) |
-| **Prism Policy** (OZ Confidential Token `ComplianceHooks`) | [`CBWMYGL7…BLQF`](https://stellar.expert/explorer/testnet/contract/CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF) — `is_authorized` live |
+| **Eunomia Policy** (OZ Confidential Token `ComplianceHooks`) | [`CBWMYGL7…BLQF`](https://stellar.expert/explorer/testnet/contract/CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF) — `is_authorized` live |
 
 The first treasury is the transparent "public mode" demo; **Treasury v2** adds the reputation gate + escrow. Full addresses + verified on-chain results: [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## Testers & traction
 
-Prism is used by people who are not us. Every treasury below was deployed by someone
+Eunomia is used by people who are not us. Every treasury below was deployed by someone
 connecting their own Stellar wallet on testnet — no seeded accounts, no scripted users.
 
 Counts below are what **testers** did — our own testing is excluded and shown separately,
@@ -263,7 +265,7 @@ treasury** (5), **confidential mode (ZK)** (4) and **x402 agentic payments** (2)
 | *"'how it works' isnt functioning"* | Landing anchors no longer swallowed by the hash router | [`cba88a4`](https://github.com/Bekirerdem/prism/commit/cba88a4) |
 | *"more agent action options"* · *"openclaw skills"* | On the roadmap → agent tooling / MCP + stellar-8004 ([`ROADMAP.md`](ROADMAP.md) M2/M4) | |
 
-**Tried Prism?** Tell us what to fix next: **[share feedback →](https://forms.gle/7gzJWwte52SmbXei7)**
+**Tried Eunomia?** Tell us what to fix next: **[share feedback →](https://forms.gle/7gzJWwte52SmbXei7)**
 
 ## Quickstart
 
@@ -330,7 +332,7 @@ docs/                           narrative + assets, design spec & plan
 
 ## Security
 
-- **Non-custodial** — funds never leave the owner's own contract; Prism cannot move funds outside the policy.
+- **Non-custodial** — funds never leave the owner's own contract; Eunomia cannot move funds outside the policy.
 - **Checks-effects-interactions** — accounting is written before the transfer, so a failed/reentrant transfer reverts the whole call atomically.
 - **No front-runnable init** — the policy is set atomically in the constructor at deploy time.
 - **Testnet-only key** — the demo's embedded agent key holds no real value, and a config guard blocks loading it on any non-testnet network.

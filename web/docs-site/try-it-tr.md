@@ -5,7 +5,7 @@
 Aşağıdaki akış tamamen **testnet** üzerindedir: gerçek para yok, riskiniz sıfır.
 Her adım kendi cüzdanınızla imzalanır — non-custodial, fonlar hep sizin kontrolünüzde.
 
-**Uygulama:** [prism-stellar.vercel.app](https://prism-stellar.vercel.app)
+**Uygulama:** [eunomia.finance](https://eunomia.finance)
 
 ## Telefondan bağlanma
 

@@ -107,7 +107,7 @@ export default function ActivityFeed({ filter }: { filter?: FeedFilter }) {
         </span>
       </div>
       <p style={{ color: "#A0A0B8", marginTop: 6, fontSize: 14 }}>
-        Every treasury action across Prism — full history, streamed live. On-chain events
+        Every treasury action across Eunomia — full history, streamed live. On-chain events
         from the demo treasury, the ZK verifier and your own treasury ride on top.
       </p>
 

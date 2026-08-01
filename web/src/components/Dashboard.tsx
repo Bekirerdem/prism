@@ -464,7 +464,7 @@ export default function Dashboard({ onHome }: { onHome: () => void }) {
             <path d="M16 3 L29 26 L3 26 Z" stroke="url(#fnav)" strokeWidth="1.6" fill="rgba(124,58,237,0.10)" />
             <defs><linearGradient id="fnav" x1="3" y1="26" x2="29" y2="3"><stop stopColor="#7C3AED" /><stop offset="0.5" stopColor="#4F46E5" /><stop offset="1" stopColor="#22D3EE" /></linearGradient></defs>
           </svg>
-          Prism <span className="dim" style={{ fontFamily: "var(--sans)", fontWeight: 400, fontSize: 13, marginLeft: 6 }}>Build On Stellar · IBW 2026</span>
+          Eunomia <span className="dim" style={{ fontFamily: "var(--sans)", fontWeight: 400, fontSize: 13, marginLeft: 6 }}>Build On Stellar · IBW 2026</span>
         </div>
         <div className="dim mono" style={{ fontSize: 12.5 }}>
           Non-custodial · {shortAddr(USDC_SAC)} · <a className="glow-link" href="https://github.com/Bekirerdem" target="_blank" rel="noreferrer">GitHub ↗</a>
