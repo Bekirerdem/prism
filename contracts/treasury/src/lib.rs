@@ -1,5 +1,5 @@
 #![no_std]
-//! Prism Agent Treasury
+//! Eunomia Agent Treasury
 //!
 //! A non-custodial treasury that lets a business delegate spending to an AI agent
 //! while the *contract* — not the model's good behaviour — enforces hard limits.
@@ -92,7 +92,7 @@ pub enum DataKey {
     Paused,
 }
 
-/// Minimal reputation-oracle interface PRISM reads to authorize a *non-whitelisted*
+/// Minimal reputation-oracle interface Eunomia reads to authorize a *non-whitelisted*
 /// payee by its earned trust. Targets an ERC-8004-style reputation registry
 /// (e.g. stellar-8004). `reputation_of` returns an opaque, monotonic score where
 /// a higher value means more trustworthy.

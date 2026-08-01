@@ -27,7 +27,7 @@ import {
   setLimits,
   setPaused,
   type Lifecycle,
-  type PrismState,
+  type EunomiaState,
 } from "../lib/userTreasury";
 import { SERVICE, shortAddr } from "../config";
 import { fundWithFriendbot, getXlmBalance } from "../lib/funding";
@@ -58,7 +58,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const [treasuryId, setTreasuryIdState] = useState<string | null>(
     () => (address ? getTreasuryId(address) : null),
   );
-  const [state, setState] = useState<PrismState | null>(null);
+  const [state, setState] = useState<EunomiaState | null>(null);
   const [lifecycle, setLifecycle] = useState<Lifecycle | null>(null);
   const [legacy, setLegacy] = useState(false);
   const [sessionSecret, setSessionSecret] = useState<string | null>(null);

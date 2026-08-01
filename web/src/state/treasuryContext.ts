@@ -1,7 +1,7 @@
 // Context + types live apart from the provider component (react-refresh rule: a file
 // exporting a component must export nothing else).
 import { createContext } from "react";
-import type { Lifecycle, PrismState } from "../lib/userTreasury";
+import type { Lifecycle, EunomiaState } from "../lib/userTreasury";
 import type { TreasuryRef } from "../lib/treasuryList";
 
 // One in-flight wallet action at a time (a wallet signs one tx at a time) — the key
@@ -34,7 +34,7 @@ export interface ActionOutcome {
 export interface TreasuryContextValue {
   address: string | null;
   treasuryId: string | null;
-  state: PrismState | null;
+  state: EunomiaState | null;
   lifecycle: Lifecycle | null;
   legacy: boolean;
   sessionActive: boolean;

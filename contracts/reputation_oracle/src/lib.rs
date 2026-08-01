@@ -1,6 +1,6 @@
 #![no_std]
 //! Minimal ERC-8004-style reputation registry — a stand-in for stellar-8004 that
-//! the Prism demo controls. Exposes the `reputation_of(agent) -> i128` interface the
+//! the Eunomia demo controls. Exposes the `reputation_of(agent) -> i128` interface the
 //! treasury's reputation gate reads. In production the score is earned from settled
 //! work (see the Casper trust layer); here the admin sets it for demonstration.
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};

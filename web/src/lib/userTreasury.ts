@@ -39,7 +39,7 @@ export function toStroops(xlm: number): bigint {
   return BigInt(Math.round(xlm * XLM_UNIT));
 }
 
-export interface PrismState {
+export interface EunomiaState {
   balance: bigint;
   daySpent: bigint;
   dailyLimit: bigint;
@@ -129,7 +129,7 @@ export async function fundTreasury(
   return sent.hash;
 }
 
-export async function readState(treasury: Client): Promise<PrismState> {
+export async function readState(treasury: Client): Promise<EunomiaState> {
   const [bal, cfg, day] = await Promise.all([
     treasury.balance(),
     treasury.get_config(),

@@ -1,5 +1,5 @@
 /* ============================================================================
-   PRISM — cinematic landing ("confidential treasury")
+   Eunomia — cinematic landing ("confidential treasury")
    SCOPED under .lx + .cine so it never collides with index.css (Dashboard/
    Wallet). All tokens are --lx-* to avoid touching the shared --accent token.
    Accent is a single token — change --lx-accent to re-skin the whole page.
@@ -129,7 +129,7 @@
 .lx .badge b{ color:var(--lx-text); font-weight:500; }
 .lx .badge .medal{ color:var(--lx-accent); }
 
-/* ---------- creed (the PRISM acronym) ---------- */
+/* ---------- creed (the Eunomia framework letters) ---------- */
 .lx .creed__grid{ display:grid; grid-template-columns:repeat(5,1fr); margin-top:56px; border-top:1px solid var(--lx-line2); }
 .lx .creed__cell{ padding:30px 26px 6px 0; }
 .lx .creed__cell + .creed__cell{ padding-left:26px; border-left:1px solid var(--lx-line); }

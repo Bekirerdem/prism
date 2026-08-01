@@ -79,7 +79,7 @@ npx playwright show-report
 The injection path lives in `src/lib/testSigner.ts`. It compiles in **only** when
 `VITE_ENABLE_TEST_SIGNER=true` (a compile-time `import.meta.env` flag — the dead
 branch gets tree-shaken out of production builds). At runtime it additionally
-requires the `window.__PRISM_TEST_SIGNER__` global that Playwright injects via
+requires the `window.__EUNOMIA_TEST_SIGNER__` global that Playwright injects via
 `addInitScript` — even if the flag accidentally ships, the code is a no-op
 without the global.
 

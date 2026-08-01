@@ -97,7 +97,7 @@ StellarWalletsKit.init({
   modules,
 });
 
-// Theme the wallet-select modal to match Prism — dark surface + Stellar-yellow accent.
+// Theme the wallet-select modal to match Eunomia — dark surface + Stellar-yellow accent.
 StellarWalletsKit.setTheme({
   background: "#0b0b10",
   "background-secondary": "#131319",

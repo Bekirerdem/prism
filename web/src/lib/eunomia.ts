@@ -26,10 +26,10 @@ const treasury = new Client({
 
 // One shape across the demo (this file) and the per-user product (userTreasury.ts) —
 // re-exported here so Dashboard's imports keep working from a single definition.
-export type { PayResult, PrismState } from "./userTreasury";
-import type { PayResult, PrismState } from "./userTreasury";
+export type { PayResult, EunomiaState } from "./userTreasury";
+import type { PayResult, EunomiaState } from "./userTreasury";
 
-export async function readState(): Promise<PrismState> {
+export async function readState(): Promise<EunomiaState> {
   const [bal, cfg, day] = await Promise.all([
     treasury.balance(),
     treasury.get_config(),

@@ -8,8 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, animate, useMotionValue, useMotionValueEvent } from "framer-motion";
 import FundingRail from "./FundingRail";
 import {
-  readState, readTaskSpent, agentPay, type PrismState, type PayResult,
-} from "../lib/prism";
+  readState, readTaskSpent, agentPay, type EunomiaState, type PayResult,
+} from "../lib/eunomia";
 import {
   TASKS, ROGUE, fmtUSDC, shortAddr, txUrl, contractUrl,
   TREASURY_ID, USDC_SAC, AGENT_PK, REG_IDENTITY, AGENT_8004_ID,
@@ -40,7 +40,7 @@ function useCountUp(target: number, ms = 700) {
 const usd = (stroops: bigint) => Number(stroops) / 1e7;
 
 export default function Dashboard({ onHome }: { onHome: () => void }) {
-  const [state, setState] = useState<PrismState | null>(null);
+  const [state, setState] = useState<EunomiaState | null>(null);
   const [spent, setSpent] = useState<Record<string, bigint>>({});
   const [baseline, setBaseline] = useState<Record<string, bigint> | null>(null);
   const baselineCaptured = useRef(false);

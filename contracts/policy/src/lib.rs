@@ -1,11 +1,11 @@
 #![no_std]
-//! Prism Compliance Policy
+//! Eunomia Compliance Policy
 //!
 //! A `Policy` for OpenZeppelin's Confidential Token `ComplianceHooks` (external
 //! authorization). Wired as the confidential token's `compliance.policy`, it gates
-//! every confidential transfer behind Prism's payee rule — **whitelist OR earned
-//! reputation** — the exact gate the Prism treasury enforces, now applied where the
-//! *amount is hidden*. The Confidential Token hides the amount; Prism bounds the payee.
+//! every confidential transfer behind Eunomia's payee rule — **whitelist OR earned
+//! reputation** — the exact gate the Eunomia treasury enforces, now applied where the
+//! *amount is hidden*. The Confidential Token hides the amount; Eunomia bounds the payee.
 //!
 //! See OpenZeppelin Confidential Token `compliance::Policy`:
 //!   `fn is_authorized(e, account, token) -> bool`
@@ -21,7 +21,7 @@ pub enum DataKey {
     MinReputation,
 }
 
-/// ERC-8004-style reputation registry Prism reads to authorize a *non-whitelisted*
+/// ERC-8004-style reputation registry Eunomia reads to authorize a *non-whitelisted*
 /// payee by earned trust (the same interface the treasury uses).
 #[contractclient(name = "ReputationClient")]
 pub trait ReputationOracle {
@@ -29,10 +29,10 @@ pub trait ReputationOracle {
 }
 
 #[contract]
-pub struct PrismPolicy;
+pub struct EunomiaPolicy;
 
 #[contractimpl]
-impl PrismPolicy {
+impl EunomiaPolicy {
     /// Atomic init at deploy (no front-runnable `initialize`).
     pub fn __constructor(env: Env, admin: Address) {
         env.storage().instance().set(&DataKey::Admin, &admin);
@@ -91,7 +91,7 @@ impl PrismPolicy {
 }
 
 // Non-exported helper (separate impl block — not part of the ABI).
-impl PrismPolicy {
+impl EunomiaPolicy {
     fn admin(env: &Env) -> Address {
         env.storage().instance().get(&DataKey::Admin).unwrap()
     }

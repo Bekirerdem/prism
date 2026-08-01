@@ -24,8 +24,8 @@ export async function injectTestSigner(
   await context.addInitScript(
     ({ secretKey }) => {
       (
-        window as unknown as { __PRISM_TEST_SIGNER__?: { secretKey: string } }
-      ).__PRISM_TEST_SIGNER__ = {
+        window as unknown as { __EUNOMIA_TEST_SIGNER__?: { secretKey: string } }
+      ).__EUNOMIA_TEST_SIGNER__ = {
         secretKey,
       };
     },

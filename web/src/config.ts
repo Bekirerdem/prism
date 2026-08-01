@@ -1,4 +1,4 @@
-// Prism — testnet configuration. All values are public testnet artifacts.
+// Eunomia — testnet configuration. All values are public testnet artifacts.
 // The agent secret is a TESTNET-only key with no real value; embedding it lets the
 // dashboard demonstrate an *autonomous* agent that signs its own payments (no wallet
 // popup) — the whole point is that the contract, not a human click, is the safety.
@@ -38,7 +38,7 @@ export const ATTACKER = "GAKSMBN6TRMF4M4PL3FJSDMQRD6XBQCJFLECLYTNAXZYMRIWXT6ADYT
 // attribute incoming deposits to individual agent budgets (no memos, no new accounts).
 export const POOL_PK = "GD2NZKSMQW367OIFXRM4NP7RIW6YLDZLJ4C7253MDOKCFC4Q4IOO3427";
 
-// Prism Treasury Registry — permissionless wallet → treasury discovery index,
+// Eunomia Treasury Registry — permissionless wallet → treasury discovery index,
 // used for cross-device recovery of per-user treasuries (M2).
 export const REGISTRY_ID = "CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7";
 

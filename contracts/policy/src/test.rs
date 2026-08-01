@@ -1,13 +1,13 @@
 #![cfg(test)]
-use crate::{PrismPolicy, PrismPolicyClient};
+use crate::{EunomiaPolicy, EunomiaPolicyClient};
 use soroban_sdk::{contract, contractimpl, testutils::Address as _, Address, Env};
 
-fn setup() -> (Env, PrismPolicyClient<'static>) {
+fn setup() -> (Env, EunomiaPolicyClient<'static>) {
     let env = Env::default();
     env.mock_all_auths();
     let admin = Address::generate(&env);
-    let id = env.register(PrismPolicy, (admin,));
-    (env.clone(), PrismPolicyClient::new(&env, &id))
+    let id = env.register(EunomiaPolicy, (admin,));
+    (env.clone(), EunomiaPolicyClient::new(&env, &id))
 }
 
 #[test]

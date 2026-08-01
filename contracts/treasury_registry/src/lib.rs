@@ -1,5 +1,5 @@
 #![no_std]
-//! Prism Treasury Registry — a permissionless on-chain index of "which treasuries
+//! Eunomia Treasury Registry — a permissionless on-chain index of "which treasuries
 //! does this wallet own?", so a user can recover their treasury from any device
 //! instead of relying on one browser's localStorage.
 //!

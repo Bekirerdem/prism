@@ -4,7 +4,7 @@ import {
   injectTestSigner,
   PrismPage,
   expect,
-} from "./prismTest";
+} from "./eunomiaTest";
 import { SERVICE } from "../../src/config";
 
 const test = base.extend<{

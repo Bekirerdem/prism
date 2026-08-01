@@ -15,7 +15,7 @@ vi.mock("./treasuryClient", () => ({
   },
 }));
 
-import { agentPay, isTransient } from "./prism";
+import { agentPay, isTransient } from "./eunomia";
 
 const okTx = (hash: string) => ({
   signAndSend: async () => ({ sendTransactionResponse: { hash } }),
