@@ -13,6 +13,7 @@ import {
 import { Client, type Session } from "./treasuryClient";
 import { contractErr, errText } from "./wallet-errors";
 import type { ContractSigner } from "./walletSigner";
+import type { SubmittableTx, TxExecutor } from "./executor";
 import { NETWORK_PASSPHRASE, RPC_URL } from "../config";
 
 // Native XLM SAC on testnet — the token each user treasury holds and spends.
@@ -59,28 +60,41 @@ export interface PayResult {
   transient?: boolean;
 }
 
-/** A treasury Client bound to a runtime contract id + the connected wallet as signer. */
-export function makeTreasury(contractId: string, address: string, signer: ContractSigner): Client {
-  return new Client({
-    contractId,
-    networkPassphrase: NETWORK_PASSPHRASE,
-    rpcUrl: RPC_URL,
-    publicKey: address,
-    signTransaction: signer.signTransaction,
-  });
+/** A treasury Client plus the executor that submits for it.
+ *
+ *  Building the transaction and submitting it are separate concerns now: a wallet session
+ *  submits over the contract client's own RPC, a passkey session signs with the smart wallet
+ *  and hands the result to the relay. Carrying the executor alongside the client keeps every
+ *  operation below indifferent to which one is in play. */
+export interface Treasury {
+  client: Client;
+  submit: (tx: SubmittableTx) => Promise<{ hash?: string }>;
+}
+
+/** A treasury bound to a runtime contract id + the session that owns it. */
+export function makeTreasury(contractId: string, executor: TxExecutor): Treasury {
+  return {
+    client: new Client({
+      contractId,
+      networkPassphrase: NETWORK_PASSPHRASE,
+      rpcUrl: RPC_URL,
+      publicKey: executor.address,
+      signTransaction: executor.signer.signTransaction,
+    }),
+    submit: executor.submit,
+  };
 }
 
 /** Deploy a fresh treasury owned by `address` (admin = agent = the wallet). Returns its id. */
 export async function deployTreasury(
-  address: string,
-  signer: ContractSigner,
+  executor: TxExecutor,
   dailyXlm: number,
   perTaskXlm: number,
 ): Promise<string> {
   const tx = await Client.deploy(
     {
-      admin: address,
-      agent: address,
+      admin: executor.address,
+      agent: executor.address,
       token: XLM_SAC,
       daily_limit: toStroops(dailyXlm),
       per_task_limit: toStroops(perTaskXlm),
@@ -89,12 +103,14 @@ export async function deployTreasury(
       wasmHash: TREASURY_WASM_HASH,
       networkPassphrase: NETWORK_PASSPHRASE,
       rpcUrl: RPC_URL,
-      publicKey: address,
-      signTransaction: signer.signTransaction,
+      publicKey: executor.address,
+      signTransaction: executor.signer.signTransaction,
     },
   );
-  const { result } = await tx.signAndSend();
-  return result.options.contractId;
+  // The deployed id is known from the assembled transaction, so it survives either submit path.
+  const contractId = tx.result.options.contractId;
+  await executor.submit(tx);
+  return contractId;
 }
 
 /** Fund a treasury by transferring native XLM from the wallet into the treasury contract
@@ -129,11 +145,11 @@ export async function fundTreasury(
   return sent.hash;
 }
 
-export async function readState(treasury: Client): Promise<EunomiaState> {
+export async function readState(t: Treasury): Promise<EunomiaState> {
   const [bal, cfg, day] = await Promise.all([
-    treasury.balance(),
-    treasury.get_config(),
-    treasury.day_spent(),
+    t.client.balance(),
+    t.client.get_config(),
+    t.client.day_spent(),
   ]);
   const c = cfg.result;
   return {
@@ -149,32 +165,28 @@ export async function readState(treasury: Client): Promise<EunomiaState> {
 
 /** Read-only whitelist probe (simulation, no signature) — the chain-truth behind the
  *  "verified" badge on the derived payee list. */
-export async function isPayee(treasury: Client, payee: string): Promise<boolean> {
-  const tx = await treasury.is_payee({ payee });
+export async function isPayee(t: Treasury, payee: string): Promise<boolean> {
+  const tx = await t.client.is_payee({ payee });
   return tx.result;
 }
 
-export async function addPayee(treasury: Client, payee: string): Promise<void> {
-  const tx = await treasury.add_payee({ payee });
-  await tx.signAndSend();
+export async function addPayee(t: Treasury, payee: string): Promise<void> {
+  await t.submit(await t.client.add_payee({ payee }));
 }
 
-export async function removePayee(treasury: Client, payee: string): Promise<void> {
-  const tx = await treasury.remove_payee({ payee });
-  await tx.signAndSend();
+export async function removePayee(t: Treasury, payee: string): Promise<void> {
+  await t.submit(await t.client.remove_payee({ payee }));
 }
 
 /** Build → sign → send a contract tx, mapping on-chain guardrail rejections
  *  to friendly messages. Shared by every state-changing treasury call. */
 async function sendTx(
-  build: () => Promise<{ signAndSend: () => Promise<unknown> }>,
+  build: () => Promise<SubmittableTx>,
   failMsg: string,
+  submit: (tx: SubmittableTx) => Promise<{ hash?: string }>,
 ): Promise<PayResult> {
   try {
-    const tx = await build();
-    const sent = await tx.signAndSend();
-    const hash = (sent as { sendTransactionResponse?: { hash?: string } }).sendTransactionResponse
-      ?.hash;
+    const { hash } = await submit(await build());
     return { ok: true, hash };
   } catch (e) {
     const msg = errText(e);
@@ -187,14 +199,15 @@ async function sendTx(
 /** Spend from the treasury. The contract enforces the policy and rejects violations
  *  on-chain — those rejections are the product working, surfaced as messages. */
 export async function pay(
-  treasury: Client,
+  t: Treasury,
   taskId: bigint,
   to: string,
   amountXlm: number,
 ): Promise<PayResult> {
   return sendTx(
-    () => treasury.pay({ task_id: taskId, to, amount: toStroops(amountXlm) }),
+    () => t.client.pay({ task_id: taskId, to, amount: toStroops(amountXlm) }),
     "Payment failed.",
+    t.submit,
   );
 }
 
@@ -207,9 +220,9 @@ export interface Lifecycle {
 
 /** The v3 lifecycle state (pause flag + agent session). Returns null on a pre-M2
  *  treasury — callers treat null as "legacy: hide the session/lifecycle sections". */
-export async function readLifecycle(treasury: Client): Promise<Lifecycle | null> {
+export async function readLifecycle(t: Treasury): Promise<Lifecycle | null> {
   try {
-    const [paused, session] = await Promise.all([treasury.is_paused(), treasury.get_session()]);
+    const [paused, session] = await Promise.all([t.client.is_paused(), t.client.get_session()]);
     return { paused: paused.result, session: session.result ?? null };
   } catch {
     return null;
@@ -217,53 +230,56 @@ export async function readLifecycle(treasury: Client): Promise<Lifecycle | null>
 }
 
 /** Freeze/unfreeze spending (owner-signed). Exit paths keep working while paused. */
-export async function setPaused(treasury: Client, paused: boolean): Promise<PayResult> {
-  return sendTx(() => treasury.set_paused({ paused }), "Pause toggle failed.");
+export async function setPaused(t: Treasury, paused: boolean): Promise<PayResult> {
+  return sendTx(() => t.client.set_paused({ paused }), "Pause toggle failed.", t.submit);
 }
 
 /** Owner reclaims free (unlocked) funds — exempt from pause, limits, and the whitelist. */
 export async function adminWithdraw(
-  treasury: Client,
+  t: Treasury,
   to: string,
   amountXlm: number,
 ): Promise<PayResult> {
   return sendTx(
-    () => treasury.admin_withdraw({ to, amount: toStroops(amountXlm) }),
+    () => t.client.admin_withdraw({ to, amount: toStroops(amountXlm) }),
     "Withdraw failed.",
+    t.submit,
   );
 }
 
 /** Update the spending limits, effective immediately (owner-signed). */
 export async function setLimits(
-  treasury: Client,
+  t: Treasury,
   dailyXlm: number,
   perTaskXlm: number,
 ): Promise<PayResult> {
   return sendTx(
     () =>
-      treasury.set_limits({
+      t.client.set_limits({
         daily_limit: toStroops(dailyXlm),
         per_task_limit: toStroops(perTaskXlm),
       }),
     "Limit update failed.",
+    t.submit,
   );
 }
 
 /** Register a session agent (owner-signed). While active it is the treasury's
  *  ONLY spender — time-bound, spend-capped, instantly revocable. */
 export async function setSession(
-  treasury: Client,
+  t: Treasury,
   agent: string,
   validUntil: bigint,
   capXlm: number,
 ): Promise<PayResult> {
   return sendTx(
-    () => treasury.set_session({ agent, valid_until: validUntil, limit: toStroops(capXlm) }),
+    () => t.client.set_session({ agent, valid_until: validUntil, limit: toStroops(capXlm) }),
     "Session start failed.",
+    t.submit,
   );
 }
 
 /** Instantly revoke the session (owner-signed) — spending falls back to the wallet. */
-export async function revokeSession(treasury: Client): Promise<PayResult> {
-  return sendTx(() => treasury.revoke_session(), "Session revoke failed.");
+export async function revokeSession(t: Treasury): Promise<PayResult> {
+  return sendTx(() => t.client.revoke_session(), "Session revoke failed.", t.submit);
 }

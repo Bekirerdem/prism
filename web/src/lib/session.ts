@@ -12,7 +12,9 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { basicNodeSigner } from "@stellar/stellar-sdk/contract";
 import { NETWORK_PASSPHRASE } from "../config";
 import { fundWithFriendbot } from "./funding";
-import type { Client, Session } from "./treasuryClient";
+import type { Session } from "./treasuryClient";
+import type { Treasury } from "./userTreasury";
+import { makeWalletExecutor } from "./executor";
 import { makeTreasury, pay, setSession, type PayResult } from "./userTreasury";
 import type { ContractSigner } from "./walletSigner";
 
@@ -66,7 +68,7 @@ export function sessionSigner(secret: string): { publicKey: string; signer: Cont
  *  on-chain registration succeeds — even if funding then fails, the session is
  *  live on-chain (single-spender), so the key must not be lost. */
 export async function createSession(
-  walletTreasury: Client,
+  walletTreasury: Treasury,
   treasuryId: string,
   capXlm: number,
   durationHours: number,
@@ -116,6 +118,8 @@ export async function sessionPay(
       errorMessage: "This device's session key is invalid — revoke the session and start a new one.",
     };
   }
-  const t = makeTreasury(treasuryId, publicKey, signer);
+  // The session key signs and submits over RPC exactly like a wallet would — it is a plain
+  // Ed25519 credential, not a smart wallet, so the relay is not involved here.
+  const t = makeTreasury(treasuryId, makeWalletExecutor(publicKey, signer));
   return pay(t, taskId, to, amountXlm);
 }

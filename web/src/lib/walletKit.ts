@@ -23,6 +23,9 @@ import { currentDevice, logFunnel } from "./funnel";
 import { errText } from "./wallet-errors";
 import { sortWalletsForDevice } from "./walletDevice";
 import { testSignerAvailable, getTestSigner } from "./testSigner";
+import { makePasskeyWallet, realPasskeyBackend } from "./passkey";
+import { makePasskeyExecutor, makeWalletExecutor, type TxExecutor } from "./executor";
+import { relayEnvelope, relayTx, type AssembledLike, type FetchLike } from "./relayer";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
 // over WalletConnect v2 — so without this module a mobile visitor with the wallet installed
@@ -122,6 +125,8 @@ export { StellarWalletsKit as kit };
 
 const ADDR_KEY = "prism_wallet_address";
 const WALLET_ID_KEY = "prism_wallet_id";
+/** Marks a session as belonging to a passkey smart wallet rather than a browser wallet. */
+const PASSKEY_ID = "passkey";
 let connectedAddress: string | null =
   typeof sessionStorage !== "undefined"
     ? sessionStorage.getItem(ADDR_KEY)
@@ -228,6 +233,64 @@ export async function disconnect(): Promise<void> {
   sessionStorage.removeItem(ADDR_KEY);
   sessionStorage.removeItem(WALLET_ID_KEY);
   notifyAddress();
+}
+
+/** Register a passkey (or reconnect one) and adopt the resulting smart wallet as the session.
+ *
+ *  Same funnel contract as connect(), tagged `passkey`, so the two entry paths are directly
+ *  comparable in funnel_events. Creating a wallet also deploys it — that deploy transaction
+ *  comes back signed and is submitted through the relay, so the user never needs XLM. */
+export async function connectPasskey(
+  mode: "create" | "connect",
+  userLabel = "Eunomia user",
+): Promise<string> {
+  logFunnel({ event: "connect_click", walletId: PASSKEY_ID });
+  try {
+    const wallet = makePasskeyWallet(await realPasskeyBackend(), "Eunomia");
+
+    let contractId: string;
+    if (mode === "create") {
+      const created = await wallet.create(userLabel);
+      contractId = created.contractId;
+      await relayEnvelope(fetch as unknown as FetchLike, created.signedTx);
+    } else {
+      contractId = await wallet.connect();
+    }
+
+    connectedAddress = contractId;
+    sessionStorage.setItem(ADDR_KEY, contractId);
+    sessionStorage.setItem(WALLET_ID_KEY, PASSKEY_ID);
+    notifyAddress();
+    logFunnel({ event: "connect_result", outcome: "success", walletId: PASSKEY_ID });
+    return contractId;
+  } catch (e) {
+    logFunnel({
+      event: "connect_result",
+      outcome: "error",
+      walletId: PASSKEY_ID,
+      detail: errText(e),
+    });
+    throw e;
+  }
+}
+
+/** Whether the current session came in through a passkey rather than a wallet. */
+export function isPasskeySession(): boolean {
+  return typeof sessionStorage !== "undefined" && sessionStorage.getItem(WALLET_ID_KEY) === PASSKEY_ID;
+}
+
+/** The executor for the current session: wallet sessions submit over RPC as they always have,
+ *  passkey sessions sign with the smart wallet and submit through the relay. */
+export async function executorFor(address: string): Promise<TxExecutor> {
+  if (isPasskeySession()) {
+    const wallet = makePasskeyWallet(await realPasskeyBackend(), "Eunomia");
+    // `built` is opaque to the executor and structural to the relay; decode() validates it
+    // at runtime and throws a user-facing message if the transaction was never assembled.
+    return makePasskeyExecutor(address, wallet, (tx) =>
+      relayTx(fetch as unknown as FetchLike, tx as AssembledLike),
+    );
+  }
+  return makeWalletExecutor(address, walletSignerFor(address));
 }
 
 /** A contract-client `signTransaction` bound to the connected wallet. A session the wallet

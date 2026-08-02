@@ -37,17 +37,11 @@ function decode(tx: AssembledLike): { func: string; auth: string[] } {
   };
 }
 
-/** Submit a passkey-signed transaction through our relay proxy. */
-export async function relayTx(
-  fetchImpl: FetchLike,
-  tx: AssembledLike,
-): Promise<{ hash?: string }> {
-  const { func, auth } = decode(tx);
-
+async function post(fetchImpl: FetchLike, payload: unknown): Promise<{ hash?: string }> {
   const res = await fetchImpl("/api/relay", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ func, auth }),
+    body: JSON.stringify(payload),
   });
 
   const body = (await res.json().catch(() => ({}))) as { hash?: string; error?: string };
@@ -56,4 +50,18 @@ export async function relayTx(
     throw new Error(body.error === "FEE_LIMIT_EXCEEDED" ? RELAY_QUOTA_MSG : GENERIC_MSG);
   }
   return { hash: body.hash };
+}
+
+/** Submit a passkey-signed transaction through our relay proxy. */
+export async function relayTx(fetchImpl: FetchLike, tx: AssembledLike): Promise<{ hash?: string }> {
+  return post(fetchImpl, decode(tx));
+}
+
+/** Submit an already-signed transaction envelope — what passkey-kit hands back when it
+ *  registers a passkey and deploys the smart wallet. */
+export async function relayEnvelope(
+  fetchImpl: FetchLike,
+  xdr: string,
+): Promise<{ hash?: string }> {
+  return post(fetchImpl, { xdr });
 }

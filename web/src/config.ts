@@ -42,6 +42,18 @@ export const POOL_PK = "GD2NZKSMQW367OIFXRM4NP7RIW6YLDZLJ4C7253MDOKCFC4Q4IOO3427
 // used for cross-device recovery of per-user treasuries (M2).
 export const REGISTRY_ID = "CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7";
 
+// --- Passkey (smart wallet) --------------------------------------------------------
+// The smart-wallet WASM passkey-kit deploys for each new passkey user.
+export const WALLET_WASM_HASH =
+  "fdefad64b96837147e1c333e51f537b696eab925e9f147e63d597c04e3c903f0";
+// WebAuthn Relying Party id. A passkey is bound to this domain: change it and every passkey
+// created before the change stops resolving. Left undefined in dev so the kit falls back to
+// the current origin (localhost), which is the only value that works there.
+// Read defensively: this module is also loaded outside Vite (Playwright config), where
+// import.meta.env does not exist at all.
+const IS_PROD = (import.meta as { env?: { PROD?: boolean } }).env?.PROD === true;
+export const RP_ID: string | undefined = IS_PROD ? "eunomia.finance" : undefined;
+
 // 8004 (trionlabs/stellar-8004) testnet registries — the agent trust layer.
 export const REG_IDENTITY = "CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH";
 export const REG_REPUTATION = "CBZEAGIEI3HXMDRLF44KLQJQQOH6LCYWWSGJVSYQYQO2HQ6DDGZ7HT55";

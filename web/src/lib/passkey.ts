@@ -39,6 +39,29 @@ function humanise(e: unknown): Error {
   return new Error(GENERIC);
 }
 
+/** The only place that touches passkey-kit directly. If the kit's signatures shift, this
+ *  function is the single thing that changes — nothing else in the app knows about it. */
+export async function realPasskeyBackend(): Promise<PasskeyBackend> {
+  const { PasskeyKit } = await import("passkey-kit");
+  const { RPC_URL, NETWORK_PASSPHRASE, WALLET_WASM_HASH, RP_ID } = await import("../config");
+
+  const kit = new PasskeyKit({
+    rpcUrl: RPC_URL,
+    networkPassphrase: NETWORK_PASSPHRASE,
+    walletWasmHash: WALLET_WASM_HASH,
+    ...(RP_ID ? { rpId: RP_ID } : {}),
+  });
+
+  return {
+    createWallet: async (app, user) => {
+      const { contractId, signedTx } = await kit.createWallet(app, user);
+      return { contractId, signedTx };
+    },
+    connectWallet: async () => ({ contractId: (await kit.connectWallet()).contractId }),
+    sign: (tx) => kit.sign(tx as never) as never,
+  };
+}
+
 export function makePasskeyWallet(backend: PasskeyBackend, app: string): PasskeyWallet {
   return {
     async create(user) {
