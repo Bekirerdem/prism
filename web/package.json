@@ -22,6 +22,7 @@
     "@supabase/supabase-js": "^2.108.2",
     "buffer": "^6.0.3",
     "framer-motion": "^12.40.0",
+    "passkey-kit": "^0.14.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
