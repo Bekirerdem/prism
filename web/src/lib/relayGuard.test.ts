@@ -17,7 +17,7 @@ describe("isAllowedContract", () => {
   it("rejects empty or malformed input rather than passing it through", () => {
     expect(isAllowedContract("", ALLOW)).toBe(false);
     expect(isAllowedContract("not-a-contract", ALLOW)).toBe(false);
-    // A G-address is a valid StrKey but not a contract — the relay only ever calls contracts.
+    // An account address, not a contract — the relay only ever calls contracts.
     expect(isAllowedContract("GBGHXQXR7BQZMZ3EPWXVMBNVFHXHVZQJPVWQGCTLPXQHRTFHXQXR7BQZ", ALLOW)).toBe(false);
   });
 
