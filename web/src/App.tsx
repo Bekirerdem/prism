@@ -84,12 +84,7 @@ export default function App() {
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.4, ease: [0.2, 0.7, 0.3, 1] }}
           >
-            <Landing
-              onLaunch={() => go("dashboard")}
-              onWallet={() => go("wallet")}
-              onActivity={() => go("activity")}
-              onWorkspace={() => go("overview")}
-            />
+            <Landing onEnter={() => go("overview")} onWallet={() => go("wallet")} />
           </motion.div>
         ) : (
           // One key for the whole app — the shell persists across page switches; only
