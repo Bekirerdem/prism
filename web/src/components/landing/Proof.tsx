@@ -12,7 +12,7 @@ export default function Proof() {
   return (
     <section className="lp__section lp__divide">
       <div className="lp__in">
-        <h2 className="lp__reveal">It went out of policy. The chain refused.</h2>
+        <h2 className="lp__reveal--head">It went out of policy. The chain refused.</h2>
         <p className="lp__lede lp__reveal">
           Not a promise — a record. {TRACTION.blocked} spend attempts stopped by the contract so
           far, each one visible to anyone who wants to check.

@@ -67,7 +67,25 @@
   margin-bottom: 32px;
 }
 
-.lp__mark { background: var(--green); color: #223e05; padding: 0 0.12em; border-radius: 3px; }
+/* Word masks — the hero mechanic from animmaster `hero-1`: each word rides up out of an
+ * overflow box, staggered. Markup-level split so text stays selectable without JS. */
+.lp__mask { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.lp__word { display: inline-block; }
+
+/* The highlight is a wipe, not a static fill: the green block grows left-to-right under the
+ * word while the word itself is already in place. */
+.lp__mark { position: relative; color: #223e05; padding: 0 0.12em; }
+.lp__mark-fill {
+  position: absolute;
+  left: 0;
+  top: 0.06em;
+  bottom: 0.04em;
+  width: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  z-index: -1;
+  transform-origin: left center;
+}
 .lp__rule { height: 3px; width: 64px; background: var(--green); border-radius: 99px; margin-bottom: 26px; }
 
 /* Primary is green fill with ink text — never white on green (1.89:1). */
@@ -190,10 +208,17 @@
 
 /* ---- reveal ------------------------------------------------------------- */
 
-/* Gated on a class, not a media query. The class ships with the first render (so there is no
- * flash of visible-then-hidden), and useReveal removes it if motion is off or if the animation
- * libraries fail to load — otherwise a failed import would leave the page permanently blank. */
-.lp--pending .lp__reveal { opacity: 0; transform: translateY(18px); }
+/* Only the hero is pre-hidden, because it is above the fold and would otherwise flash into
+ * view before GSAP takes over. Everything below animates with `from`, so it stays visible in
+ * CSS — if the libraries never load, the page simply renders without motion.
+ *
+ * The class ships with the first render and useReveal removes it once GSAP has taken hold (or
+ * immediately, under reduced motion or a failed import). */
+.lp--pending .lp__hero .lp__word { transform: translateY(110%); }
+.lp--pending .lp__hero .lp__lede,
+.lp--pending .lp__hero .lp__actions,
+.lp--pending .lp__hero .lp__counter { opacity: 0; }
+.lp--pending .lp__hero .lp__mark-fill { transform: scaleX(0); }
 
 @media (max-width: 720px) {
   .lp__section { padding: 60px 20px; }

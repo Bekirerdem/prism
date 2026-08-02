@@ -23,7 +23,7 @@ export default function HowItWorks() {
   return (
     <section className="lp__section lp__divide">
       <div className="lp__in">
-        <h2 className="lp__reveal">How it works</h2>
+        <h2 className="lp__reveal--head">How it works</h2>
         <p className="lp__lede lp__reveal">
           Three things you do once. After that the contract does the watching.
         </p>
