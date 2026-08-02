@@ -110,8 +110,30 @@ Kalan iki gerçek risk: (a) `@stellar/stellar-sdk/contract` Client API'si deği�
 gerekebilir), (b) ESM/native fetch geçişinin Vite bundle'ında `polyfills.ts` Buffer shim'iyle
 davranışı.
 
-`packages/prover` kendi eski SDK'sında kalır — izole, passkey yolunu etkilemez. Monorepo'da iki
-sürüm bulunması **bilinçli**; ZK tarafını bu işe karıştırmak kapsamı şişirir.
+### Bump'ın gerçek yüzeyi: `web/` + iki client paketi
+
+Binding'ler `packages/treasury-client` ve `packages/registry-client`'ta üretilip
+`web/src/lib/`'e **byte-identical** kopyalanıyor; CI bunu zorluyor:
+
+```
+cmp packages/treasury-client/src/index.ts web/src/lib/treasuryClient.ts
+cmp packages/registry-client/src/index.ts web/src/lib/registryClient.ts
+```
+
+İkisi de `@stellar/stellar-sdk ^14.5.0`. Web 16'ya geçip binding'ler yeniden üretilince **bu iki
+paket de bump edilmezse CI kırılır.** Bump kapsamı: `web/` + `treasury-client` + `registry-client`.
+
+Root `package.json` yok — bunlar npm workspace değil, her paket kendi `node_modules`'ına sahip.
+Yani bump paket paket yapılabilir, çakışma riski yok.
+
+### `packages/prover` ve `packages/x402` — kapsam dışı
+
+`prover` `@stellar/stellar-sdk`'yı **hiç import etmiyor** (5 dosya/143 satır; `encode.ts`'te
+yalnızca yorum, `submit.ts` `stellar` CLI'ını child process olarak sarmalıyor). `package.json`'daki
+`^14.6.1` **kullanılmayan bağımlılık** → monorepo'daki "iki SDK sürümü" meselesi kâğıt üstünde,
+kodda karşılığı yok. Temizliği opsiyonel madde olarak planda; ZK tarafına dokunmayı gerektirmiyor.
+
+`x402`'nin SDK bağımlılığı zaten yok.
 
 **Neden ayrı adım:** doğrulama kapısı güçlü (183 vitest + lint + tsc + build + gerçek testnet
 E2E smoke). Bump tek başına bu kapıdan geçerse, sonraki hatanın suçlusu tartışmasız passkey olur.
