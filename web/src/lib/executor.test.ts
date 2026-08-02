@@ -51,10 +51,10 @@ describe("makePasskeyExecutor", () => {
     const relay = vi.fn().mockResolvedValue({ hash: "relayed1" });
     const ex = makePasskeyExecutor(C, w, relay);
 
-    await expect(ex.submit({ signAndSend, id: 7 })).resolves.toEqual({ hash: "relayed1" });
+    await expect(ex.submit({ signAndSend, built: { operations: [] } })).resolves.toEqual({ hash: "relayed1" });
 
-    expect(w.sign).toHaveBeenCalledWith({ signAndSend, id: 7 });
-    expect(relay).toHaveBeenCalledWith({ signAndSend, id: 7, signed: true });
+    expect(w.sign).toHaveBeenCalledWith({ signAndSend, built: { operations: [] } });
+    expect(relay).toHaveBeenCalledWith({ signAndSend, built: { operations: [] }, signed: true });
     // The passkey wallet has no XLM of its own — going to RPC would fail on fees.
     expect(signAndSend).not.toHaveBeenCalled();
   });

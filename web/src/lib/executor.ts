@@ -11,9 +11,11 @@
 import type { ContractSigner } from "./walletSigner";
 import type { PasskeyWallet } from "./passkey";
 
-/** The shape every contract-client transaction shares — enough to submit it. */
+/** The shape every contract-client transaction shares — enough to submit it either way.
+ *  `built` is the assembled envelope the relay path reads its host function out of. */
 export interface SubmittableTx {
   signAndSend: () => Promise<unknown>;
+  built?: unknown;
 }
 
 export interface TxExecutor {
