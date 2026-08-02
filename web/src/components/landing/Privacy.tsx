@@ -7,7 +7,7 @@ export default function Privacy() {
   return (
     <section className="lp__section lp__divide">
       <div className="lp__in">
-        <h2 className="lp__reveal">Prove you followed the rules — without showing the numbers.</h2>
+        <h2 className="lp__reveal--head">Prove you followed the rules — without showing the numbers.</h2>
         <p className="lp__lede lp__reveal">
           On a public chain every payment is readable: what you spend, who you pay, what your
           margin is. Confidential mode keeps those private while still proving to anyone that

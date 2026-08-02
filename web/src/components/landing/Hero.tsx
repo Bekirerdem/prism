@@ -3,6 +3,7 @@ import { connectPasskey } from "../../lib/walletKit";
 import { passkeyCapability, type PasskeyCapability } from "../../lib/passkeySupport";
 import { errText } from "../../lib/wallet-errors";
 import { TRACTION } from "./traction";
+import Words from "./Words";
 
 /** The opening screen: one line of pain, the primary passkey door, and proof.
  *
@@ -41,7 +42,7 @@ export default function Hero({
       <div className="lp__in">
         <div className="lp__rule" />
         <h1>
-          You don't have to hand your agent <span className="lp__mark">the keys</span>.
+          <Words text="You don't have to hand your agent the keys." mark="the keys" />
         </h1>
         <p className="lp__lede">
           Give it a budget instead. The limits live in the contract — not in the prompt, and

@@ -23,7 +23,7 @@ export default function Guarantees() {
   return (
     <section className="lp__section lp__divide">
       <div className="lp__in">
-        <h2 className="lp__reveal">Four things the chain enforces</h2>
+        <h2 className="lp__reveal--head">Four things the chain enforces</h2>
         <p className="lp__lede lp__reveal">
           Not settings in an app that an agent could be talked around. Rules the contract checks
           before it moves money.
