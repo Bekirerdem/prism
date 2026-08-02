@@ -1,0 +1,143 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Eunomia — yeşil palet + kırmızı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Questrial&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#FCFFD5;          /* krem zemin — paletten, uydurulmadi */
+    --ink:#223E05;         /* koyu yesil: metin (krem uzerinde 11.6:1) */
+    --ink-2:#55693F;       /* ikincil metin (5.87:1) */
+    --green:#A2CB28;       /* izin / eylem */
+    --red:#A62021;         /* ret / durum */
+    --surface:#F4FADC;     /* kart zemini: kremden bir ton koyu, tek tip */
+    --line:rgba(34,62,5,.16);
+  }
+  body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+  .meta{padding:20px 32px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--line)}
+  section{padding:78px 32px}
+  .in{max-width:1060px;margin:0 auto}
+  h2{font-family:'Questrial';font-size:clamp(38px,5.6vw,72px);line-height:1.02;letter-spacing:-.022em;margin-bottom:22px}
+  h3{font-family:'Questrial';font-size:clamp(26px,3.2vw,40px);line-height:1.1;margin-bottom:16px}
+  .sub{font-size:18px;line-height:1.62;max-width:54ch;color:var(--ink-2);margin-bottom:32px}
+  .btn{display:inline-block;padding:15px 26px;border-radius:12px;font-weight:600;font-size:16px;text-decoration:none;
+       background:var(--green);color:var(--ink)}
+  .btn2{display:inline-block;padding:15px 18px;font-size:16px;margin-left:8px;text-decoration:none;font-weight:600;color:var(--red)}
+  mark{background:var(--green);color:var(--ink);padding:0 .12em;border-radius:3px}
+  .rule{height:3px;width:64px;background:var(--green);border-radius:99px;margin-bottom:26px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px;margin-top:36px}
+  /* Durum rengi zeminde degil, sol seritte: acik tonlar soluk/pembe kaliyordu. */
+  .card{border:1px solid var(--line);border-radius:14px;padding:22px;background:var(--surface);
+        border-left:5px solid var(--ink)}
+  .card--ok{border-left-color:var(--green)}
+  .card--blocked{border-left-color:var(--red)}
+  .k{font-size:13px;color:var(--ink-2);margin-bottom:8px}
+  .v{font-size:27px;font-family:'Questrial'}
+  .bar{height:8px;border-radius:99px;background:rgba(34,62,5,.14);overflow:hidden;margin:12px 0 8px}
+  .bar>i{display:block;height:100%;width:36%;background:var(--green);border-radius:99px}
+  .pill{display:inline-block;font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;
+        background:var(--red);color:#fff}
+  .cta{background:var(--ink);border-radius:22px;padding:56px 40px;text-align:center;margin-top:12px}
+  .sw{display:flex;margin-top:44px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .sw>div{flex:1;padding:24px 16px;font-size:12px;font-weight:600}
+  .note{font-size:13px;line-height:1.65;margin-top:24px;max-width:72ch;color:var(--ink-2)}
+</style>
+
+<div class="meta">Eunomia · krem #FCFFD5 · koyu yeşil #223E05 · yeşil #A2CB28 · kırmızı #A62021</div>
+
+<!-- HERO -->
+<section>
+  <div class="in">
+    <div class="rule"></div>
+    <h2>Agent'a anahtar<br>vermek <mark>zorunda değilsin</mark>.</h2>
+    <p class="sub">Bütçe ver. Sınırları zincir zorlasın — modelin iyi niyeti değil.</p>
+    <a class="btn">Passkey ile kasanı kur</a>
+    <a class="btn2">Nasıl çalışır →</a>
+    <p class="note">Metin koyu yeşil (11.6:1) — siyah kullanılmadı, paletin kendi koyusu yetiyor.
+      Buton yeşil: "izin verilen eylem" rengi zaten o.</p>
+  </div>
+</section>
+
+<!-- KANIT -->
+<section style="border-top:1px solid var(--line)">
+  <div class="in">
+    <h3>Kural dışına çıktı. Zincir reddetti.</h3>
+    <p class="sub">Söz değil, kayıt. Bugüne kadar 20 harcama denemesi kontrat tarafından durduruldu.</p>
+    <div class="cards">
+      <div class="card card--ok">
+        <div class="k">Bugünkü harcama</div>
+        <div class="v">18 <span style="font-size:16px;color:var(--ink-2)">/ 50 XLM</span></div>
+        <div class="bar"><i></i></div>
+        <div class="k">sınır içinde · zincirde</div>
+      </div>
+      <div class="card card--blocked">
+        <div class="k">Kural dışı deneme</div>
+        <div class="v" style="color:var(--red)">engellendi</div>
+        <div style="margin-top:14px"><span class="pill">150 XLM · limit aşımı</span></div>
+      </div>
+      <div class="card card--ok">
+        <div class="k">Onaylı alıcı</div>
+        <div class="v" style="font-size:20px">GDOM…QCRT</div>
+        <div class="k" style="margin-top:12px">whitelist · zincirde doğrulanabilir</div>
+      </div>
+    </div>
+    <p class="note">Durum sol şeritte: <b>yeşil = kural içinde</b>, <b>kırmızı = reddedildi</b>. Zemine açık ton vermek yerine
+      şerit kullanmak hem pembeleşmeyi önlüyor hem rengi doygun bırakıyor — kullanıcı kartı okumadan durumu görüyor.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="in">
+    <div class="cta">
+      <h3 style="color:var(--bg)">30 saniyede kendi kasan.</h3>
+      <p class="sub" style="color:var(--bg);opacity:.85;margin:0 auto 28px">Cüzdan kurmadan, seed phrase olmadan, XLM'siz.
+        Parmak izinle gir, kuralları sen koy.</p>
+      <a class="btn">Passkey ile başla</a>
+      <a class="btn2" style="color:var(--green)">Dokümantasyon →</a>
+    </div>
+    <p class="note">Tek koyu blok. Zemin paletin koyu yeşili, üstünde krem metin (11.6:1) —
+      dışarıdan hiçbir renk gelmiyor.</p>
+  </div>
+</section>
+
+<!-- SWATCH -->
+<section style="border-top:1px solid var(--line)">
+  <div class="in">
+    <h3 style="font-size:clamp(22px,2.6vw,30px)">Renk bütçesi</h3>
+    <div class="sw">
+      <div style="background:var(--bg);color:var(--ink)">#FCFFD5<br><span style="font-weight:400">zemin · ~%75</span></div>
+      <div style="background:var(--surface);color:var(--ink)">#F4FADC<br><span style="font-weight:400">kart zemini</span></div>
+      <div style="background:var(--green);color:var(--ink)">#A2CB28<br><span style="font-weight:400">eylem · ilerleme</span></div>
+      <div style="background:var(--red);color:#fff">#A62021<br><span style="font-weight:400">ret · link</span></div>
+      <div style="background:var(--ink);color:var(--bg)">#223E05<br><span style="font-weight:400">metin · koyu blok</span></div>
+    </div>
+    <p class="note"><b>#A2CB28 metin olamaz</b> (krem üzerinde 1.84:1) — yalnızca dolgu: buton, çubuk, vurgu.
+      Üstüne daima koyu yeşil metin (6.31:1); beyaz metin 1.89:1, asla.
+      Kırmızı hem metin hem zemin olarak çalışıyor (7.16:1 / beyazla 7.37:1).</p>
+  </div>
+</section>
+
+<!-- KOYU TEMA -->
+<section style="background:#152A03">
+  <div class="in">
+    <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:20px">Koyu tema — tercih edenler için</div>
+    <h3 style="color:#EDF6D2">Aynı denge, ters çevrilmiş</h3>
+    <p class="sub" style="color:#94A87A">Zemin koyu yeşile iniyor; yeşil ve kırmızı anlamlarını koruyor.</p>
+    <a class="btn">Passkey ile kasanı kur</a>
+    <a class="btn2" style="color:#FF8A78">Nasıl çalışır →</a>
+    <div class="cards">
+      <div class="card card--ok" style="background:#1E3A06;border-color:rgba(162,203,40,.28)">
+        <div class="k" style="color:#94A87A">Bugünkü harcama</div>
+        <div class="v" style="color:#EDF6D2">18 <span style="font-size:16px;color:#94A87A">/ 50 XLM</span></div>
+        <div class="bar" style="background:rgba(255,255,255,.12)"><i></i></div>
+      </div>
+      <div class="card card--blocked" style="background:#2A1508;border-color:rgba(166,32,33,.35)">
+        <div class="k" style="color:#C9A59F">Kural dışı deneme</div>
+        <div class="v" style="color:#FF8A78">engellendi</div>
+      </div>
+    </div>
+  </div>
+</section>
