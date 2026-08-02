@@ -6,7 +6,7 @@
 // A caller-supplied "this goes to contract X" claim is never trusted.
 import { ChannelsClient } from "@openzeppelin/relayer-plugin-channels";
 import { rpc, xdr } from "@stellar/stellar-sdk";
-import { classifyHostFunction } from "../src/lib/hostFunction";
+import { classifyHostFunction, hostFunctionFromEnvelope } from "../src/lib/hostFunction";
 import { isRelayAllowed } from "../src/lib/relayGuard";
 
 // Invisible characters smuggled into an env value have bitten this project twice (a BOM in
@@ -62,23 +62,31 @@ export default async function handler(req: Request): Promise<Response> {
   const apiKey = clean(process.env.OZ_CHANNELS_API_KEY);
   if (!apiKey) return json({ error: "Relay is not configured." }, 503);
 
-  let body: { func?: unknown; auth?: unknown };
+  let body: { func?: unknown; auth?: unknown; xdr?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return json({ error: "Malformed request." }, 400);
   }
 
-  const { func, auth } = body;
-  if (typeof func !== "string" || !Array.isArray(auth) || !auth.every((a) => typeof a === "string")) {
-    return json({ error: "Malformed request." }, 400);
-  }
+  const { func, auth, xdr: envelope } = body;
 
-  if (!(await admit(func))) return json({ error: "Not allowed." }, 403);
+  // Two shapes reach the relay. Treasury calls arrive decoded (func + auth entries), while
+  // passkey-kit's wallet deployment arrives as a fully signed envelope. Both go through the
+  // same admission gate — the envelope's host function is read out of it first.
+  const isFuncCall =
+    typeof func === "string" && Array.isArray(auth) && auth.every((a) => typeof a === "string");
+  const isEnvelope = typeof envelope === "string" && envelope.length > 0;
+  if (!isFuncCall && !isEnvelope) return json({ error: "Malformed request." }, 400);
+
+  const gated = isFuncCall ? (func as string) : hostFunctionFromEnvelope(envelope as string);
+  if (!gated || !(await admit(gated))) return json({ error: "Not allowed." }, 403);
 
   try {
     const client = new ChannelsClient({ baseUrl: CHANNELS_URL, apiKey });
-    const result = await client.submitSorobanTransaction({ func, auth: auth as string[] });
+    const result = isFuncCall
+      ? await client.submitSorobanTransaction({ func: func as string, auth: auth as string[] })
+      : await client.submitTransaction({ xdr: envelope as string });
     return json({ hash: result.hash, status: result.status }, 200);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
