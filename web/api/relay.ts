@@ -9,8 +9,14 @@ import { rpc, xdr } from "@stellar/stellar-sdk";
 import { classifyHostFunction } from "../src/lib/hostFunction";
 import { isRelayAllowed } from "../src/lib/relayGuard";
 
+// Invisible characters smuggled into an env value have bitten this project twice (a BOM in
+// the Supabase key, a BOM+CRLF in the WalletConnect id) — both times the symptom was a silent
+// failure far from the cause. Strip anything non-printable before use; .trim() alone misses
+// zero-width characters.
+const clean = (v: string | undefined): string => (v ?? "").replace(/[^\x20-\x7E]/g, "").trim();
+
 const csv = (v: string | undefined): string[] =>
-  (v ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  clean(v).split(",").map((s) => s.trim()).filter(Boolean);
 
 const ALLOWED_CONTRACTS = csv(process.env.RELAY_ALLOWED_CONTRACTS);
 const ALLOWED_WASM = csv(process.env.RELAY_ALLOWED_WASM);
@@ -53,7 +59,7 @@ async function admit(func: string): Promise<boolean> {
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const apiKey = process.env.OZ_CHANNELS_API_KEY;
+  const apiKey = clean(process.env.OZ_CHANNELS_API_KEY);
   if (!apiKey) return json({ error: "Relay is not configured." }, 503);
 
   let body: { func?: unknown; auth?: unknown };
