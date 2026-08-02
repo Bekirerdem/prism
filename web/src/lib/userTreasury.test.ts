@@ -44,7 +44,7 @@ describe("readLifecycle", () => {
       is_paused: async () => ({ result: true }),
       get_session: async () => ({ result: undefined }),
     } as unknown as Client;
-    expect(await readLifecycle(fake)).toEqual({ paused: true, session: null });
+    expect(await readLifecycle({ client: fake, submit: async () => ({}) })).toEqual({ paused: true, session: null });
   });
 
   it("returns null on a pre-M2 treasury (probe failure = legacy signal)", async () => {
@@ -56,6 +56,6 @@ describe("readLifecycle", () => {
         throw new Error("HostError: Error(WasmVm, MissingValue)");
       },
     } as unknown as Client;
-    expect(await readLifecycle(legacyTreasury)).toBeNull();
+    expect(await readLifecycle({ client: legacyTreasury, submit: async () => ({}) })).toBeNull();
   });
 });

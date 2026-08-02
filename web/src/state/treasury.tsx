@@ -3,7 +3,7 @@
 // Workspace so all shell pages read one context. Transaction progress/results surface as
 // toasts; validation failures return `{ validation: true }` and render inline at the form.
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { connect as kitConnect, walletSignerFor } from "../lib/walletKit";
+import { connect as kitConnect, executorFor, walletSignerFor } from "../lib/walletKit";
 import { useWalletAddress } from "../lib/useWalletAddress";
 import {
   clearTreasuryId,
@@ -101,7 +101,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
   const loadState = useCallback(async (id: string, addr: string, opts?: { markLoading?: boolean }) => {
     if (opts?.markLoading !== false) setLoading(true);
     try {
-      const t = makeTreasury(id, addr, walletSignerFor(addr));
+      const t = makeTreasury(id, await executorFor(addr));
       setState(await readState(t));
       // One probe decides v3 vs legacy: pre-M2 treasuries have no get_session/is_paused.
       const lc = await readLifecycle(t);
@@ -226,7 +226,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("deploy");
       toast("info", "Creating your treasury — confirm in your wallet…");
       try {
-        const id = await deployTreasury(address, walletSignerFor(address), dailyLimit.value, perTaskLimit.value);
+        const id = await deployTreasury(await executorFor(address), dailyLimit.value, perTaskLimit.value);
         setTreasuryId(address, id);
         setTreasuryIdState(id);
         setCreatingNew(false);
@@ -314,7 +314,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("whitelist");
       toast("info", "Approving payee — confirm in your wallet…");
       try {
-        const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+        const t = makeTreasury(treasuryId, await executorFor(address));
         await addPayee(t, p);
         void logActivity({ walletAddress: address, treasuryId, action: "whitelist" });
         const msg = `Payee approved: ${shortAddr(p)}`;
@@ -338,7 +338,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("removePayee");
       toast("info", "Removing payee — confirm in your wallet…");
       try {
-        const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+        const t = makeTreasury(treasuryId, await executorFor(address));
         await removePayee(t, payeeAddr.trim());
         const msg = `Payee removed: ${shortAddr(payeeAddr)}`;
         toast("success", msg);
@@ -373,7 +373,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
           sessionActive && sessionSecret
             ? await sessionPay(treasuryId, sessionSecret, BigInt(Date.now()), to.trim(), amt.value)
             : await pay(
-                makeTreasury(treasuryId, address, walletSignerFor(address)),
+                makeTreasury(treasuryId, await executorFor(address)),
                 BigInt(Date.now()),
                 to.trim(),
                 amt.value,
@@ -422,7 +422,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("session");
       toast("info", "Starting the Leash session — confirm in your wallet…");
       try {
-        const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+        const t = makeTreasury(treasuryId, await executorFor(address));
         const res = await createSession(t, treasuryId, capV.value, hoursV.value, (phase) =>
           toast(
             "info",
@@ -468,7 +468,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     setBusy("revoke");
     toast("info", "Revoking the Leash — confirm in your wallet…");
     try {
-      const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+      const t = makeTreasury(treasuryId, await executorFor(address));
       const res = await revokeSession(t);
       if (res.ok) {
         clearSessionSecret(treasuryId);
@@ -531,7 +531,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     setBusy("pause");
     toast("info", `${next ? "Pausing" : "Resuming"} — confirm in your wallet…`);
     try {
-      const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+      const t = makeTreasury(treasuryId, await executorFor(address));
       const res = await setPaused(t, next);
       if (res.ok) {
         void logActivity({ walletAddress: address, treasuryId, action: "pause" });
@@ -560,7 +560,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("withdraw");
       toast("info", "Withdrawing — confirm in your wallet…");
       try {
-        const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+        const t = makeTreasury(treasuryId, await executorFor(address));
         const res = await adminWithdraw(t, to.trim() || address, amt.value);
         if (res.ok) {
           void logActivity({ walletAddress: address, treasuryId, action: "withdraw", txHash: res.hash, amountXlm: amt.value });
@@ -597,7 +597,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("limits");
       toast("info", "Updating limits — confirm in your wallet…");
       try {
-        const t = makeTreasury(treasuryId, address, walletSignerFor(address));
+        const t = makeTreasury(treasuryId, await executorFor(address));
         const res = await setLimits(t, dailyLimit.value, perTaskLimit.value);
         if (res.ok) {
           void logActivity({ walletAddress: address, treasuryId, action: "limits" });

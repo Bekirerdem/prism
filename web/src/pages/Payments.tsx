@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EXPLORER, fmtXlm, SERVICE, shortAddr } from "../config";
 import { useTreasury } from "../state/useTreasury";
-import { walletSignerFor } from "../lib/walletKit";
+import { executorFor } from "../lib/walletKit";
 import { isPayee, makeTreasury } from "../lib/userTreasury";
 import { isValidPaymentDest } from "../lib/validate";
 import { loadLedger } from "../lib/eventLedger";
@@ -35,13 +35,14 @@ export default function Payments() {
 
   // Verify each derived row against the chain (read-only simulate; no signatures).
   useEffect(() => {
-    if (!t.address || payees.length === 0) return;
+    const addr = t.address;
+    if (!addr || payees.length === 0) return;
     let alive = true;
-    const client = makeTreasury(treasuryId, t.address, walletSignerFor(t.address));
     (async () => {
+      const treasury = makeTreasury(treasuryId, await executorFor(addr));
       for (const p of payees) {
         try {
-          const ok = await isPayee(client, p.address);
+          const ok = await isPayee(treasury, p.address);
           if (!alive) return;
           setVerify((v) => ({ ...v, [p.address]: ok }));
         } catch {
