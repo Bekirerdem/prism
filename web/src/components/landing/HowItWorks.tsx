@@ -26,7 +26,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="lp__section lp__divide lp__how">
+    <section className="lp__section lp__divide lp__how" id="how">
       {/* The pinned scene. Decorative duplicates of the step titles — the accessible copy is
           the list below, so these are hidden from assistive tech. */}
       <div className="lp__scene" aria-hidden="true">
@@ -43,12 +43,20 @@ export default function HowItWorks() {
           Three things you do once. After that the contract does the watching.
         </p>
 
+        {/* The scene overhead already carries the three titles at display size; repeating them
+            here read as a stutter. The list keeps the number and the sentence, and the title
+            stays for screen readers — which never see the scene, it is decorative. */}
         <div className="lp__steps">
           {STEPS.map((s) => (
             <div className="lp__step" key={s.n}>
-              <div className="lp__step-n">{s.n}</div>
+              {/* Drawn open like the hero's counter rule, rather than just being there. */}
+              <i className="lp__step-rule" aria-hidden="true" />
+              {/* The number rides out of a box, the way the hero's letters do. */}
+              <div className="lp__step-n-mask">
+                <div className="lp__step-n">{s.n}</div>
+              </div>
               <div className="lp__step-b">
-                <h3>{s.t}</h3>
+                <h3 className="lp__sr">{s.t}</h3>
                 <p className="lp__fill-text">{s.d}</p>
               </div>
             </div>

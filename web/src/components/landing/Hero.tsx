@@ -4,13 +4,14 @@ import { passkeyCapability, type PasskeyCapability } from "../../lib/passkeySupp
 import { errText } from "../../lib/wallet-errors";
 import { TRACTION } from "./traction";
 import Words from "./Words";
+import { useTheme } from "./useTheme";
 
 const WalletChip = lazy(() => import("../WalletChip"));
 
-/** The brand name split so the loader box can sit in the middle of it, exactly like the
- *  reference does with "Aur|box|ela". */
-const BRAND_START = "Eun";
-const BRAND_END = "omia";
+/** The brand name split where the curtain parts. Each half is pinned to the inner edge of its
+ *  panel, so as the gap opens the two halves are carried off screen with it. */
+const BRAND_START = "Eu";
+const BRAND_END = "nomia";
 
 const loaderChars = (word: string, keyBase: string) =>
   [...word].map((ch, i) => (
@@ -39,6 +40,7 @@ export default function Hero({
   onEnter: () => void;
   onWallet: () => void;
 }) {
+  const { theme, toggle } = useTheme();
   const [capability, setCapability] = useState<PasskeyCapability>("none");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -62,13 +64,18 @@ export default function Hero({
 
   return (
     <section className="lp__section lp__hero">
-      {/* The loading scene. Decorative: the same name is in the nav for assistive tech. */}
-      <div className="lp__loader" aria-hidden="true">
-        <div className="lp__brand-line">
+      {/* The opening curtain. Two cream panels meeting in the middle with the brand name
+          straddling the seam; the gap between them opens onto the real hero underneath, so
+          there is no separate splash to hand over from — the page is simply uncovered.
+          Decorative: the same name sits in the nav for assistive tech. */}
+      <div className="lp__curtain" aria-hidden="true">
+        {/* The green fills the opening as it widens — the moment the first version got right.
+            Once it owns the screen it lifts away, and the hero is underneath. */}
+        <i className="lp__curtain-fill" />
+        <div className="lp__curtain-half lp__curtain-half--l">
           <span className="lp__brand-start">{loaderChars(BRAND_START, "s")}</span>
-          <div className="lp__loader-box">
-            <i className="lp__loader-fill" />
-          </div>
+        </div>
+        <div className="lp__curtain-half lp__curtain-half--r">
           <span className="lp__brand-end">{loaderChars(BRAND_END, "e")}</span>
         </div>
       </div>
@@ -78,6 +85,23 @@ export default function Hero({
           <span className="lp__nav-mask">
             <span className="lp__nav-link lp__nav-brand">Eunomia</span>
           </span>
+
+          {/* The page had no way to move around itself — six sections and no menu. */}
+          <span className="lp__nav-mid">
+            {[
+              ["Proof", "#proof"],
+              ["How it works", "#how"],
+              ["Guarantees", "#guarantees"],
+              ["Privacy", "#privacy"],
+            ].map(([label, href]) => (
+              <span className="lp__nav-mask" key={href}>
+                <a className="lp__nav-link" href={href}>
+                  {label}
+                </a>
+              </span>
+            ))}
+          </span>
+
           <span className="lp__nav-end">
             <span className="lp__nav-mask">
               <a className="lp__nav-link" href="/docs/">
@@ -94,6 +118,18 @@ export default function Hero({
                 GitHub
               </a>
             </span>
+            <span className="lp__nav-mask">
+              <button
+                className="lp__nav-link lp__theme"
+                onClick={toggle}
+                type="button"
+                aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+                title={theme === "dark" ? "Light" : "Dark"}
+              >
+                {theme === "dark" ? "☀" : "☾"}
+              </button>
+            </span>
+
             {/* Rides in with the nav links rather than sitting there through the whole scene. */}
             <span className="lp__nav-mask lp__nav-mask--chip">
               <span className="lp__nav-chip">
@@ -145,6 +181,10 @@ export default function Hero({
           </p>
         )}
 
+      </div>
+
+      {/* Sits on the bottom edge of the scene, not stacked under the buttons. */}
+      <div className="lp__hero-foot">
         {/* A real element rather than the counter's border-top, so it can be drawn open.
             This is `hero-1`'s box widening out — the reference grows it to `110vw`. */}
         <i className="lp__counter-rule" aria-hidden="true" />
@@ -159,6 +199,9 @@ export default function Hero({
             <span>
               <b>{TRACTION.actions}</b> actions on-chain
             </span>
+            {/* Every other number here is our own. This is the one someone else awarded — the
+                only outside verification on the page, and the redesign had dropped it. */}
+            <span className="lp__award">2nd place · BuildOn Stellar, IBW 2026</span>
           </div>
         </div>
       </div>

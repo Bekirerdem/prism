@@ -5,7 +5,7 @@
  *  they buy not showing their suppliers and margins to competitors. */
 export default function Privacy() {
   return (
-    <section className="lp__section lp__divide">
+    <section className="lp__section lp__divide lp__privacy" id="privacy">
       <div className="lp__in">
         <h2 className="lp__reveal--head">Prove you followed the rules — without showing the numbers.</h2>
         <p className="lp__lede lp__reveal">

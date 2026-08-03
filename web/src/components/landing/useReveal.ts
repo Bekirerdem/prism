@@ -95,45 +95,63 @@ export function useReveal(): void {
           );
           const rises = gsap.utils.toArray<HTMLElement>(".lp__hero .lp__rise");
 
+          // Put the seam where the name actually splits. "Eu" and "nomia" are not the same
+          // width, so a 50/50 curtain would hang the word off to one side.
+          const curtain = document.querySelector<HTMLElement>(".lp__curtain");
+          const half1 = document.querySelector<HTMLElement>(".lp__brand-start");
+          const half2 = document.querySelector<HTMLElement>(".lp__brand-end");
+          if (curtain && half1 && half2) {
+            const w1 = half1.getBoundingClientRect().width;
+            const w2 = half2.getBoundingClientRect().width;
+            curtain.style.setProperty(
+              "--seam",
+              `${(window.innerWidth - (w1 + w2)) / 2 + w1}px`,
+            );
+          }
+
           const tl = gsap.timeline({
             defaults: { ease: "expo.inOut" },
             onComplete: settle,
           });
 
-          // 1 — the name assembles.
+          // 1 — the name assembles at the seam.
           if (loadChars.length) {
             tl.from(loadChars, { yPercent: 100, stagger: 0.025, duration: 1.25 }, 0);
           }
 
-          // 2 — a box opens in the middle of it, and the panel inside fills that box.
-          tl.fromTo(".lp__loader-box", { width: "0em" }, { width: "1em", duration: 1.25 }, ">");
-          tl.fromTo(".lp__loader-fill", { width: "0%" }, { width: "100%", duration: 1.25 }, "<");
+          // 2 — a sliver opens between the two halves (reference: the box at `1em`), enough to
+          //     show that there is something behind the curtain.
+          tl.fromTo(
+            ".lp__curtain",
+            { "--gap": "0px" },
+            { "--gap": "120px", duration: 1.25 },
+            ">",
+          );
 
-          // 3 — the two halves of the name are pushed apart as the box grows between them.
-          tl.fromTo(".lp__brand-start", { x: "0em" }, { x: "-0.05em", duration: 1.25 }, "<");
-          tl.fromTo(".lp__brand-end", { x: "0em" }, { x: "0.05em", duration: 1.25 }, "<");
+          // 3 — then it opens all the way past the viewport, carrying both halves of the name
+          //     off screen with it (reference: the box growing to 110vw). By the end the green
+          //     owns the screen.
+          tl.to(
+            ".lp__curtain",
+            { "--gap": `${Math.ceil(window.innerWidth * 1.1)}px`, duration: 2 },
+            "<1.25",
+          );
 
-          // 4 — the panel takes the whole viewport (reference: 100vw / 100dvh, box to 110vw).
-          tl.to(".lp__loader-fill", { width: "100vw", height: "100dvh", duration: 2 }, "<1.25");
-          tl.to(".lp__loader-box", { width: "110vw", duration: 2 }, "<");
+          // 3b — and then the green lifts away to hand the screen to the hero. This is the
+          //      only part that is not in the reference: there the grown panel is a photograph
+          //      and it stays. Ours has nothing to say once it has filled the frame.
+          tl.to(
+            ".lp__curtain-fill",
+            { yPercent: -100, duration: 1.15, ease: "expo.inOut" },
+            "<1.35",
+          );
 
-          // 5 — with no artwork to keep, the scene pulls away and hands over to the content.
-          //     When imagery lands it lives in `.lp__loader-fill` and this retraction goes.
-          tl.to(".lp__loader", { yPercent: -100, duration: 1.3, ease: "expo.inOut" }, "<1.5");
+          // 4 — the headline is NOT animated in. The curtain is what reveals it: the words are
+          //     already standing behind the panels, so parting them uncovers a finished hero
+          //     rather than an empty stage that then fills itself. Animating both reads as the
+          //     page being built twice.
 
-          // 6 — the headline rises out from under it (reference: header letters, expo.out).
-          //     `from` rather than `set` + `to`: the parked state has to be captured by the
-          //     tween itself, otherwise a later tween on the same transform re-asserts it and
-          //     the letters stay stuck at 110%.
-          if (chars.length) {
-            tl.from(
-              chars,
-              { yPercent: 110, duration: 1.25, ease: "expo.out", stagger: 0.025 },
-              "<0.1",
-            );
-          }
-
-          // 7 — then the nav, on a slower stagger like the reference's nav links.
+          // 5 — the nav follows the curtain, on a slower stagger like the reference's links.
           if (navLinks.length) {
             tl.from(
               navLinks,
@@ -230,7 +248,8 @@ export function useReveal(): void {
               scrollTrigger: {
                 trigger: proof,
                 start: "top top",
-                end: `+=${Math.round(window.innerHeight * 1.15)}`,
+                // Longer now that the jailbreak block reveals inside the same pin.
+                end: `+=${Math.round(window.innerHeight * 2)}`,
                 pin: true,
                 scrub: true,
                 invalidateOnRefresh: true,
@@ -244,6 +263,44 @@ export function useReveal(): void {
                 card,
                 { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 },
                 i * 0.85 + (blocked ? 0.45 : 0),
+              );
+            });
+
+            // The jailbreak account is the payoff of this section, so it cannot already be
+            // sitting there while the cards are still arriving. It joins the same scrub, last.
+            const jail = proof.querySelector(".lp__jail");
+            if (jail) {
+              gsap.set(jail, { clipPath: "inset(0 0 100% 0)", opacity: 0 });
+              proofTl.to(
+                jail,
+                { clipPath: "inset(0 0 0% 0)", opacity: 1, ease: "none", duration: 1.2 },
+                2.9,
+              );
+            }
+          }
+
+          // ---- privacy cards: the same reveal, without a pin ------------------
+          // Same mechanic as the proof grid so the two sections read as one language. No pin
+          // here — two pinned sections back to back would stretch the page out of proportion.
+          const privacy = document.querySelector<HTMLElement>(".lp__privacy");
+          if (privacy) {
+            const cards = gsap.utils.toArray<HTMLElement>(".lp__privacy .lp__card");
+            gsap.set(cards, { clipPath: "inset(0 0 100% 0)" });
+
+            const privacyTl = gsap.timeline({
+              scrollTrigger: {
+                trigger: privacy,
+                start: "top 78%",
+                end: "bottom 78%",
+                scrub: true,
+                invalidateOnRefresh: true,
+              },
+            });
+            cards.forEach((card, i) => {
+              privacyTl.to(
+                card,
+                { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 },
+                i * 0.75,
               );
             });
           }
@@ -293,6 +350,11 @@ export function useReveal(): void {
               scrub: 1,
               pinSpacing: false,
               invalidateOnRefresh: true,
+              // `pinSpacing: false` releases the element back into the flow when the pin ends,
+              // and the lines — still transformed — end up sitting on top of the copy block
+              // that follows. The scene has said what it has to say by then, so it leaves.
+              onLeave: () => gsap.to(scene, { autoAlpha: 0, duration: 0.25, overwrite: true }),
+              onEnterBack: () => gsap.to(scene, { autoAlpha: 1, duration: 0.25, overwrite: true }),
               onUpdate: (self) => {
                 if (self.progress <= 0.5) {
                   const y = self.progress / 0.5;
@@ -303,14 +365,22 @@ export function useReveal(): void {
                   gsap.set(lines[0], { y: "100%" });
                   gsap.set(lines[2], { y: "-100%" });
                   const t = (self.progress - 0.5) / 0.5;
-                  const minScale = window.innerWidth <= 1000 ? 0.3 : 0.1;
+                  // The reference bottoms out at 0.1 because its lines are display type that is
+                  // *meant* to dissolve into texture. These are the product's three steps and
+                  // have to stay readable when the scene settles, so the floor is much higher.
+                  const minScale = window.innerWidth <= 1000 ? 0.78 : 0.7;
                   gsap.set(lines, { scale: 1 - t * (1 - minScale) });
                 }
               },
             });
           }
 
-          // ---- the guarantees slideshow (sliders-13) --------------------------
+          // ---- the guarantees slideshow (sliders-13) — RETIRED ----------------
+          // The carousel showed one guarantee at a time, but the section's argument is that the
+          // four caps are cumulative. Showing them one by one contradicted the point being
+          // made, so the four are laid out together and this mechanic was dropped on purpose.
+          // Kept behind a selector that no longer exists rather than deleted outright, so the
+          // reason survives in the file rather than only in the commit message.
           const slidesRoot = document.querySelector<HTMLElement>("[data-slides]");
           if (slidesRoot) {
             // Switches the stacked list into a carousel. Until this lands the section is a
@@ -408,9 +478,71 @@ export function useReveal(): void {
             };
           }
 
-          // Remaining card rows keep a quiet entrance; the proof grid is driven by its pin.
+          // ---- guarantees: the page's own language, not a new one -------------
+          // These four were static while every section around them moved, so the page felt
+          // like it stopped here. Rather than importing a sixth mechanic, the reveal already
+          // used by the proof and privacy cards is extended to them — same `inset` wipe, same
+          // scrub — and the closing statement lands last, the way the jailbreak block does.
+          const guards = gsap.utils.toArray<HTMLElement>(".lp__guard");
+          const guardKey = document.querySelector<HTMLElement>(".lp__guard-key");
+          if (guards.length) {
+            gsap.set(guards, { clipPath: "inset(0 0 100% 0)" });
+            if (guardKey) gsap.set(guardKey, { clipPath: "inset(0 0 100% 0)" });
+
+            const guardTl = gsap.timeline({
+              scrollTrigger: {
+                trigger: guards[0].parentElement ?? guards[0],
+                start: "top 82%",
+                end: "bottom 62%",
+                scrub: true,
+                invalidateOnRefresh: true,
+              },
+            });
+            guards.forEach((g, i) => {
+              guardTl.to(g, { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 }, i * 0.6);
+            });
+            if (guardKey) {
+              guardTl.to(
+                guardKey,
+                { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1.1 },
+                guards.length * 0.6 + 0.2,
+              );
+            }
+          }
+
+          // ---- how it works: the two parts of each row arrive apart ------------
+          // The number leads and the sentence follows a beat behind, so a row reads as one
+          // gesture rather than a block appearing. Same expo.out the hero closes on.
+          gsap.utils.toArray<HTMLElement>(".lp__step").forEach((step) => {
+            const rule = step.querySelector(".lp__step-rule");
+            const num = step.querySelector(".lp__step-n");
+            const body = step.querySelector(".lp__step-b");
+            if (!num || !body) return;
+
+            const stepTl = gsap.timeline({
+              scrollTrigger: { trigger: step, start: "top 88%", once: true },
+            });
+            // The rule draws first — same move as the hero's counter rule.
+            if (rule) {
+              stepTl.from(rule, { scaleX: 0, duration: 0.9, ease: "expo.inOut" });
+            }
+            // Then the number rides up out of its box, like the hero's letters.
+            stepTl.from(
+              num,
+              { yPercent: 110, duration: 1.05, ease: "expo.out" },
+              rule ? "<0.15" : 0,
+            );
+            // The sentence follows a beat later.
+            stepTl.from(
+              body,
+              { yPercent: 20, opacity: 0, duration: 0.95, ease: "expo.out" },
+              "<0.16",
+            );
+          });
+
+          // Remaining card rows keep a quiet entrance; proof and privacy drive their own.
           gsap.utils.toArray<HTMLElement>(".lp__cards").forEach((row) => {
-            if (row.closest(".lp__proof")) return;
+            if (row.closest(".lp__proof") || row.closest(".lp__privacy")) return;
             gsap.from(row.querySelectorAll(".lp__card"), {
               opacity: 0,
               y: 26,
@@ -434,6 +566,16 @@ export function useReveal(): void {
 
         // GSAP has captured the hero's start state by now, so dropping the class cannot flash.
         reveal();
+
+        // Trigger positions were measured against a layout that has since moved: two pinned
+        // sections and a `155svh` clearance push everything below them down, and the webfonts
+        // resize the headings again when they land. Without a recalculation the triggers below
+        // the pins fire against stale coordinates — the step rows were counting themselves as
+        // already passed and skipping their entrance entirely.
+        ScrollTrigger.refresh();
+        void document.fonts?.ready.then(() => {
+          if (!disposed) ScrollTrigger.refresh();
+        });
 
         dispose = () => {
           gsap.ticker.remove(drive);

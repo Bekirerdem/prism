@@ -53,6 +53,23 @@ marka adı hem loader'ın ortasında (`Aur|kutu|ela`) hem nav'da hem altta.
       **Not:** daire merkezi `50%`'ye alındı (referans `at 70%`); panel geniş-kısa olduğu için
       off-center daire tek yanından düz kesiliyor ve hata gibi okunuyordu
 
+## AÇIK — Bekir döndüğünde buradan devam
+
+Şu an `main`'de, **commit edilmemiş** iki değişiklik var (`useReveal.ts`):
+`minScale 0.1 → 0.7` ve sahnenin `onLeave`'de çekilmesi. Bekir onaylayınca commit.
+
+1. **"How it works"te başlık tekrarı (Bekir tespiti)** — sahne üç adım başlığını gösteriyor
+   (`Create a treasury` / `Set the rules` / `Let the agent spend`), hemen altındaki liste
+   **aynı üç başlığı** tekrar veriyor. Seçenekler: (a) listeden başlıkları kaldır, sadece
+   numara + açıklama kalsın; (b) sahnede farklı bir metin kullan (örn. tek cümlelik vaat);
+   (c) sahneyi tamamen kaldır. Karar Bekir'in.
+2. **Sahne sonunda başlık kayboluyor** — `onLeave: autoAlpha 0` bilinçliydi (kopya bloğuyla
+   çakışmayı önlüyor) ama Bekir "kayboluyor" diye fark etti. Alternatif: kopya bloğunu daha
+   aşağı alıp sahneyi görünür bırakmak. 1. maddeyle birlikte karara bağlanmalı.
+3. **Geri alınan iş** — `scroll-29` + `sliders-13` tam ekran sahne ve Lenis kaldırma
+   (`96adb2d`) revert edildi ve branch silindiğinde geçmişi gitti. Bekir isterse yeniden
+   yazılacak. Scroll titremesi şikayeti bu haliyle **hâlâ açık** (Lenis duruyor).
+
 ## Kapanış
 
 - [x] `prefers-reduced-motion`: tüm transformlar `none`, revealer 0, loader gizli, metin okunur
