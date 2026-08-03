@@ -2,10 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    <!-- SVG first: stays sharp at every size and carries the two-colour mark. The 32px PNG is
+         the fallback for browsers that ignore SVG favicons; 16px is left to the browser to
+         downscale rather than shipped as its own file. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070a12" />
+    <meta name="theme-color" content="#FCFFD5" />
     <meta name="description" content="Eunomia — the wallet your AI agent can't drain. A non-custodial, contract-bounded agent treasury on Stellar." />
 
     <!-- Open Graph / social share -->
@@ -28,23 +32,37 @@
     <link rel="preconnect" href="https://api.fontshare.com" />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <!-- Landing identity: Questrial for headings, Geist for body. Kept separate from the
-         dashboard's Inter/Fraunces so the two surfaces can migrate independently. -->
-    <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+         dashboard's Inter/Fraunces so the two surfaces can migrate independently.
+         Kalnia is the brand signature only — the wordmark and the opening curtain. A single
+         weight is requested on purpose: it never sets a heading or a paragraph. -->
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Geist:wght@300;400;500;600;700&family=Kalnia:wght@500&display=swap" rel="stylesheet" />
     <title>Eunomia — bounded agent treasury on Stellar</title>
     <style>
       html,body{background:#08080b}
       /* pre-hydration splash — painted instantly, replaced when React mounts.
-         150ms fade-in delay keeps it invisible on fast loads. */
-      .boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#f3f1ec;font-family:Georgia,'Times New Roman',serif}
-      .boot__m{display:flex;align-items:center;gap:12px;font-size:22px;opacity:0;animation:bootin .5s ease .15s forwards}
-      .boot__glyph{width:10px;height:10px;border-radius:50%;background:#FDDA24;box-shadow:0 0 14px #FDDA24;animation:bootpulse 1.6s ease-in-out .15s infinite}
-      @keyframes bootin{to{opacity:.9}}
-      @keyframes bootpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+         150ms fade-in delay keeps it invisible on fast loads.
+         The cream lives on .boot rather than on body: the landing opens cream but the
+         dashboard shell is still dark, and painting body cream would flash the wrong colour
+         under it. .boot covers the viewport, so nothing behind it is ever seen. */
+      .boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+            background:#FCFFD5;color:#223E05;font-family:'Kalnia',Georgia,'Times New Roman',serif}
+      .boot__m{display:flex;align-items:center;gap:11px;font-size:24px;opacity:0;animation:bootin .5s ease .15s forwards}
+      /* The mark itself, not a generic dot — the same shape the favicon and the nav carry.
+         Its middle arm is the part that pulses. */
+      .boot__mk{width:22px;height:22px;display:block}
+      .boot__arm{animation:bootpulse 1.6s ease-in-out .15s infinite;transform-origin:38px 31px}
+      @keyframes bootin{to{opacity:1}}
+      @keyframes bootpulse{0%,100%{opacity:1}50%{opacity:.35}}
     </style>
   </head>
   <body>
     <div id="root">
-      <div class="boot"><div class="boot__m"><span class="boot__glyph"></span>Eunomia</div></div>
+      <div class="boot"><div class="boot__m">
+        <svg class="boot__mk" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M8 6h10v52H8zM18 6h38v10H18zM18 48h38v10H18z" fill="#223E05"/>
+          <rect class="boot__arm" x="28" y="26" width="20" height="10" fill="#A2CB28"/>
+        </svg>Eunomia
+      </div></div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
