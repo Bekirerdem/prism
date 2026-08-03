@@ -125,7 +125,9 @@ export async function deployTreasury(
   );
   // The deployed id is known from the assembled transaction, so it survives either submit path.
   const contractId = tx.result.options.contractId;
-  await executor.submit(tx);
+  // No contract auth to sign: the treasury does not exist yet and `__constructor` calls no
+  // `require_auth()`. Ownership comes from the `admin` argument above, not from a signature.
+  await executor.submit(tx, { requiresAuth: false });
   return contractId;
 }
 

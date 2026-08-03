@@ -18,6 +18,15 @@ export interface SubmittableTx {
   built?: unknown;
 }
 
+export interface SubmitOptions {
+  /** Set false when the transaction carries no contract auth for the smart wallet to sign.
+   *
+   *  Deployment is the case: the treasury does not exist yet and its `__constructor` calls no
+   *  `require_auth()`, so there is nothing to authorise. Handing it to passkey-kit anyway
+   *  prompts for a passkey the transaction has no use for, and then fails. */
+  requiresAuth?: boolean;
+}
+
 export interface TxExecutor {
   /** The account that owns the treasury: a G-address for wallets, a C-address for passkeys. */
   address: string;
@@ -25,7 +34,7 @@ export interface TxExecutor {
   /** Handed to the contract client when it is built. */
   signer: ContractSigner;
   /** Sign and submit, returning the on-chain hash when there is one. */
-  submit: (tx: SubmittableTx) => Promise<{ hash?: string }>;
+  submit: (tx: SubmittableTx, opts?: SubmitOptions) => Promise<{ hash?: string }>;
 }
 
 /** The existing path, unchanged. */
@@ -58,6 +67,10 @@ export function makePasskeyExecutor(
       signTransaction: () =>
         Promise.reject(new Error("A passkey session signs transactions, not raw XDR.")),
     },
-    submit: async (tx) => relay(await wallet.sign(tx)),
+    // The relay reads the host function and auth entries straight off the assembled
+    // transaction, so signing is only ever about filling those entries in. When there are none
+    // to fill, skip it rather than asking the user for a passkey the transaction cannot use.
+    submit: async (tx, opts) =>
+      relay(opts?.requiresAuth === false ? tx : await wallet.sign(tx)),
   };
 }
