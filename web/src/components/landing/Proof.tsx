@@ -10,7 +10,10 @@ const BLOCKED_TX = "32f3b29f4b2c4a3f9c5e0d1a7b8c6e5f4d3c2b1a0f9e8d7c6b5a49382716
 
 export default function Proof() {
   return (
-    <section className="lp__section lp__divide">
+    <section className="lp__section lp__divide lp__proof">
+      {/* scroll-29 tints the page as the reveal advances. A sheet is used instead of animating
+          the background colour directly so the two themes keep their own tokens. */}
+      <i className="lp__sheet" aria-hidden="true" />
       <div className="lp__in">
         <h2 className="lp__reveal--head">It went out of policy. The chain refused.</h2>
         <p className="lp__lede lp__reveal">

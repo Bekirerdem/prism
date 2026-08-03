@@ -28,13 +28,16 @@ export default function HowItWorks() {
           Three things you do once. After that the contract does the watching.
         </p>
 
+        {/* scroll-61: the rows arrive from alternating sides as you scroll into the block, and
+            each description fills in from below on scrub. `lp__fill-text` is the reference's
+            `.animate-text` — a dim line with a bright copy clipped over it. */}
         <div className="lp__steps">
           {STEPS.map((s) => (
-            <div className="lp__step lp__reveal" key={s.n}>
+            <div className="lp__step lp__slide-in" key={s.n}>
               <div className="lp__step-n">{s.n}</div>
               <div className="lp__step-b">
                 <h3>{s.t}</h3>
-                <p>{s.d}</p>
+                <p className="lp__fill-text">{s.d}</p>
               </div>
             </div>
           ))}

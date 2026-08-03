@@ -25,19 +25,43 @@ Referanslar: `Desktop/animmaster-lib/<kategori>/<n>/code.zip`
       dolgu zeminin altına kaçıyordu · StrictMode'da ilk effect `settle()` çağırıp rise
       kutularını erken açıyordu
 
+### Hero sahnesi (Bekir düzeltmesi — dalga 1 eksik kalmıştı)
+
+Bekir: *"hero alt bölüm ile aynı ekranda duruyor, üstüne proje ismimiz bile yok."* Haklı —
+`script.js` okunmuş ama `index.html` okunmamıştı. Referans `.willem-header` **100dvh** ve
+marka adı hem loader'ın ortasında (`Aur|kutu|ela`) hem nav'da hem altta.
+
+- [x] Hero `min-height: 100dvh` sahne (nav üstte, başlık altta, space-between)
+- [x] Loader: `Eun|kutu|omia` — 7 harf stagger, kutu `0→1em→110vw`, panel `0%→100%→100vw/100dvh`
+- [x] Marka nav'da; Docs/GitHub linkleri + WalletChip nav'a taşındı (Landing.tsx'ten çıktı)
+      **Ölçüldü:** heroH=900, box `0→158→1432→1584px`, panel `1440×900`, perde `y→-900`,
+      başlık `80.78→7.32→0`, nav `34.1→0`, loader `display:none` @motion-done
+      **Tuzak:** `gsap.set` + `to` çifti tween'i sürmüyordu (harfler 110%'de asılı kaldı) —
+      referansın kendi kalıbı `from`/`fromTo` kullanılmalı
+
 ## Dalga 2 — scroll bölgesi
 
-- [ ] **scroll-29** → Kanıt: sütun **pin** + `scrub` · `clipPath inset(0→0 0 100%)` mask ·
-      zemin rengi adım adım geçer → kartlar maskeyle açılır, blocked bir beat geç
-- [ ] **scroll-61** → Nasıl çalışır: `--clip-value 100%→0%` scrub'lı metin dolumu (birebir,
-      görsel gerekmiyor) + `01/02/03` zıt yönlerde kayar
-- [ ] **sliders-13** → Dört garanti: `circle()` clip-path morph, kart **yüzeyinde**
-      (metin üstte kalır, kırpılmaz) + gezinme + metin stagger
+- [x] **scroll-29** → Kanıt: **pin** + `scrub` + `clipPath inset` + zemin tonlaması
+      **Ölçüldü:** pinSpacer=true · sheet `0→0.10→0.40→0.71→1` · kart0 `inset(0 0 100%)→69.5%→0`
+      · **blocked kart en son ve gecikmeli**: `100%→100%→100%→10.6%→0%`
+- [x] **scroll-61** → Nasıl çalışır: `--clip-value` scrub dolumu + zıt yönlü satırlar
+      **Ölçüldü:** satır x `+643 / -643 / +643 → 0` · clip `100%→[0, 1.3, 49.1]→0` ·
+      `data-text` aynalanıyor
+- [x] **sliders-13** → Dört garanti: `circle()` clip morph slideshow
+      **Ölçüldü:** sayaç `01/04→02/04` · çıkan `circle(62%)→23.4%→10.3%→9%` ·
+      gelen `9%→10.6%→49.2%→62%` · metinler stagger ile giriyor
+      **Not:** daire merkezi `50%`'ye alındı (referans `at 70%`); panel geniş-kısa olduğu için
+      off-center daire tek yanından düz kesiliyor ve hata gibi okunuyordu
 
 ## Kapanış
 
-- [ ] `prefers-reduced-motion` kapalı-durum kontrolü · 390px taşma yok
-- [ ] `npm test` + `lint` + `tsc -b` + `build` yeşil
+- [x] `prefers-reduced-motion`: tüm transformlar `none`, revealer 0, loader gizli, metin okunur
+- [x] **Slideshow progressive enhancement** — reduced-motion'da veya GSAP yüklenmezse 4 garanti
+      düz liste olarak kalıyor (`lp--slides-live` sınıfı olmadan carousel devreye girmiyor).
+      Bu olmadan 4 garantinin 3'ü erişilemez kalıyordu.
+      **Ölçüldü:** normal `live=true, görünür=1, nav=flex` · reduced `live=false, görünür=4, nav=none`
+- [x] 390px: `scrollWidth == clientWidth == 390`
+- [x] 228 vitest + eslint + `tsc -b` yeşil
 - [ ] Bekir görsel onayı → **sonra** production kararı (canlı hâlâ eski landing sunuyor:
       `.lp` kökü yok, h1 "The wallet your AI agent can't drain.", koyu tema)
 

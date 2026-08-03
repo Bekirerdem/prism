@@ -74,12 +74,21 @@ export function useReveal(): void {
         // Line wrappers built for `text-15` have to be unwound by hand on teardown —
         // `ctx.revert()` only knows about tweens, not about DOM this effect inserted.
         const splits: { revert: () => void }[] = [];
+        // Same for the slideshow's click handlers.
+        let slideCleanup = () => {};
 
         const ctx = gsap.context(() => {
           // ---- hero (hero-1) -------------------------------------------------
+          // The reference plays a loading scene first: the brand name assembles letter by
+          // letter, a box grows out of its middle, the artwork inside that box expands until
+          // it fills the viewport, and only then do the header letters and nav rise.
+          const loadChars = gsap.utils.toArray<HTMLElement>(".lp__hero .lp__load-char");
           const chars = gsap.utils.toArray<HTMLElement>(".lp__hero h1 .lp__char");
           const markChars = gsap.utils.toArray<HTMLElement>(".lp__hero h1 .lp__mark .lp__char");
           const leadChars = chars.filter((c) => !markChars.includes(c));
+          const navLinks = gsap.utils.toArray<HTMLElement>(
+            ".lp__hero .lp__nav-link, .lp__hero .lp__nav-chip",
+          );
           const rises = gsap.utils.toArray<HTMLElement>(".lp__hero .lp__rise");
 
           const tl = gsap.timeline({
@@ -87,38 +96,72 @@ export function useReveal(): void {
             onComplete: settle,
           });
 
-          // The box opens first (reference: `width: 0em → 1em`).
-          tl.fromTo(".lp__hero .lp__rule", { width: 0 }, { width: 64, duration: 1.25 }, 0);
-
-          // Letters ride up out of their word boxes.
-          if (chars.length) {
-            tl.from(chars, { yPercent: 110, stagger: 0.025, duration: 1.25 }, 0);
+          // 1 — the name assembles.
+          if (loadChars.length) {
+            tl.from(loadChars, { yPercent: 100, stagger: 0.025, duration: 1.25 }, 0);
           }
 
-          // …and the two halves of the heading separate as they land.
+          // 2 — a box opens in the middle of it, and the panel inside fills that box.
+          tl.fromTo(".lp__loader-box", { width: "0em" }, { width: "1em", duration: 1.25 }, ">");
+          tl.fromTo(".lp__loader-fill", { width: "0%" }, { width: "100%", duration: 1.25 }, "<");
+
+          // 3 — the two halves of the name are pushed apart as the box grows between them.
+          tl.fromTo(".lp__brand-start", { x: "0em" }, { x: "-0.05em", duration: 1.25 }, "<");
+          tl.fromTo(".lp__brand-end", { x: "0em" }, { x: "0.05em", duration: 1.25 }, "<");
+
+          // 4 — the panel takes the whole viewport (reference: 100vw / 100dvh, box to 110vw).
+          tl.to(".lp__loader-fill", { width: "100vw", height: "100dvh", duration: 2 }, "<1.25");
+          tl.to(".lp__loader-box", { width: "110vw", duration: 2 }, "<");
+
+          // 5 — with no artwork to keep, the scene pulls away and hands over to the content.
+          //     When imagery lands it lives in `.lp__loader-fill` and this retraction goes.
+          tl.to(".lp__loader", { yPercent: -100, duration: 1.3, ease: "expo.inOut" }, "<1.5");
+
+          // 6 — the headline rises out from under it (reference: header letters, expo.out).
+          //     `from` rather than `set` + `to`: the parked state has to be captured by the
+          //     tween itself, otherwise a later tween on the same transform re-asserts it and
+          //     the letters stay stuck at 110%.
+          if (chars.length) {
+            tl.from(
+              chars,
+              { yPercent: 110, duration: 1.25, ease: "expo.out", stagger: 0.025 },
+              "<0.1",
+            );
+          }
+
+          // 7 — then the nav, on a slower stagger like the reference's nav links.
+          if (navLinks.length) {
+            tl.from(
+              navLinks,
+              { yPercent: 110, duration: 1.25, ease: "expo.out", stagger: 0.1 },
+              "<",
+            );
+          }
+
+          // The heading's two halves separate as they land, mirroring step 3.
           if (leadChars.length) {
-            tl.fromTo(leadChars, { x: "0em" }, { x: "-0.05em", duration: 1.25 }, 0);
+            tl.fromTo(leadChars, { x: "0em" }, { x: "-0.05em", duration: 1.25 }, "<");
           }
           if (markChars.length) {
-            tl.fromTo(markChars, { x: "0em" }, { x: "0.05em", duration: 1.25 }, 0);
+            tl.fromTo(markChars, { x: "0em" }, { x: "0.05em", duration: 1.25 }, "<");
           }
 
           // The highlight wipes in while the phrase is already standing.
           tl.from(
             ".lp__hero .lp__mark-fill",
             { scaleX: 0, duration: 0.9, ease: "power3.inOut" },
-            0.6,
+            "<0.55",
           );
 
-          // The rule widens out (reference: the box grows to `110vw`).
-          tl.from(".lp__hero .lp__counter-rule", { scaleX: 0, duration: 1.1 }, 0.75);
+          tl.from(".lp__hero .lp__rule", { width: 0, duration: 0.9 }, "<0.1");
+          tl.from(".lp__hero .lp__counter-rule", { scaleX: 0, duration: 1.1 }, "<0.15");
 
-          // Supporting blocks lift last, on expo.out like the reference's header letters.
+          // Supporting blocks lift last, on expo.out like the reference's credits line.
           if (rises.length) {
             tl.from(
               rises,
               { yPercent: 110, duration: 1.25, ease: "expo.out", stagger: 0.1 },
-              0.9,
+              "<0.1",
             );
           }
 
@@ -163,10 +206,180 @@ export function useReveal(): void {
             });
           });
 
-          // ---- cards and the rest (placeholder until wave 2) -------------------
-          // Deliberately plain. `scroll-29` and `sliders-13` need the real pin/scrub and
-          // clip-path work; calling this an adaptation of them is what went wrong before.
+          // ---- the proof reveal (scroll-29) -----------------------------------
+          // The reference pins a column and wipes each image away with
+          // `clipPath: inset(0) → inset(0 0 100%)` on scrub, tinting the page as it goes.
+          // Here the cards are pinned and wiped *open* the same way, and the refusal lands
+          // last — the beat the section exists for.
+          const proof = document.querySelector<HTMLElement>(".lp__proof");
+          if (proof) {
+            const cards = gsap.utils.toArray<HTMLElement>(".lp__proof .lp__card");
+            const ordered = [...cards].sort(
+              (a, b) =>
+                Number(a.classList.contains("lp__card--blocked")) -
+                Number(b.classList.contains("lp__card--blocked")),
+            );
+
+            gsap.set(cards, { clipPath: "inset(0 0 100% 0)" });
+
+            const proofTl = gsap.timeline({
+              scrollTrigger: {
+                trigger: proof,
+                start: "top top",
+                end: `+=${Math.round(window.innerHeight * 1.15)}`,
+                pin: true,
+                scrub: true,
+                invalidateOnRefresh: true,
+              },
+            });
+
+            proofTl.to(".lp__proof .lp__sheet", { opacity: 1, ease: "none", duration: 3 }, 0);
+            ordered.forEach((card, i) => {
+              const blocked = card.classList.contains("lp__card--blocked");
+              proofTl.to(
+                card,
+                { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 },
+                i * 0.85 + (blocked ? 0.45 : 0),
+              );
+            });
+          }
+
+          // ---- how it works (scroll-61) ---------------------------------------
+          // Two mechanics from the reference: copy that fills in on scrub behind a clip, and
+          // rows that travel in from alternating sides as the block is scrolled into.
+          gsap.utils.toArray<HTMLElement>(".lp__fill-text").forEach((el) => {
+            el.setAttribute("data-text", (el.textContent ?? "").trim());
+            ScrollTrigger.create({
+              trigger: el,
+              start: "top 78%",
+              end: "bottom 55%",
+              scrub: 1,
+              onUpdate: (self) => {
+                el.style.setProperty(
+                  "--clip-value",
+                  `${Math.max(0, 100 - self.progress * 100)}%`,
+                );
+              },
+            });
+          });
+
+          const steps = gsap.utils.toArray<HTMLElement>(".lp__slide-in");
+          if (steps.length && steps[0].parentElement) {
+            ScrollTrigger.create({
+              trigger: steps[0].parentElement,
+              start: "top bottom",
+              end: "top 45%",
+              scrub: 1,
+              onUpdate: (self) => {
+                steps.forEach((step, i) => {
+                  const origin = i % 2 === 0 ? 100 : -100;
+                  gsap.set(step, { xPercent: origin - self.progress * origin });
+                });
+              },
+            });
+          }
+
+          // ---- the guarantees slideshow (sliders-13) --------------------------
+          const slidesRoot = document.querySelector<HTMLElement>("[data-slides]");
+          if (slidesRoot) {
+            // Switches the stacked list into a carousel. Until this lands the section is a
+            // plain list, so every guarantee stays reachable without JS.
+            root?.classList.add("lp--slides-live");
+            const slides = gsap.utils.toArray<HTMLElement>(".lp__slide", slidesRoot);
+            const shapeOf = (s: HTMLElement) => s.querySelector(".lp__slide-shape");
+            const bodyOf = (s: HTMLElement) =>
+              s.querySelectorAll(".lp__slide-n, .lp__slide-t, .lp__slide-d");
+
+            // The reference's clip shapes, kept as a config object like the original.
+            // Centred rather than the reference's `at 70%`: this panel is wide and short, so an
+            // off-centre circle gets sliced flat on one side only and reads as a mistake.
+            const CLIP = {
+              initial: "circle(62% at 50% 50%)",
+              final: "circle(9% at 50% 50%)",
+            };
+
+            let current = 0;
+            let animating = false;
+
+            gsap.set(slides, { opacity: 0 });
+            gsap.set(slides[0], { opacity: 1 });
+            gsap.set(shapeOf(slides[0]), { clipPath: CLIP.initial });
+
+            const count = slidesRoot.parentElement?.querySelector("[data-slide-count]");
+            const paint = () => {
+              if (count) count.textContent = `0${current + 1} / 0${slides.length}`;
+              slides.forEach((s, i) => {
+                s.classList.toggle("lp__slide--current", i === current);
+                if (i === current) s.removeAttribute("aria-hidden");
+                else s.setAttribute("aria-hidden", "true");
+              });
+            };
+
+            const navigate = (dir: "next" | "prev") => {
+              if (animating) return;
+              animating = true;
+
+              const from = slides[current];
+              current =
+                dir === "next"
+                  ? (current + 1) % slides.length
+                  : (current - 1 + slides.length) % slides.length;
+              const to = slides[current];
+              const out = dir === "next" ? "-100%" : "100%";
+              const inFrom = dir === "next" ? "100%" : "-100%";
+
+              gsap
+                .timeline({
+                  onStart: paint,
+                  onComplete: () => {
+                    animating = false;
+                  },
+                })
+                .addLabel("start", 0)
+                .set(shapeOf(to), { y: inFrom, clipPath: CLIP.final }, "start")
+                .set(to, { opacity: 1 }, "start")
+                .set(bodyOf(to), { y: inFrom }, "start")
+                // the outgoing shape contracts, then leaves
+                .to(shapeOf(from), { duration: 1, ease: "power3", clipPath: CLIP.final }, "start")
+                .to(bodyOf(from), { duration: 1, ease: "power3", y: out }, "start")
+                .to(
+                  shapeOf(from),
+                  { duration: 1, ease: "power2.inOut", y: out },
+                  "start+=0.6",
+                )
+                .set(from, { opacity: 0 }, "start+=1.55")
+                // the incoming one arrives and opens back up
+                .to(shapeOf(to), { duration: 1, ease: "power2.inOut", y: "0%" }, "start+=0.6")
+                .to(
+                  shapeOf(to),
+                  { duration: 1.5, ease: "expo.inOut", clipPath: CLIP.initial },
+                  "start+=1.2",
+                )
+                .to(
+                  bodyOf(to),
+                  { duration: 1.5, ease: "expo.inOut", y: "0%", stagger: 0.1 },
+                  "start+=1.1",
+                );
+            };
+
+            const onNext = () => navigate("next");
+            const onPrev = () => navigate("prev");
+            const nextBtn = document.querySelector("[data-slide-next]");
+            const prevBtn = document.querySelector("[data-slide-prev]");
+            nextBtn?.addEventListener("click", onNext);
+            prevBtn?.addEventListener("click", onPrev);
+            paint();
+
+            slideCleanup = () => {
+              nextBtn?.removeEventListener("click", onNext);
+              prevBtn?.removeEventListener("click", onPrev);
+              root?.classList.remove("lp--slides-live");
+            };
+          }
+
+          // Remaining card rows keep a quiet entrance; the proof grid is driven by its pin.
           gsap.utils.toArray<HTMLElement>(".lp__cards").forEach((row) => {
+            if (row.closest(".lp__proof")) return;
             gsap.from(row.querySelectorAll(".lp__card"), {
               opacity: 0,
               y: 26,
@@ -193,6 +406,7 @@ export function useReveal(): void {
 
         dispose = () => {
           cancelAnimationFrame(frame);
+          slideCleanup();
           ctx.revert();
           splits.forEach((s) => s.revert());
           // SplitText.revert() restores the original text but leaves our wrappers behind.

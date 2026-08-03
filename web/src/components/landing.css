@@ -83,6 +83,10 @@
 .lp__rise-box { overflow: hidden; }
 .lp--motion-done .lp__rise-box { overflow: visible; }
 
+/* Once the scene is over the loader has nothing left to show. Under reduced motion `settle()`
+ * runs immediately, so this is also what keeps the brand panel from sitting across the hero. */
+.lp--motion-done .lp__loader { display: none; }
+
 /* Drawn open by the timeline instead of sitting there as a border. */
 .lp__counter-rule {
   display: block;
@@ -146,7 +150,87 @@
 
 /* ---- hero --------------------------------------------------------------- */
 
-.lp__hero { padding-top: 96px; padding-bottom: 72px; }
+/* The hero is a scene, not a padded band: `hero-1`'s header is `100dvh` with the nav pinned to
+ * the top and the headline to the bottom. `min-height` rather than `height` so a small phone
+ * can grow the section instead of clipping the CTA. */
+.lp__hero {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 24px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.lp__hero-top,
+.lp__hero-bottom {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- the loading scene (hero-1) ----------------------------------------- */
+
+/* Sits over the whole hero while it plays, then pulls away upward. The reference keeps a
+ * photograph here forever; the flat panel is the placeholder until artwork exists. */
+.lp__loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+}
+.lp__brand-line {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-family: "Questrial", system-ui, sans-serif;
+  font-size: clamp(52px, 13vw, 160px);
+  line-height: 0.75;
+  color: var(--ink);
+}
+/* The two halves are overflow boxes so the letters can ride in from below. */
+.lp__brand-start { display: flex; overflow: hidden; justify-content: flex-end; }
+.lp__brand-end { display: flex; overflow: hidden; justify-content: flex-start; }
+.lp__load-char { display: block; will-change: transform; }
+
+/* Grows out of the middle of the name, then out past the viewport (reference: 110vw). */
+.lp__loader-box {
+  width: 0;
+  height: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.lp__loader-fill {
+  position: absolute;
+  width: 0;
+  height: 100%;
+  background: var(--green);
+}
+
+/* ---- nav ---------------------------------------------------------------- */
+
+.lp__nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.lp__nav-end { display: flex; align-items: center; gap: 20px; }
+.lp__nav-mask { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.lp__nav-link {
+  display: inline-block;
+  font-size: 15px;
+  color: var(--ink);
+  text-decoration: none;
+  will-change: transform;
+}
+.lp__nav-brand { font-family: "Questrial", system-ui, sans-serif; font-size: 20px; }
+.lp__nav-link:hover { color: var(--red); }
+.lp__nav-chip { display: inline-block; will-change: transform; }
+/* Released after the scene so the chip's pill shape and focus ring are never clipped. */
+.lp--motion-done .lp__nav-mask--chip { overflow: visible; }
 .lp__counter {
   display: flex;
   flex-wrap: wrap;
@@ -212,6 +296,123 @@
 .lp__step-b h3 { font-size: 20px; margin: 0 0 4px; }
 .lp__step-b p { color: var(--ink-2); font-size: 15px; line-height: 1.55; }
 
+/* ---- scroll-29: the proof reveal ---------------------------------------- */
+
+.lp__proof { position: relative; overflow: hidden; }
+/* Tints the section as the reveal advances, instead of tweening a themed background colour. */
+.lp__sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  opacity: 0;
+  pointer-events: none;
+}
+.lp__proof .lp__in { position: relative; z-index: 1; }
+
+/* ---- scroll-61: rows that arrive, copy that fills ------------------------ */
+
+.lp__slide-in { will-change: transform; }
+
+/* The reference's `.animate-text`: a dim line with a bright copy clipped over it, the clip
+ * driven by scroll progress. `::before` mirrors the text via `attr(data-text)`. */
+.lp__fill-text {
+  position: relative;
+  color: var(--ink-2);
+  --clip-value: 100%;
+}
+.lp__fill-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--ink);
+  clip-path: inset(0 0 var(--clip-value) 0);
+  will-change: clip-path;
+  pointer-events: none;
+}
+
+/* ---- sliders-13: the shape slideshow ------------------------------------ */
+
+/* Progressive enhancement. Without the slideshow — reduced motion, or GSAP failing to load —
+ * all four guarantees have to stay reachable, so the default is a plain stacked list and the
+ * carousel behaviour only switches on once `useReveal` has wired it up. */
+.lp__slides {
+  display: grid;
+  gap: 14px;
+  margin-top: 34px;
+}
+.lp__slide {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  min-height: 150px;
+}
+.lp__slide-nav { display: none; }
+
+.lp--slides-live .lp__slides {
+  display: block;
+  position: relative;
+  min-height: 268px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.lp--slides-live .lp__slide {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  min-height: 0;
+}
+.lp--slides-live .lp__slide--current { opacity: 1; pointer-events: auto; }
+.lp--slides-live .lp__slide-nav { display: flex; }
+
+/* The clip runs on this panel; the copy lives outside it and is never cut. */
+.lp__slide-shape { position: relative; overflow: hidden; clip-path: circle(62% at 50% 50%); }
+.lp__slide-fill { position: absolute; inset: 0; background: var(--green); }
+
+.lp__slide-body { padding: 34px 34px 34px 30px; align-self: center; min-width: 0; }
+.lp__slide-n {
+  font-family: "Questrial", system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--ink-2);
+  letter-spacing: 0.08em;
+}
+.lp__slide-t {
+  font-size: 25px;
+  margin: 8px 0 10px;
+}
+.lp__slide-d { color: var(--ink-2); font-size: 15px; line-height: 1.6; max-width: 46ch; }
+
+/* `display` is owned by the enhancement rules above — hidden until the carousel is live. */
+.lp__slide-nav { align-items: center; gap: 14px; margin-top: 18px; }
+.lp__slide-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.lp__slide-btn:hover { background: var(--green); border-color: var(--green); }
+.lp__slide-count { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 720px) {
+  .lp__slides { min-height: 340px; }
+  .lp__slide { grid-template-columns: 1fr; grid-template-rows: 110px 1fr; }
+  .lp__slide-body { padding: 22px; }
+}
+
 /* ---- guarantees --------------------------------------------------------- */
 
 .lp__note {
@@ -247,6 +448,9 @@
  *
  * The class ships with the first render and useReveal removes it once GSAP has taken hold (or
  * immediately, under reduced motion or a failed import). */
+.lp--pending .lp__hero .lp__load-char { transform: translateY(100%); }
+.lp--pending .lp__hero .lp__nav-link,
+.lp--pending .lp__hero .lp__nav-chip { transform: translateY(110%); }
 .lp--pending .lp__hero .lp__char { transform: translateY(110%); }
 .lp--pending .lp__hero .lp__rise { transform: translateY(110%); }
 .lp--pending .lp__hero .lp__rule { width: 0; }

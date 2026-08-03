@@ -1,5 +1,12 @@
 /** The four checks, in plain language. The old page called this "guardrails" and listed
- *  contract internals; the mechanics moved to the docs. */
+ *  contract internals; the mechanics moved to the docs.
+ *
+ *  Presented as the `sliders-13` shape slideshow (`Sliders/13`): one guarantee at a time, the
+ *  panel behind it clipped to a circle that contracts on the way out and opens on the way in,
+ *  the copy staggering after it. The reference clips a photograph; here the clip runs on a
+ *  flat panel and the text sits above it, so nothing is ever cut off mid-word.
+ *
+ *  Markup only — the timeline lives in `useReveal`, next to the other adapted mechanics. */
 const ITEMS = [
   {
     t: "A cap per payment",
@@ -29,17 +36,35 @@ export default function Guarantees() {
           before it moves money.
         </p>
 
-        <div className="lp__cards">
-          {ITEMS.map((it) => (
-            <div className="lp__card lp__card--ok lp__reveal" key={it.t}>
-              <div className="lp__v" style={{ fontSize: 19, marginBottom: 8 }}>
-                {it.t}
+        <div className="lp__slides" data-slides>
+          {ITEMS.map((it, i) => (
+            <article
+              className={`lp__slide${i === 0 ? " lp__slide--current" : ""}`}
+              key={it.t}
+              aria-hidden={i === 0 ? undefined : "true"}
+            >
+              <div className="lp__slide-shape">
+                <i className="lp__slide-fill" />
               </div>
-              <p className="lp__k" style={{ marginBottom: 0, lineHeight: 1.55 }}>
-                {it.d}
-              </p>
-            </div>
+              <div className="lp__slide-body">
+                <span className="lp__slide-n">{`0${i + 1}`}</span>
+                <h3 className="lp__slide-t">{it.t}</h3>
+                <p className="lp__slide-d">{it.d}</p>
+              </div>
+            </article>
           ))}
+        </div>
+
+        <div className="lp__slide-nav">
+          <button className="lp__slide-btn" data-slide-prev aria-label="Previous guarantee">
+            ←
+          </button>
+          <span className="lp__slide-count" data-slide-count>
+            01 / 0{ITEMS.length}
+          </span>
+          <button className="lp__slide-btn" data-slide-next aria-label="Next guarantee">
+            →
+          </button>
         </div>
 
         {/* The whole reason this section exists — the one line a competitor cannot copy. */}
