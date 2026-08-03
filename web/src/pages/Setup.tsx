@@ -135,7 +135,12 @@ export default function Setup({ onGo }: { onGo: (v: View) => void }) {
             placeholder="Treasury contract id (C…)"
             aria-label="Existing treasury contract id"
             value={existing}
-            onChange={(e) => setExisting(e.target.value)}
+            onChange={(e) => {
+              setExisting(e.target.value);
+              // Clear the previous complaint as soon as the field is touched; leaving it up
+              // makes the page look like it is rejecting what is currently typed.
+              if (openErr) setOpenErr("");
+            }}
           />
           <button style={ghostBtn} onClick={doOpen} type="button">
             Open it

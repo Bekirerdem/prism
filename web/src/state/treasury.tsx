@@ -268,6 +268,9 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     (raw: string): ActionOutcome => {
       if (!address) return fail("Connect a wallet first.");
       const id = raw.trim();
+      // An empty field is not a malformed ID — telling someone their blank input "doesn't look
+      // like a contract ID" reads as if the page rejected something they never typed.
+      if (!id) return invalid("Paste your treasury ID to open it.");
       if (!isValidContractId(id)) {
         return invalid("That doesn't look like a treasury contract ID — it starts with C and is 56 characters long.");
       }
