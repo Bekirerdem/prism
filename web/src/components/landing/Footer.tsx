@@ -1,5 +1,6 @@
 import { EXPLORER, TREASURY_ID, VERIFIER_ID, REGISTRY_ID } from "../../config";
 import { TRACTION } from "./traction";
+import EunomiaMark from "../EunomiaMark";
 
 const REPO = "https://github.com/eunomia-finance/eunomia";
 
@@ -21,7 +22,10 @@ export default function Footer() {
       <div className="lp__in">
         <div className="lp__footer-top">
           <div>
-            <strong className="lp__footer-brand">Eunomia</strong>
+            <strong className="lp__footer-brand">
+              <EunomiaMark size={20} />
+              Eunomia
+            </strong>
             <p className="lp__footer-line">
               The safety layer for agent money — your rules live in the contract, not in the
               prompt.

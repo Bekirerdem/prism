@@ -281,9 +281,15 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  font-family: "Questrial", system-ui, sans-serif;
-  font-size: clamp(52px, 13vw, 160px);
-  line-height: 0.75;
+  /* The curtain carries the wordmark, so it follows the brand face rather than the heading
+   * face. Kalnia sits taller in its box than Questrial did; 0.82 keeps the name optically
+   * centred on the seam where 0.75 pushed it high. `useReveal` measures the two halves at
+   * runtime, so the seam re-centres itself for the new letter widths without a magic number. */
+  font-family: "Kalnia", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(48px, 12vw, 150px);
+  letter-spacing: -0.016em;
+  line-height: 0.82;
   color: var(--ink);
 }
 /* Each panel keeps its half of the name against the seam, so the letters travel with it. */
@@ -320,7 +326,19 @@
   text-decoration: none;
   will-change: transform;
 }
-.lp__nav-brand { font-family: "Questrial", system-ui, sans-serif; font-size: 20px; }
+/* The brand lock: mark + word. The gap is 38% of the mark's width rather than a fixed pixel
+ * value, so the pairing looks identical at every size it appears in. The word sits 1px low —
+ * Kalnia's serif baseline reads high when centred by the box. */
+.lp__nav-brand {
+  font-family: "Kalnia", Georgia, serif;
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: -0.014em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.lp__nav-brand svg { position: relative; top: -1px; }
 .lp__nav-link:hover { color: var(--red); }
 .lp__nav-chip { display: inline-block; will-change: transform; }
 .lp__theme {
@@ -811,7 +829,17 @@
   padding-bottom: 30px;
   border-bottom: 1px solid var(--line);
 }
-.lp__footer-brand { font-family: "Questrial", system-ui, sans-serif; font-size: 20px; color: var(--ink); }
+.lp__footer-brand {
+  font-family: "Kalnia", Georgia, serif;
+  font-weight: 500;
+  font-size: 21px;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.lp__footer-brand svg { position: relative; top: -1px; }
 .lp__footer-line { margin-top: 10px; max-width: 34ch; line-height: 1.6; }
 .lp__footer-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 26px; }
 .lp__footer-cols a { display: block; margin-bottom: 8px; }

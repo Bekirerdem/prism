@@ -5,6 +5,7 @@ import { errText } from "../../lib/wallet-errors";
 import { TRACTION } from "./traction";
 import Words from "./Words";
 import { useTheme } from "./useTheme";
+import EunomiaMark from "../EunomiaMark";
 
 const WalletChip = lazy(() => import("../WalletChip"));
 
@@ -83,7 +84,10 @@ export default function Hero({
       <div className="lp__hero-top">
         <nav className="lp__nav">
           <span className="lp__nav-mask">
-            <span className="lp__nav-link lp__nav-brand">Eunomia</span>
+            <span className="lp__nav-link lp__nav-brand">
+              <EunomiaMark size={19} />
+              Eunomia
+            </span>
           </span>
 
           {/* The page had no way to move around itself — six sections and no menu. */}
