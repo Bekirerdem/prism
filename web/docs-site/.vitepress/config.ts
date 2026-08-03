@@ -10,7 +10,22 @@ export default defineConfig({
   base: "/docs/",
   outDir: "../public/docs",
   ignoreDeadLinks: true, // included repo-root markdown carries GitHub-relative links
+  // The docs are served from the same origin as the app, so they point at the same brand
+  // files rather than carrying their own copies. Absolute paths on purpose: `base` is
+  // "/docs/", and a relative href would look for the icon inside it.
+  head: [
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
+    ["link", { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon.png" }],
+    ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
+    ["meta", { name: "theme-color", content: "#FCFFD5" }],
+    ["meta", { property: "og:type", content: "website" }],
+    ["meta", { property: "og:site_name", content: `${NAME} Docs` }],
+    ["meta", { property: "og:image", content: "https://eunomia.finance/og.png" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
+    ["meta", { name: "twitter:image", content: "https://eunomia.finance/og.png" }],
+  ],
   themeConfig: {
+    logo: { src: "/favicon.svg", alt: `${NAME}` },
     nav: [
       { text: "App", link: "https://eunomia.finance/#overview" },
       { text: "GitHub", link: "https://github.com/eunomia-finance/eunomia" },
