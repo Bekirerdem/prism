@@ -58,7 +58,8 @@ async function admit(func: string): Promise<boolean> {
   return false; // raw wasm uploads and anything unrecognised
 }
 
-export default async function handler(req: Request): Promise<Response> {
+// Named HTTP methods rather than `export default` — see the note in api/faucet.ts.
+async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const apiKey = clean(process.env.OZ_CHANNELS_API_KEY);
@@ -97,3 +98,6 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: "Relay failed." }, 502);
   }
 }
+
+export const GET = handler;
+export const POST = handler;

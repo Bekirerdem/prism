@@ -108,7 +108,11 @@ async function sendToWallet(
   return (await server.sendTransaction(prepared)).hash;
 }
 
-export default async function handler(req: Request): Promise<Response> {
+// Exported as named HTTP methods, not as `export default`. Vercel treats a default export as
+// the legacy `(req, res) => void` signature and ignores whatever it returns — so a handler
+// written against the Web `Request`/`Response` API produced no response at all and the request
+// hung until it timed out. Named methods select the fetch-style signature.
+async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const secret = clean(process.env.DISPENSER_SECRET);
@@ -147,3 +151,8 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: "Couldn't send starting funds. Try again shortly." }, 502);
   }
 }
+
+// GET is wired up too so the handler's own 405 answers it, rather than Vercel returning a
+// bare 405 that says nothing about the endpoint being alive.
+export const GET = handler;
+export const POST = handler;
