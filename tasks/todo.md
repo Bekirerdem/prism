@@ -1,3 +1,46 @@
+# Kova 6 — animmaster mekaniklerinin gerçek uyarlaması (2026-08-03, branch `feat/passkey-onboarding`)
+
+**Neden:** `0a62843` beş animmaster bileşenini "uyarladım" diyordu; referans `code.zip`'lerle
+karşılaştırınca beşi de üç fade varyantına inmişti. Bekir yakaladı — haklı.
+Bu iş mekanikleri **gerçekten** taşıyor. Bekir kararı: **B yolu — önce görselsiz uyarla**,
+görseller sonraki dalgada referanslarla tamamlanır.
+
+Referanslar: `Desktop/animmaster-lib/<kategori>/<n>/code.zip`
+
+**Kural:** Bir madde "tamam" olmadan önce referans mekaniğin **imzası ölçülür**
+(clip-path değeri, pin durumu, scrub ilerlemesi). Sadece opacity değişimi kanıt sayılmaz.
+
+## Dalga 1 — hero bölgesi
+
+- [x] **hero-1** (`Hero Animations/1`) — harf bazlı yükseliş (36 harf, stagger 0.025) ·
+      `.lp__rule` 0→64px · başlığın iki yarısı `x: ∓0.05em` ayrışır · `.lp__counter-rule`
+      scaleX 0→1 · destek blokları maskeden expo.out ile yükselir
+      **Ölçüldü:** harf `y 80.7→30.3→0`, `x 0→-3.6px`, rule `0→60→64px`,
+      counter-rule `scaleX 0→0.99→1`, fill `scaleX 0→1`, done@3000ms
+- [x] **text-15** (`Text Animations/15`) — SplitText lines + satır başına block-revealer perde
+      **Ölçüldü:** `scaleX 0→0.78→0.99` (origin `0px`=left) → `lineOpacity 0→1` →
+      origin `1080px`=right → `scaleX 0.99→0.44→0` — referans turunun birebir imzası
+      **Yol açılırken düzeltilenler:** inline-block boşluk collapse'ı "the keys"i "thekeys"
+      yapıyordu (`white-space: pre`) · `.lp__mark` stacking context'i yoktu, `z-index:-1`
+      dolgu zeminin altına kaçıyordu · StrictMode'da ilk effect `settle()` çağırıp rise
+      kutularını erken açıyordu
+
+## Dalga 2 — scroll bölgesi
+
+- [ ] **scroll-29** → Kanıt: sütun **pin** + `scrub` · `clipPath inset(0→0 0 100%)` mask ·
+      zemin rengi adım adım geçer → kartlar maskeyle açılır, blocked bir beat geç
+- [ ] **scroll-61** → Nasıl çalışır: `--clip-value 100%→0%` scrub'lı metin dolumu (birebir,
+      görsel gerekmiyor) + `01/02/03` zıt yönlerde kayar
+- [ ] **sliders-13** → Dört garanti: `circle()` clip-path morph, kart **yüzeyinde**
+      (metin üstte kalır, kırpılmaz) + gezinme + metin stagger
+
+## Kapanış
+
+- [ ] `prefers-reduced-motion` kapalı-durum kontrolü · 390px taşma yok
+- [ ] `npm test` + `lint` + `tsc -b` + `build` yeşil
+- [ ] Bekir görsel onayı → **sonra** production kararı (canlı hâlâ eski landing sunuyor:
+      `.lp` kökü yok, h1 "The wallet your AI agent can't drain.", koyu tema)
+
 # Kova 5 — Hijyen + UX Dalgası (2026-07-31)
 
 Plan: `~/.claude/plans/lucky-wandering-harp.md` (Bekir onaylı). SCF #45 kabulü ana hedef;

@@ -67,14 +67,49 @@
   margin-bottom: 32px;
 }
 
-/* Word masks — the hero mechanic from animmaster `hero-1`: each word rides up out of an
- * overflow box, staggered. Markup-level split so text stays selectable without JS. */
+/* Word masks — the hero mechanic from animmaster `hero-1`. The reference staggers *letters*
+ * (`.willem__letter`, stagger 0.025) out of an overflow box, so the split goes down to
+ * characters; staggering whole words reads as a different animation entirely.
+ * Markup-level split so text stays selectable without JS. */
 .lp__mask { display: inline-block; overflow: hidden; vertical-align: bottom; }
 .lp__word { display: inline-block; }
+/* `pre` because an inline-block holding a single space collapses to zero width, which
+ * silently welds "the keys" into "thekeys". */
+.lp__char { display: inline-block; white-space: pre; will-change: transform; }
+
+/* Supporting blocks ride up out of their own boxes at the end of the hero timeline, mirroring
+ * how `hero-1` lifts its header letters and nav links. The overflow is released once the
+ * timeline finishes so focus rings and button shadows are never clipped afterwards. */
+.lp__rise-box { overflow: hidden; }
+.lp--motion-done .lp__rise-box { overflow: visible; }
+
+/* Drawn open by the timeline instead of sitting there as a border. */
+.lp__counter-rule {
+  display: block;
+  height: 1px;
+  background: var(--line);
+  margin-top: 54px;
+  transform-origin: left center;
+}
+
+/* text-15 — the block revealer. A coloured panel wipes across each line, leaves the line
+ * behind it, then wipes off the other side. `useReveal` builds the wrappers at runtime
+ * because the line boxes only exist after SplitText has measured the wrap. */
+.lp__line-wrap { position: relative; display: block; overflow: hidden; }
+.lp__revealer {
+  position: absolute;
+  inset: 0;
+  background: var(--green);
+  transform-origin: left center;
+  pointer-events: none;
+}
 
 /* The highlight is a wipe, not a static fill: the green block grows left-to-right under the
  * word while the word itself is already in place. */
-.lp__mark { position: relative; color: #223e05; padding: 0 0.12em; }
+/* `z-index: 0` establishes a stacking context so the `z-index: -1` fill stays behind the
+ * letters but in front of the page background. Without it the fill escapes this element and
+ * disappears under the section's own background. */
+.lp__mark { position: relative; z-index: 0; color: #223e05; padding: 0 0.12em; }
 .lp__mark-fill {
   position: absolute;
   left: 0;
@@ -116,9 +151,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px 30px;
-  margin-top: 54px;
   padding-top: 22px;
-  border-top: 1px solid var(--line);
   font-size: 14px;
   color: var(--ink-2);
 }
@@ -214,10 +247,10 @@
  *
  * The class ships with the first render and useReveal removes it once GSAP has taken hold (or
  * immediately, under reduced motion or a failed import). */
-.lp--pending .lp__hero .lp__word { transform: translateY(110%); }
-.lp--pending .lp__hero .lp__lede,
-.lp--pending .lp__hero .lp__actions,
-.lp--pending .lp__hero .lp__counter { opacity: 0; }
+.lp--pending .lp__hero .lp__char { transform: translateY(110%); }
+.lp--pending .lp__hero .lp__rise { transform: translateY(110%); }
+.lp--pending .lp__hero .lp__rule { width: 0; }
+.lp--pending .lp__hero .lp__counter-rule { transform: scaleX(0); }
 .lp--pending .lp__hero .lp__mark-fill { transform: scaleX(0); }
 
 @media (max-width: 720px) {
