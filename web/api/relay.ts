@@ -6,8 +6,10 @@
 // A caller-supplied "this goes to contract X" claim is never trusted.
 import { ChannelsClient } from "@openzeppelin/relayer-plugin-channels";
 import { rpc, xdr } from "@stellar/stellar-sdk";
-import { classifyHostFunction, hostFunctionFromEnvelope } from "../src/lib/hostFunction";
-import { isRelayAllowed } from "../src/lib/relayGuard";
+// Explicit .js extensions — see the note in api/faucet.ts.
+import process from "node:process";
+import { classifyHostFunction, hostFunctionFromEnvelope } from "../src/lib/hostFunction.js";
+import { isRelayAllowed } from "../src/lib/relayGuard.js";
 
 // Invisible characters smuggled into an env value have bitten this project twice (a BOM in
 // the Supabase key, a BOM+CRLF in the WalletConnect id) — both times the symptom was a silent

@@ -17,7 +17,11 @@ import {
   rpc,
   scValToNative,
 } from "@stellar/stellar-sdk";
-import { dispenseDecision, DISPENSE_XLM } from "../src/lib/dispenser";
+// Explicit .js extension: Vercel compiles api/* with node16 resolution, where an extensionless
+// relative import does not resolve and the function dies at cold start with a 500. The local
+// bundler config maps .js back to .ts, so this satisfies both.
+import process from "node:process";
+import { dispenseDecision, DISPENSE_XLM } from "../src/lib/dispenser.js";
 
 const clean = (v: string | undefined): string => (v ?? "").replace(/[^\x20-\x7E]/g, "").trim();
 
