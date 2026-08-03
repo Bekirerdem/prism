@@ -87,6 +87,14 @@
  * runs immediately, so this is also what keeps the brand panel from sitting across the hero. */
 .lp--motion-done .lp__loader { display: none; }
 
+/* Release the hero's compositor layers once it has played. Forty-odd letters each holding a
+ * `will-change` layer for the rest of the session is GPU memory spent on an animation that is
+ * over — and it competes with the scroll-driven work further down the page. */
+.lp--motion-done .lp__char,
+.lp--motion-done .lp__load-char,
+.lp--motion-done .lp__nav-link,
+.lp--motion-done .lp__nav-chip { will-change: auto; }
+
 /* Drawn open by the timeline instead of sitting there as a border. */
 .lp__counter-rule {
   display: block;
@@ -309,7 +317,43 @@
 }
 .lp__proof .lp__in { position: relative; z-index: 1; }
 
-/* ---- scroll-61: rows that arrive, copy that fills ------------------------ */
+/* ---- scroll-61: the pinned scene, then copy that fills ------------------- */
+
+/* The section carries no padding of its own: the scene owns the viewport, the copy block
+ * brings its own spacing back afterwards. */
+.lp__how { padding: 0 0 84px; }
+.lp__scene {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+/* Opaque bands: the reference relies on each line covering the one behind it as they split. */
+.lp__scene-line {
+  position: relative;
+  width: 100%;
+  padding: 0 24px;
+  background: var(--bg);
+  will-change: transform;
+  font-family: "Questrial", system-ui, sans-serif;
+  font-size: clamp(30px, 6.4vw, 88px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--ink);
+}
+.lp__scene-line:nth-child(1),
+.lp__scene-line:nth-child(3) { transform: translateX(100%); }
+.lp__scene-line:nth-child(2) { transform: translateX(-100%); z-index: 2; }
+
+/* `pinSpacing: false` reserves no room, so the copy has to clear the pin's whole travel
+ * (2 × viewport) itself. The reference uses `155svh` for exactly this reason; anything less
+ * and the scene's lines land on top of the copy. */
+.lp__how-copy { margin-top: 155svh; padding: 0 24px; }
 
 .lp__slide-in { will-change: transform; }
 

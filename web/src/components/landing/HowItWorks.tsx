@@ -1,6 +1,11 @@
 /** Three steps, one sentence each. The old page explained the machinery here (muxed
  *  sub-addresses, sponsored reserves); that moved to the docs. What stays is what the user
- *  actually does. */
+ *  actually does.
+ *
+ *  Staged as `scroll-61` (`Scroll Animation/61`): a full-height pinned scene where the three
+ *  lines arrive from alternating sides, split apart vertically, then scale down together — and
+ *  only after it does the copy fill in on scrub. The reference does this with display type and
+ *  no imagery at all, which is why it transfers here unchanged. */
 const STEPS = [
   {
     n: "01",
@@ -21,19 +26,26 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="lp__section lp__divide">
-      <div className="lp__in">
+    <section className="lp__section lp__divide lp__how">
+      {/* The pinned scene. Decorative duplicates of the step titles — the accessible copy is
+          the list below, so these are hidden from assistive tech. */}
+      <div className="lp__scene" aria-hidden="true">
+        {STEPS.map((s) => (
+          <div className="lp__scene-line" key={s.n}>
+            {s.t}
+          </div>
+        ))}
+      </div>
+
+      <div className="lp__in lp__how-copy">
         <h2 className="lp__reveal--head">How it works</h2>
         <p className="lp__lede lp__reveal">
           Three things you do once. After that the contract does the watching.
         </p>
 
-        {/* scroll-61: the rows arrive from alternating sides as you scroll into the block, and
-            each description fills in from below on scrub. `lp__fill-text` is the reference's
-            `.animate-text` — a dim line with a bright copy clipped over it. */}
         <div className="lp__steps">
           {STEPS.map((s) => (
-            <div className="lp__step lp__slide-in" key={s.n}>
+            <div className="lp__step" key={s.n}>
               <div className="lp__step-n">{s.n}</div>
               <div className="lp__step-b">
                 <h3>{s.t}</h3>

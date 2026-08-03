@@ -59,17 +59,21 @@ export function useReveal(): void {
 
         // Lenis drives the scroll; ScrollTrigger has to read from it rather than the native
         // scroll position, otherwise triggers fire at the wrong place under smoothing.
+        //
+        // Lenis MUST be driven from GSAP's ticker, not from its own requestAnimationFrame.
+        // With two independent rAF loops, Lenis writes a new scroll position in one callback
+        // and GSAP renders the scrubbed tweens in another — the pinned section and the scrubbed
+        // clip-paths end up a frame apart from the scroll position, which is felt as shudder
+        // even though no frame is actually dropped. `lagSmoothing(0)` stops GSAP from silently
+        // skipping time after a stall, which would desync the two again.
         const Lenis = lenisMod.default;
         const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
         const onScroll = () => ScrollTrigger.update();
         lenis.on("scroll", onScroll);
 
-        let frame = 0;
-        const raf = (time: number) => {
-          lenis.raf(time);
-          frame = requestAnimationFrame(raf);
-        };
-        frame = requestAnimationFrame(raf);
+        const drive = (time: number) => lenis.raf(time * 1000);
+        gsap.ticker.add(drive);
+        gsap.ticker.lagSmoothing(0);
 
         // Line wrappers built for `text-15` have to be unwound by hand on teardown —
         // `ctx.revert()` only knows about tweens, not about DOM this effect inserted.
@@ -263,18 +267,45 @@ export function useReveal(): void {
             });
           });
 
-          const steps = gsap.utils.toArray<HTMLElement>(".lp__slide-in");
-          if (steps.length && steps[0].parentElement) {
+          // The pinned scene, straight from the reference: the lines travel in from alternating
+          // sides on the approach, then the pin holds while they split vertically and scale
+          // down together.
+          const scene = document.querySelector<HTMLElement>(".lp__scene");
+          const lines = gsap.utils.toArray<HTMLElement>(".lp__scene-line");
+          if (scene && lines.length === 3) {
             ScrollTrigger.create({
-              trigger: steps[0].parentElement,
+              trigger: scene,
               start: "top bottom",
-              end: "top 45%",
+              end: "top top",
               scrub: 1,
               onUpdate: (self) => {
-                steps.forEach((step, i) => {
-                  const origin = i % 2 === 0 ? 100 : -100;
-                  gsap.set(step, { xPercent: origin - self.progress * origin });
-                });
+                gsap.set(lines[0], { x: `${100 - self.progress * 100}%` });
+                gsap.set(lines[1], { x: `${-100 + self.progress * 100}%` });
+                gsap.set(lines[2], { x: `${100 - self.progress * 100}%` });
+              },
+            });
+
+            ScrollTrigger.create({
+              trigger: scene,
+              start: "top top",
+              end: `+=${window.innerHeight * 2}`,
+              pin: true,
+              scrub: 1,
+              pinSpacing: false,
+              invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                if (self.progress <= 0.5) {
+                  const y = self.progress / 0.5;
+                  gsap.set(lines[0], { y: `${y * 100}%` });
+                  gsap.set(lines[2], { y: `${y * -100}%` });
+                  gsap.set(lines, { scale: 1 });
+                } else {
+                  gsap.set(lines[0], { y: "100%" });
+                  gsap.set(lines[2], { y: "-100%" });
+                  const t = (self.progress - 0.5) / 0.5;
+                  const minScale = window.innerWidth <= 1000 ? 0.3 : 0.1;
+                  gsap.set(lines, { scale: 1 - t * (1 - minScale) });
+                }
               },
             });
           }
@@ -405,7 +436,8 @@ export function useReveal(): void {
         reveal();
 
         dispose = () => {
-          cancelAnimationFrame(frame);
+          gsap.ticker.remove(drive);
+          gsap.ticker.lagSmoothing(500, 33);
           slideCleanup();
           ctx.revert();
           splits.forEach((s) => s.revert());
