@@ -14,7 +14,7 @@ import { Client, type Session } from "./treasuryClient";
 import { contractErr, errText } from "./wallet-errors";
 import type { ContractSigner } from "./walletSigner";
 import type { SubmittableTx, TxExecutor } from "./executor";
-import { NETWORK_PASSPHRASE, RPC_URL } from "../config";
+import { ADMIN, NETWORK_PASSPHRASE, RPC_URL } from "../config";
 
 // Native XLM SAC on testnet — the token each user treasury holds and spends.
 export const XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
@@ -86,6 +86,21 @@ export function makeTreasury(contractId: string, executor: TxExecutor): Treasury
 }
 
 /** Deploy a fresh treasury owned by `address` (admin = agent = the wallet). Returns its id. */
+/** The account a transaction is *assembled* against — not the account that submits it.
+ *
+ *  The SDK builds an `Account(publicKey, seq)` to simulate against, and `Account` only accepts a
+ *  classic `G…`. A passkey session's address is the smart wallet contract (`C…`), so passing it
+ *  through threw `invalid version byte. expected 48, got 16` before the wallet ever opened.
+ *
+ *  It does not matter who this is, because the passkey path never submits this transaction from
+ *  it: `executor.submit` hands the decoded host function to the relay, and OpenZeppelin Channels
+ *  builds and pays for the real transaction from its own account. Ownership is not affected
+ *  either — the treasury's owner is the `admin` constructor argument, which stays the smart
+ *  wallet. So this is only the account the simulation is priced against. */
+export function assembleSource(executor: TxExecutor): string {
+  return executor.kind === "passkey" ? ADMIN : executor.address;
+}
+
 export async function deployTreasury(
   executor: TxExecutor,
   dailyXlm: number,
@@ -93,6 +108,7 @@ export async function deployTreasury(
 ): Promise<string> {
   const tx = await Client.deploy(
     {
+      // Ownership rides here, not on the transaction source: the smart wallet is the admin.
       admin: executor.address,
       agent: executor.address,
       token: XLM_SAC,
@@ -103,7 +119,7 @@ export async function deployTreasury(
       wasmHash: TREASURY_WASM_HASH,
       networkPassphrase: NETWORK_PASSPHRASE,
       rpcUrl: RPC_URL,
-      publicKey: executor.address,
+      publicKey: assembleSource(executor),
       signTransaction: executor.signer.signTransaction,
     },
   );

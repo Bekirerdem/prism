@@ -1,6 +1,31 @@
 import { describe, it, expect } from "vitest";
-import { isValidContractId, readLifecycle, toStroops, XLM_SAC } from "./userTreasury";
+import { StrKey } from "@stellar/stellar-sdk";
+import { assembleSource, isValidContractId, readLifecycle, toStroops, XLM_SAC } from "./userTreasury";
 import type { Client } from "./treasuryClient";
+import type { TxExecutor } from "./executor";
+
+const executor = (address: string, kind: TxExecutor["kind"]): TxExecutor => ({
+  address,
+  kind,
+  signer: { signTransaction: () => Promise.reject(new Error("unused")) },
+  submit: () => Promise.resolve({}),
+});
+
+const WALLET = "GDPKXL6CNHUXBV4PM54CPTRZNQRYVTIMO4YGBW3M2MNSCMQ7TTNINXP6";
+
+describe("assembleSource", () => {
+  it("assembles a wallet session against the wallet's own account", () => {
+    expect(assembleSource(executor(WALLET, "wallet"))).toBe(WALLET);
+  });
+
+  it("never assembles against a contract address for a passkey session", () => {
+    // The regression this guards: a smart wallet's C… address reached Account() and threw
+    // "invalid version byte. expected 48, got 16" before the user could create a treasury.
+    const source = assembleSource(executor(XLM_SAC, "passkey"));
+    expect(StrKey.isValidContract(source)).toBe(false);
+    expect(StrKey.isValidEd25519PublicKey(source)).toBe(true);
+  });
+});
 
 describe("isValidContractId", () => {
   it("accepts a real contract id", () => {
