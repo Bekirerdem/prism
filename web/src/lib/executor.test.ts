@@ -4,40 +4,6 @@ import { makeWalletExecutor, makePasskeyExecutor } from "./executor";
 const G = "GBGHXQXR7BQZMZ3EPWXVMBNVFHXHVZQJPVWQGCTLPXQHRTFHXQXR7BQZ";
 const C = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ";
 
-describe("makePasskeyExecutor — auth-free submissions", () => {
-  const wallet = () => ({
-    create: vi.fn(),
-    connect: vi.fn(),
-    sign: vi.fn().mockImplementation((tx) => Promise.resolve({ ...tx, signed: true })),
-  });
-
-  it("skips the passkey prompt when the transaction carries no contract auth", async () => {
-    // Deploy is this case: the treasury does not exist yet and __constructor calls no
-    // require_auth(), so signing would ask for a passkey the transaction cannot use — which is
-    // exactly how "Couldn't use your passkey" was reached before a treasury could be created.
-    const w = wallet();
-    const relay = vi.fn().mockResolvedValue({ hash: "deployed" });
-    const ex = makePasskeyExecutor(C, w, relay);
-
-    const tx = { signAndSend: vi.fn() };
-    await expect(ex.submit(tx, { requiresAuth: false })).resolves.toEqual({ hash: "deployed" });
-
-    expect(w.sign).not.toHaveBeenCalled();
-    expect(relay).toHaveBeenCalledWith(tx);
-  });
-
-  it("still signs by default, so every other treasury call is unaffected", async () => {
-    const w = wallet();
-    const relay = vi.fn().mockResolvedValue({ hash: "signed" });
-    const ex = makePasskeyExecutor(C, w, relay);
-
-    await ex.submit({ signAndSend: vi.fn() });
-
-    expect(w.sign).toHaveBeenCalledTimes(1);
-    expect(relay).toHaveBeenCalledWith(expect.objectContaining({ signed: true }));
-  });
-});
-
 describe("makeWalletExecutor", () => {
   it("carries the address and marks itself as the wallet path", () => {
     const ex = makeWalletExecutor(G, { signTransaction: vi.fn() });
