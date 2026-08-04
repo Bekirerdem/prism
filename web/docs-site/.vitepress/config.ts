@@ -10,6 +10,10 @@ export default defineConfig({
   base: "/docs/",
   outDir: "../public/docs",
   ignoreDeadLinks: true, // included repo-root markdown carries GitHub-relative links
+  // Every link in the sidebar and in the pages is extensionless ("/try-it"), but the default
+  // build emits "try-it.html" — so the site's own navigation 404'd on a static host and only
+  // the index was reachable. cleanUrls emits "try-it/index.html", which those links resolve to.
+  cleanUrls: true,
   // The docs are served from the same origin as the app, so they point at the same brand
   // files rather than carrying their own copies. Absolute paths on purpose: `base` is
   // "/docs/", and a relative href would look for the icon inside it.

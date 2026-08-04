@@ -18,6 +18,9 @@ with on-chain interactions · published feedback summary.
   (the contract stays deliberately non-upgradeable).
 - **Treasury Registry** — on-chain discovery & recovery by owner wallet.
 - **Rolling 24h window** — closed the fixed-UTC-day 2× boundary spend.
+- **Passkey onboarding** — create and run a treasury with Face ID, a fingerprint or a
+  device PIN: no wallet to install, no seed phrase, no XLM to find first. The passkey
+  controls a Stellar smart wallet and fees are sponsored, without giving up custody.
 
 ## M3 — Mainnet
 

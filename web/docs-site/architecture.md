@@ -11,12 +11,14 @@ Eunomia is four small Soroban contracts and one web app. The design rule everywh
 | **Leash sessions** | A time-bound, spend-capped session key the owner grants to an agent. While a Leash is active it is the *only* key that can pay; it expires on its own and can be revoked instantly. |
 | **Treasury Registry** | Optional on-chain backup: `register(owner, treasury)` makes a treasury discoverable from any device by the owner's wallet — no client-side-only state. |
 | **Compliance Verifier (ZK)** | A hardened Groth16/BN254 verifier that attests a whole batch of payments obeyed the rules — without revealing amounts or payees. See [Confidential compliance](/zk). |
+| **Smart wallet** (passkey users) | A WebAuthn passkey controls a Stellar smart wallet, and that wallet — not a browser extension — owns the treasury. Nothing about the treasury changes: the owner is simply a `C…` address instead of a `G…` one. |
 
 ## The flow
 
-1. **Create.** The owner's wallet deploys their own treasury. The rules are constructor
-   arguments — there is no separate `initialize` to race, and no upgrade entrypoint to
-   trust. Policy bounds are validated at creation (`0 < per-payment ≤ daily`).
+1. **Create.** The owner deploys their own treasury — from a browser wallet, or from the
+   smart wallet a passkey controls. The rules are constructor arguments: there is no
+   separate `initialize` to race, and no upgrade entrypoint to trust. Policy bounds are
+   validated at creation (`0 < per-payment ≤ daily`).
 2. **Fund & approve.** The treasury pays from its own balance. Payments can only go to
    payees the owner approved (or, optionally, to addresses that clear an on-chain
    reputation threshold).
