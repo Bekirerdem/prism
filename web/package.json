@@ -28,10 +28,6 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
-  "comment:overrides": "passkey-kit declares @stellar/stellar-sdk as a peer (>=16.0.0) but also pins it exactly (16.0.1) as a direct dependency, so npm installs a second copy. Two copies mean two sets of XDR classes: an auth entry built by our SDK fails `instanceof` inside the kit's, which surfaced as 'XDR Write Error: <nonce> is not a Te' when signing a deploy. One version for the whole tree.",
-  "overrides": {
-    "@stellar/stellar-sdk": "$@stellar/stellar-sdk"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.54.0",

@@ -6,6 +6,18 @@ import { configDefaults, defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   define: { global: 'globalThis' },
+  resolve: {
+    // Seven packages in this tree ship their own @stellar/stellar-sdk (passkey-kit pins it
+    // exactly while also declaring it a peer). XDR encoding checks values with `instanceof`,
+    // so two copies in one bundle are two incompatible sets of classes: an auth entry built
+    // by the app's SDK was rejected inside passkey-kit's writer with
+    // "XDR Write Error: <nonce> is not a Te" the moment a real passkey signed a deploy.
+    //
+    // Deduping is deliberately scoped to the bundle. The npm tree is left alone: collapsing
+    // it with `overrides` re-resolved transitive deps and left the SDK's CommonJS entry
+    // requiring an ESM-only @noble/hashes, which killed the relay function on boot.
+    dedupe: ['@stellar/stellar-sdk'],
+  },
   test: {
     // Playwright owns tests/e2e — vitest must not try to collect its specs.
     exclude: [...configDefaults.exclude, 'tests/e2e/**'],
