@@ -1,9 +1,9 @@
-# PRISM Web
+# Eunomia — web
 
-The web app for [PRISM](../README.md): cinematic landing, the autonomous-agent demo
-dashboard, and the per-user workspace (connect a wallet → deploy your own bounded
-treasury). Vite · React 19 · TypeScript · framer-motion · `@stellar/stellar-sdk` +
-StellarWalletsKit.
+The app for [Eunomia](../README.md): the landing page, the per-user product (sign in with
+a passkey or a wallet → run your own bounded treasury), and the autonomous-agent demo.
+Vite · React 19 · TypeScript · GSAP + framer-motion · `@stellar/stellar-sdk` ·
+`passkey-kit` · StellarWalletsKit.
 
 ## Develop
 
@@ -131,8 +131,12 @@ Env vars must be set in the Vercel dashboard for Production.
 ## Layout
 
 ```
-src/components/   Landing · Dashboard (demo) · Workspace (per-user) · Wallet · ActivityFeed · AppNav/WalletChip
-src/lib/          userTreasury (deploy/fund/pay) · walletKit/walletSigner · funding (friendbot)
-                  events/analytics (on-chain reads) · feedback/activity (Supabase) · wallet-errors
-src/config.ts     testnet contract ids + demo config (build-time non-testnet guard)
+src/components/landing/   the marketing page (hero, proof, how it works, guarantees, footer)
+src/components/shell/     the product chrome — sidebar/tabs, rules feed, charts, treasury switcher
+src/pages/                Overview · Payments · Agent · Activity · Settings · Setup
+src/lib/                  userTreasury (deploy/fund/pay) · smartWalletTx (act as a passkey wallet)
+                          relaySubmit (fee-sponsored submission) · passkey · walletKit/walletSigner
+                          insights (chart series) · events/analytics · activity (Supabase)
+api/                      serverless: /api/relay (fee sponsorship) · /api/faucet (testnet dispenser)
+src/config.ts             testnet contract ids + demo config (build-time non-testnet guard)
 ```
