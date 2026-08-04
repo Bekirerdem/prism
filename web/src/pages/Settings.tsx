@@ -60,10 +60,10 @@ export default function Settings() {
         </div>
         <div style={{ marginTop: 14 }}>
           {registered ? (
-            <div style={{ fontSize: 13, color: "#00FF43" }}>Backed up on Stellar ✓ — open it from any device.</div>
+            <div style={{ fontSize: 13, color: "var(--ink)" }}>Backed up on Stellar ✓ — open it from any device.</div>
           ) : (
             <>
-              <div style={{ fontSize: 13, color: "#E0A106" }}>
+              <div style={{ fontSize: 13, color: "var(--red)" }}>
                 ⚠ Not backed up on Stellar — this device's storage is the only key to this
                 treasury. Save the ID, or back it up now.
               </div>
@@ -87,7 +87,7 @@ export default function Settings() {
       <div style={card}>
         <div style={label}>Limits</div>
         {t.state && (
-          <div style={{ fontSize: 13, color: "#A0A0B8", marginTop: 8 }}>
+          <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 8 }}>
             Current: {fmtXlm(t.state.dailyLimit)} XLM / day · ≤ {fmtXlm(t.state.perTaskLimit)} XLM per payment
           </div>
         )}
@@ -123,8 +123,8 @@ export default function Settings() {
       </div>
 
       {/* ---- danger zone ---- */}
-      <div style={{ ...card, borderColor: "rgba(255,93,93,0.28)" }}>
-        <div style={{ ...label, color: "#FF5D5D" }}>Danger zone</div>
+      <div style={{ ...card, borderColor: "var(--red)" }}>
+        <div style={{ ...label, color: "var(--red)" }}>Danger zone</div>
 
         {t.legacy ? (
           <div style={hint}>
@@ -147,7 +147,7 @@ export default function Settings() {
               {t.busy === "pause" ? "Working…" : t.lifecycle?.paused ? "Resume spending" : "Pause spending"}
             </button>
             {t.lifecycle?.paused && (
-              <div style={{ ...hint, color: "#FF5D5D" }}>Spending is frozen — withdraw still works.</div>
+              <div style={{ ...hint, color: "var(--red)" }}>Spending is frozen — withdraw still works.</div>
             )}
 
             <div style={{ ...fieldLabel, marginTop: 16 }}>Withdraw (owner exit — works while paused)</div>
@@ -185,32 +185,32 @@ export default function Settings() {
 const wrap: React.CSSProperties = { maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 };
 const card: React.CSSProperties = {
   padding: 20, borderRadius: 14,
-  background: "rgba(18,18,28,0.6)", border: "1px solid rgba(255,255,255,0.08)",
+  background: "var(--surface)", border: "1px solid var(--line)",
 };
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
+const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-2)" };
 const fieldLabel: React.CSSProperties = { ...label, marginTop: 12 };
 const idBox: React.CSSProperties = {
   marginTop: 10, padding: "10px 12px", borderRadius: 10, fontSize: 12.5,
-  fontFamily: "ui-monospace, monospace", color: "#EDEDF4", wordBreak: "break-all",
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)",
+  fontFamily: "ui-monospace, monospace", color: "var(--ink)", wordBreak: "break-all",
+  background: "var(--bg)", border: "1px solid var(--line)",
 };
 const smallBtn: React.CSSProperties = {
   padding: "5px 11px", borderRadius: 8, fontSize: 12, cursor: "pointer",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.18)", color: "#A0A0B8",
+  background: "transparent", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
-const smallLink: React.CSSProperties = { fontSize: 12.5, color: "#A0A0B8" };
+const smallLink: React.CSSProperties = { fontSize: 12.5, color: "var(--ink-2)" };
 const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
+  background: "var(--bg)", border: "1px solid var(--line)", color: "var(--ink)",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 12, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",
-  background: "#FDDA24", color: "#0F0F0F", fontWeight: 600, fontSize: 14, fontFamily: "inherit",
+  background: "var(--ink)", color: "var(--bg)", fontWeight: 600, fontSize: 14, fontFamily: "inherit",
 };
 const ghostBtn: React.CSSProperties = {
   width: "100%", marginTop: 10, padding: "10px 14px", borderRadius: 10, cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#A0A0B8",
+  background: "transparent", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
-const hint: React.CSSProperties = { marginTop: 10, fontSize: 12, color: "#7C7C92", lineHeight: 1.5 };
-const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "#FF5D5D" };
+const hint: React.CSSProperties = { marginTop: 10, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 };
+const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "var(--red)" };

@@ -1,6 +1,10 @@
-// The hero page: at a glance — how much is in the treasury, how much of today's limit
-// is spent, is the policy live, what just happened. The forms moved to their own pages;
-// this one answers "what is my state" first (the old Workspace showed inputs instead).
+// The hero page. Its job is not to report a balance — it is to show that the rules are
+// doing something. Every decision the contract made leads; the treasury's state and today's
+// limit sit underneath as the context for those decisions.
+//
+// The old layout opened with a balance card beside a limit card, then four equal counters
+// at the bottom (payments / spent / blocked / payees). That is an inventory, not a page:
+// the single most important fact — a payment was stopped — was the smallest thing on screen.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import { EXPLORER, fmtXlm, shortAddr } from "../config";
@@ -13,30 +17,27 @@ import { setupProgress, type SetupStep } from "../lib/onboarding";
 import { needsFunding, MIN_XLM } from "../lib/funding";
 import type { View } from "../lib/routes";
 import RecentActivity from "../components/shell/RecentActivity";
-import StatStrip from "../components/shell/StatStrip";
 import BottomSheet from "../components/shell/BottomSheet";
 import { useIsMobile } from "../lib/useIsMobile";
 
-const STEP_LABEL: Record<SetupStep, string> = {
-  connect: "Connect",
-  deploy: "Create",
-  fund: "Fund",
-  whitelist: "Approve payee",
-  pay: "First payment",
-};
-
-// One-line "why" under the stepper for the active step — the answer to the
-// "cluttered, explain it better" tester feedback without adding UI weight.
-const STEP_WHY: Record<SetupStep, string> = {
-  connect: "Your wallet is your identity — nothing else to set up.",
+// What the user should do next, in their words — one line, not a five-step strip. The
+// stepper took permanent space at the top of a page whose subject is elsewhere.
+const NEXT_LINE: Record<SetupStep, string> = {
+  connect: "Connect a wallet to begin.",
   deploy: "Create your treasury with its rules built in.",
   fund: "Your treasury pays from its own balance — top it up to start.",
-  whitelist: "Payments can only go to payees you've approved.",
-  pay: "Send one — watch your rules check it on the way through.",
+  whitelist: "Payments can only go to payees you've approved. Approve one.",
+  pay: "Send a payment — watch your rules check it on the way through.",
+};
+const NEXT_CTA: Record<SetupStep, string> = {
+  connect: "Connect",
+  deploy: "Create",
+  fund: "Fund it",
+  whitelist: "Approve a payee",
+  pay: "Send one",
 };
 
 const EASE = [0.2, 0.7, 0.3, 1] as const;
-// Page-load choreography: hero first, then actions, then the lower zone.
 const fadeUp = (delay: number) => ({
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
@@ -77,7 +78,6 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
 
   // Durable truths from the activity log — chain events older than the RPC's retention
   // window can't be re-scanned, but the Supabase log remembers them.
-  const blockedCount = useMemo(() => rows.filter((e) => e.kind === "blocked").length, [rows]);
   const whitelistSeen = rows.some((e) => e.kind === "whitelist");
   const paidSeen = rows.some((e) => e.kind === "paid");
 
@@ -132,24 +132,19 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const fundForm = (inSheet: boolean) => (
     <>
       <input
-        style={input}
+        className="ov__input"
         ref={inSheet ? undefined : fundInput}
         autoFocus={inSheet}
         inputMode="decimal"
-        placeholder="Amount (XLM)"
+        placeholder="Amount in XLM"
         aria-label="Fund amount in XLM"
         value={fundAmt}
         onChange={(e) => setFundAmt(e.target.value)}
       />
-      <button
-        style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
-        onClick={() => void doFund()}
-        disabled={!!t.busy}
-        type="button"
-      >
+      <button className="ov__btn" onClick={() => void doFund()} disabled={!!t.busy} type="button">
         {t.busy === "fund" ? "Funding…" : "Fund"}
       </button>
-      {fundErr && <div style={inlineErr}>{fundErr}</div>}
+      {fundErr && <div className="ov__err">{fundErr}</div>}
     </>
   );
 
@@ -166,71 +161,60 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   return (
     <div>
       {t.legacy && (
-        <div style={legacyBanner}>
-          This is an early treasury — agent sessions, pause and withdraw arrived later.
-          Your funds are safe;{" "}
-          <button style={legacyLink} onClick={() => onGo("settings")} type="button">
-            see Settings for the exit path →
-          </button>
-        </div>
-      )}
-      {t.address && t.walletXlm !== undefined && needsFunding(t.walletXlm) && (
-        <div style={fundGate}>
-          <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-            {t.walletXlm === null
-              ? "Your wallet doesn't exist on testnet yet (0 XLM)."
-              : `Your wallet holds ${t.walletXlm.toFixed(2)} XLM on testnet.`}{" "}
-            You need ~{MIN_XLM} XLM to fund a treasury — grab free testnet XLM.
-          </div>
-          <button
-            style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
-            onClick={() => void t.friendbot()}
-            disabled={!!t.busy}
-            type="button"
-          >
-            {t.busy === "friendbot" ? "Funding…" : "Get free testnet XLM"}
+        <div className="ov__notice">
+          This is an early treasury — agent sessions, pause and withdraw arrived later. Your
+          funds are safe;{" "}
+          <button onClick={() => onGo("settings")} type="button">
+            see Settings for the exit path
           </button>
         </div>
       )}
 
-      {!progress.complete && (
-        <div style={stepperCard}>
-          <div style={stepRow}>
-            {progress.steps.map(({ step, done }) => (
-              <div key={step} style={stepItem}>
-                <span
-                  style={{
-                    ...stepDot,
-                    background: done ? "#FDDA24" : "rgba(255,255,255,0.12)",
-                    color: done ? "#0F0F0F" : "#7C7C92",
-                    outline: progress.next === step ? "2px solid rgba(253,218,36,0.5)" : "none",
-                  }}
-                >
-                  {done ? "✓" : ""}
-                </span>
-                <span style={{ fontSize: 11.5, color: progress.next === step ? "#EDEDF4" : "#7C7C92" }}>
-                  {STEP_LABEL[step]}
-                </span>
-              </div>
-            ))}
-          </div>
-          {progress.next && progress.next !== "connect" && progress.next !== "deploy" && (
-            <button style={stepCtaBtn} onClick={stepCta} type="button">
-              Next: {STEP_LABEL[progress.next]} →
+      {anomaly && (
+        <div className="ov__notice">
+          Most recent payment attempts were rejected. That is your rules working — but check
+          whether the payee list or today's limit needs updating.
+        </div>
+      )}
+
+      {t.address && t.walletXlm !== undefined && needsFunding(t.walletXlm) && (
+        <div className="ov__next">
+          <span>
+            {t.walletXlm === null
+              ? "Your wallet holds no testnet XLM yet."
+              : `Your wallet holds ${t.walletXlm.toFixed(2)} XLM.`}{" "}
+            You need about {MIN_XLM} XLM to fund a treasury.
+          </span>
+          <button className="ov__btn" onClick={() => void t.friendbot()} disabled={!!t.busy} type="button">
+            {t.busy === "friendbot" ? "Sending…" : "Get test XLM"}
+          </button>
+        </div>
+      )}
+
+      {!progress.complete && progress.next && (
+        <div className="ov__next">
+          <span>{NEXT_LINE[progress.next]}</span>
+          {progress.next !== "connect" && progress.next !== "deploy" && (
+            <button className="ov__btn ov__btn--ghost" onClick={stepCta} type="button">
+              {NEXT_CTA[progress.next]}
             </button>
           )}
-          {progress.next && <div style={stepWhy}>{STEP_WHY[progress.next]}</div>}
         </div>
       )}
 
-      <motion.div className="ov__hero" {...fadeUp(0)}>
-        {/* SOL — balance */}
-        <div style={heroLeft}>
-          <div style={label}>Balance</div>
+      {/* HERO — what the rules did */}
+      <motion.div {...fadeUp(0)}>
+        <RecentActivity rows={rows} freshId={freshId} onViewAll={() => onGo("activity")} />
+      </motion.div>
+
+      {/* SECOND TIER — the state behind those decisions */}
+      <motion.div className="ov__tier" {...fadeUp(0.12)}>
+        <div className="ov__card">
+          <div className="ov__label">Treasury</div>
           {t.loading || !s ? (
             <>
-              <div className="shell__skel" style={{ height: 58, width: "70%", marginTop: 8 }} />
-              <div className="shell__skel" style={{ height: 16, width: "45%", marginTop: 12 }} />
+              <div className="shell__skel" style={{ height: 56, width: "70%", marginTop: 10 }} />
+              <div className="shell__skel" style={{ height: 16, width: "45%", marginTop: 14 }} />
             </>
           ) : (
             <>
@@ -238,203 +222,90 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
                 <RollingBalance stroops={s.balance} />
                 <small>XLM</small>
               </div>
-              <div style={chipRow}>
+              <div className="ov__chips">
                 {t.lifecycle?.paused ? (
-                  <span style={{ ...chip, color: "#FF5D5D", borderColor: "rgba(255,93,93,0.4)" }}>⏸ Paused</span>
+                  <span className="ov__chip ov__chip--paused">Spending frozen</span>
                 ) : (
-                  <span style={{ ...chip, color: "#00FF43", borderColor: "rgba(0,255,67,0.35)" }}>● Active</span>
+                  <span className="ov__chip ov__chip--live">Rules live</span>
                 )}
-                <span
-                  style={{
-                    ...chip,
-                    color: leashOn ? "#E0A106" : "#7C7C92",
-                    borderColor: leashOn ? "rgba(224,161,6,0.45)" : "rgba(255,255,255,0.12)",
-                  }}
-                >
-                  ⚡ Leash: {leashOn ? "active" : "none"}
-                </span>
+                <span className="ov__chip">{leashOn ? "Leash active" : "No leash"}</span>
               </div>
-              <div style={idRow}>
-                <a style={mono} href={`${EXPLORER}/contract/${treasuryId}`} target="_blank" rel="noreferrer">
+              <div className="ov__idrow">
+                <a className="ov__id" href={`${EXPLORER}/contract/${treasuryId}`} target="_blank" rel="noreferrer">
                   {shortAddr(treasuryId)} ↗
                 </a>
-                <button style={copyBtn} onClick={copyId} type="button">
-                  {copied ? "Copied ✓" : "Copy ID"}
+                <button className="ov__copy" onClick={copyId} type="button">
+                  {copied ? "Copied" : "Copy ID"}
                 </button>
               </div>
             </>
           )}
         </div>
 
-        {/* SAĞ — today / policy live */}
-        <div style={heroRight}>
-          <div style={label}>Today — your rules, live</div>
+        <div className="ov__card">
+          <div className="ov__label">Today's limit</div>
           {t.loading || !s ? (
             <>
               <div className="shell__skel" style={{ height: 10, marginTop: 14 }} />
-              <div className="shell__skel" style={{ height: 14, width: "60%", marginTop: 12 }} />
-              <div className="shell__skel" style={{ height: 14, width: "50%", marginTop: 8 }} />
+              <div className="shell__skel" style={{ height: 22, width: "60%", marginTop: 14 }} />
+              <div className="shell__skel" style={{ height: 14, width: "50%", marginTop: 10 }} />
             </>
           ) : (
             <>
-              <div style={barTrack}>
+              <div className="ov__track">
                 <motion.div
-                  style={barFill}
+                  className="ov__fill"
                   initial={{ width: 0 }}
                   animate={{ width: `${spentPct}%` }}
-                  transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
+                  transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
                 />
               </div>
-              <div style={todayLine}>
-                <strong style={{ color: "#EDEDF4" }}>
-                  {fmtXlm(s.daySpent)} / {fmtXlm(s.dailyLimit)} XLM
-                </strong>{" "}
-                spent in the last 24h
+              <div className="ov__spent">
+                {fmtXlm(s.daySpent)} / {fmtXlm(s.dailyLimit)} XLM
               </div>
-              <div style={todaySub}>per-payment ≤ {fmtXlm(s.perTaskLimit)} XLM</div>
-              <div style={todaySub}>remaining today: {fmtXlm(remaining)} XLM</div>
-              {blockedCount > 0 && (
-                <div style={{ ...todaySub, color: "#FF5D5D" }}>
-                  {blockedCount} payment{blockedCount > 1 ? "s" : ""} blocked by your rules
-                </div>
-              )}
-              {t.lifecycle?.paused && (
-                <div style={{ ...todaySub, color: "#FF5D5D" }}>⏸ Spending frozen — withdraw still works.</div>
-              )}
+              <div className="ov__rule">
+                <strong>{fmtXlm(remaining)} XLM</strong> left today
+              </div>
+              <div className="ov__rule">
+                At most <strong>{fmtXlm(s.perTaskLimit)} XLM</strong> per payment
+              </div>
+              <div className="ov__rule">
+                {payeeCount === null ? "Checking approved payees…" : (
+                  <><strong>{payeeCount}</strong> approved payee{payeeCount === 1 ? "" : "s"}</>
+                )}
+              </div>
             </>
           )}
         </div>
       </motion.div>
 
-      {/* QUICK ACTIONS */}
-      <motion.div style={actions} {...fadeUp(0.12)}>
+      <motion.div className="ov__actions" {...fadeUp(0.2)}>
         <button
-          style={{ ...primaryBtn, width: "auto", opacity: t.busy ? 0.6 : 1 }}
+          className="ov__btn"
           onClick={() => (fundOpen ? setFundOpen(false) : openFund())}
           disabled={!!t.busy && t.busy !== "fund"}
           type="button"
         >
-          + Fund
+          Fund
         </button>
-        <button style={ghostAction} onClick={() => onGo("payments")} type="button">
-          → Send payment
+        <button className="ov__btn ov__btn--ghost" onClick={() => onGo("payments")} type="button">
+          Send payment
         </button>
-        <button style={ghostAction} onClick={() => onGo("agent")} type="button">
-          {leashOn ? "⚡ Leash active →" : "⚡ Start Leash"}
+        <button className="ov__btn ov__btn--ghost" onClick={() => onGo("agent")} type="button">
+          {leashOn ? "Leash active" : "Start leash"}
         </button>
       </motion.div>
+
       {fundOpen && !isMobile && (
-        <div style={fundPanelStyle} ref={fundPanel}>
+        <div className="ov__panel" ref={fundPanel}>
           {fundForm(false)}
         </div>
       )}
       <BottomSheet open={fundOpen && isMobile} onClose={() => setFundOpen(false)} title="Fund treasury">
-        <div style={sheetForm}>{fundForm(true)}</div>
+        <div className="ov__panel" style={{ marginTop: 0, border: "none", padding: 0, background: "none" }}>
+          {fundForm(true)}
+        </div>
       </BottomSheet>
-
-      {/* ALT BÖLGE */}
-      <motion.div className="ov__lower" style={{ marginTop: 18 }} {...fadeUp(0.2)}>
-        <RecentActivity rows={rows} freshId={freshId} onViewAll={() => onGo("activity")} />
-        <StatStrip
-          payments={analytics.score.payments}
-          totalXlm={analytics.score.totalXlm}
-          blocked={blockedCount}
-          payees={payeeCount}
-          truncated={analytics.truncated}
-          anomaly={anomaly}
-        />
-      </motion.div>
     </div>
   );
 }
-
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
-const heroLeft: React.CSSProperties = {
-  padding: "22px 24px",
-  borderRadius: 16,
-  background: "rgba(18,18,28,0.6)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  minHeight: 210,
-};
-const heroRight: React.CSSProperties = {
-  padding: "22px 24px",
-  borderRadius: 16,
-  background: "rgba(253,218,36,0.045)",
-  border: "1px solid rgba(253,218,36,0.22)",
-  minHeight: 210,
-  boxSizing: "border-box",
-};
-const chipRow: React.CSSProperties = { display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" };
-const chip: React.CSSProperties = {
-  fontSize: 12,
-  padding: "4px 10px",
-  borderRadius: 100,
-  border: "1px solid",
-  background: "rgba(0,0,0,0.25)",
-};
-const idRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, marginTop: 14 };
-const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 13.5, color: "#A0A0B8", textDecoration: "none" };
-const copyBtn: React.CSSProperties = {
-  padding: "3px 9px", borderRadius: 7, fontSize: 11.5, cursor: "pointer",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.18)", color: "#A0A0B8",
-};
-const barTrack: React.CSSProperties = {
-  height: 8, borderRadius: 100, background: "rgba(255,255,255,0.08)", marginTop: 14, overflow: "hidden",
-};
-const barFill: React.CSSProperties = {
-  height: "100%", borderRadius: 100, background: "#FDDA24",
-  transition: "width .6s cubic-bezier(0.2, 0.7, 0.3, 1)",
-};
-const todayLine: React.CSSProperties = { fontSize: 13.5, color: "#A0A0B8", marginTop: 12 };
-const todaySub: React.CSSProperties = { fontSize: 12.5, color: "#7C7C92", marginTop: 6 };
-const actions: React.CSSProperties = { display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" };
-const primaryBtn: React.CSSProperties = {
-  padding: "11px 18px", borderRadius: 11, border: "none", cursor: "pointer",
-  background: "#FDDA24", color: "#0F0F0F", fontWeight: 600, fontSize: 14, fontFamily: "inherit",
-};
-const ghostAction: React.CSSProperties = {
-  padding: "11px 18px", borderRadius: 11, cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#EDEDF4",
-};
-const fundPanelStyle: React.CSSProperties = {
-  display: "flex", gap: 10, alignItems: "flex-start", marginTop: 10, flexWrap: "wrap",
-  padding: 14, borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-};
-const input: React.CSSProperties = {
-  flex: 1, minWidth: 180, boxSizing: "border-box", padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
-};
-const inlineErr: React.CSSProperties = { width: "100%", fontSize: 12.5, color: "#FF5D5D" };
-const fundGate: React.CSSProperties = {
-  display: "flex", gap: 14, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap",
-  marginBottom: 16, padding: 14, borderRadius: 12,
-  background: "rgba(253,218,36,0.07)", border: "1px solid rgba(253,218,36,0.35)", color: "#EDEDF4",
-};
-const stepperCard: React.CSSProperties = {
-  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap",
-  marginBottom: 16, padding: "12px 16px", borderRadius: 12,
-  background: "rgba(18,18,28,0.55)", border: "1px solid rgba(255,255,255,0.08)",
-};
-const stepRow: React.CSSProperties = { display: "flex", gap: 16, flexWrap: "wrap" };
-const stepItem: React.CSSProperties = { display: "flex", alignItems: "center", gap: 7 };
-const stepDot: React.CSSProperties = {
-  width: 18, height: 18, borderRadius: "50%", display: "inline-flex", alignItems: "center",
-  justifyContent: "center", fontSize: 11, fontWeight: 700,
-};
-const stepCtaBtn: React.CSSProperties = {
-  padding: "8px 14px", borderRadius: 9, border: "none", cursor: "pointer",
-  background: "rgba(253,218,36,0.14)", color: "#FDDA24", fontWeight: 600, fontSize: 12.5, fontFamily: "inherit",
-};
-const stepWhy: React.CSSProperties = { flexBasis: "100%", fontSize: 12.5, color: "#7C7C92", lineHeight: 1.5 };
-const sheetForm: React.CSSProperties = { display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap", paddingTop: 4 };
-const legacyBanner: React.CSSProperties = {
-  marginBottom: 16, padding: "11px 14px", borderRadius: 12, fontSize: 13, lineHeight: 1.55, color: "#EDEDF4",
-  background: "rgba(224,161,6,0.07)", border: "1px solid rgba(224,161,6,0.3)",
-};
-const legacyLink: React.CSSProperties = {
-  background: "none", border: "none", padding: 0, cursor: "pointer",
-  color: "#E0A106", textDecoration: "underline", font: "inherit",
-};

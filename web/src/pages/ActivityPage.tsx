@@ -66,8 +66,8 @@ export default function ActivityPage() {
 const chipRow: React.CSSProperties = { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 };
 const chip: React.CSSProperties = {
   padding: "6px 12px", borderRadius: 100, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
-  background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "#A0A0B8",
+  background: "none", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
 const chipActive: React.CSSProperties = {
-  ...chip, background: "rgba(253,218,36,0.12)", border: "1px solid rgba(253,218,36,0.4)", color: "#FDDA24",
+  ...chip, background: "var(--raise)", border: "1px solid var(--green)", color: "var(--ink)",
 };

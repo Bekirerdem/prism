@@ -47,8 +47,8 @@ export default function Agent() {
   return (
     <div style={wrap}>
       {active ? (
-        <div style={{ ...card, borderColor: "rgba(224,161,6,0.35)" }}>
-          <div style={{ ...label, color: "#E0A106" }}>⚡ Leash active</div>
+        <div style={{ ...card, borderColor: "var(--green)" }}>
+          <div style={{ ...label, color: "var(--ink)" }}>⚡ Leash active</div>
 
           <div style={statGrid}>
             <div>
@@ -57,7 +57,7 @@ export default function Agent() {
             </div>
             <div>
               <div style={label}>Key</div>
-              <div style={{ fontSize: 13, color: t.sessionSecret ? "#00FF43" : "#E0A106" }}>
+              <div style={{ fontSize: 13, color: t.sessionSecret ? "var(--ink)" : "var(--red)" }}>
                 {t.sessionSecret ? "on this device" : "elsewhere"}
               </div>
             </div>
@@ -152,26 +152,26 @@ function countdown(ms: number): string {
 const wrap: React.CSSProperties = { maxWidth: 560, margin: "0 auto" };
 const card: React.CSSProperties = {
   padding: 20, borderRadius: 14,
-  background: "rgba(18,18,28,0.6)", border: "1px solid rgba(255,255,255,0.08)",
+  background: "var(--surface)", border: "1px solid var(--line)",
 };
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
+const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-2)" };
 const fieldLabel: React.CSSProperties = { ...label, marginTop: 12 };
-const body: React.CSSProperties = { fontSize: 13, color: "#A0A0B8", lineHeight: 1.55, marginTop: 8 };
-const hint: React.CSSProperties = { marginTop: 12, fontSize: 12, color: "#7C7C92", lineHeight: 1.5 };
-const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 13.5, color: "#EDEDF4", marginTop: 3 };
+const body: React.CSSProperties = { fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55, marginTop: 8 };
+const hint: React.CSSProperties = { marginTop: 12, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 };
+const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 13.5, color: "var(--ink)", marginTop: 3 };
 const statGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 };
-const barTrack: React.CSSProperties = { height: 8, borderRadius: 100, background: "rgba(255,255,255,0.08)", marginTop: 8, overflow: "hidden" };
-const barFill: React.CSSProperties = { height: "100%", borderRadius: 100, background: "#E0A106", transition: "width .5s ease" };
+const barTrack: React.CSSProperties = { height: 8, borderRadius: 100, background: "var(--line)", marginTop: 8, overflow: "hidden" };
+const barFill: React.CSSProperties = { height: "100%", borderRadius: 100, background: "var(--green)", transition: "width .5s ease" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
+  background: "var(--bg)", border: "1px solid var(--line)", color: "var(--ink)",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 14, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",
-  background: "#FDDA24", color: "#0F0F0F", fontWeight: 600, fontSize: 14.5, fontFamily: "inherit",
+  background: "var(--ink)", color: "var(--bg)", fontWeight: 600, fontSize: 14.5, fontFamily: "inherit",
 };
 const ghostBtn: React.CSSProperties = {
   width: "100%", marginTop: 8, padding: "10px 14px", borderRadius: 10, cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#A0A0B8",
+  background: "transparent", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
-const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "#FF5D5D" };
+const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "var(--red)" };

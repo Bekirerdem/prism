@@ -1,12 +1,27 @@
-// The Overview's "last 5 things that happened to THIS treasury" — pure display; the
-// data (durable history + live stream) comes from useTreasuryActivity in the parent,
-// which also feeds the stat counters, so both always agree.
-import { AnimatePresence, motion } from "framer-motion";
+// The Overview's hero: what the rules did. Each row is one decision the contract made,
+// and the stripe on its left IS the decision — the same device the landing uses for its
+// allowed and rejected cards, so the two surfaces say the same thing the same way.
+//
+// Pure display; the data (durable history + live stream) comes from useTreasuryActivity in
+// the parent, which also feeds the counters, so both always agree.
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EXPLORER } from "../../config";
 import type { FeedEvent } from "../../lib/events";
-import { kindColor } from "../../lib/feedFilter";
 
-const SHOW = 5;
+const SHOW = 6;
+
+/** The verb a row leads with. The label from the feed carries the detail; this is the
+ *  one word that says which way the decision went. */
+function verbOf(kind: string): string {
+  if (kind === "blocked") return "Blocked";
+  if (kind === "paid") return "Paid";
+  if (kind === "fund") return "Funded";
+  if (kind === "deploy") return "Created";
+  if (kind === "whitelist") return "Approved";
+  if (kind === "leash") return "Leashed";
+  if (kind === "revoked") return "Revoked";
+  return "Recorded";
+}
 
 export default function RecentActivity({
   rows,
@@ -17,51 +32,80 @@ export default function RecentActivity({
   freshId: string | null;
   onViewAll: () => void;
 }) {
+  const reduce = useReducedMotion();
   const shown = rows.slice(0, SHOW);
+  const blocked = rows.filter((e) => e.kind === "blocked").length;
 
   return (
-    <div style={panel}>
-      <div style={head}>
-        <div style={label}>Recent activity</div>
-        <button style={viewAll} onClick={onViewAll} type="button">
-          View all →
-        </button>
+    <section className="rules">
+      <div className="rules__head">
+        <h1 className="rules__title">What your rules did</h1>
+        {rows.length > 0 && (
+          <div className="rules__count">
+            {rows.length} event{rows.length > 1 ? "s" : ""}
+            {blocked > 0 && ` · ${blocked} stopped`}
+          </div>
+        )}
       </div>
+
       {shown.length === 0 ? (
-        <div style={empty}>No activity yet — fund your treasury to get started.</div>
+        <div className="rules__empty">
+          Nothing has happened yet. Fund your treasury and send a payment — every decision
+          your rules make will show up here, allowed or rejected.
+        </div>
       ) : (
-        <div>
+        <div className="rules__list">
           <AnimatePresence initial={false}>
-            {shown.map((e) => (
-              <motion.div
+            {shown.map((e, i) => (
+              <motion.article
                 key={e.id}
                 layout
-                initial={{ opacity: 0, y: -6 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  backgroundColor:
-                    freshId === e.id && e.kind === "blocked"
-                      ? ["rgba(255,93,93,0.18)", "rgba(255,93,93,0)"]
-                      : "rgba(255,93,93,0)",
-                }}
-                transition={{ duration: 0.35 }}
-                style={row}
+                className={`rules__row${
+                  e.kind === "blocked" ? " rules__row--blocked" : e.kind === "paid" || e.kind === "fund" ? " rules__row--ok" : ""
+                }`}
+                initial={reduce ? false : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.32, delay: reduce ? 0 : Math.min(i, 4) * 0.045 }}
               >
-                <span style={{ ...dot, background: kindColor(e.kind), boxShadow: `0 0 6px ${kindColor(e.kind)}66` }} />
-                <span style={rowLabel}>{e.label}</span>
-                <span style={when}>{timeAgo(e.at)}</span>
-                {e.txHash && (
-                  <a style={txLink} href={`${EXPLORER}/tx/${e.txHash}`} target="_blank" rel="noreferrer">
-                    ↗
-                  </a>
+                <div className="rules__what">
+                  <span className="rules__verb">{verbOf(e.kind)}</span>
+                  <span className="rules__why">{e.label}</span>
+                </div>
+                <div className="rules__meta">
+                  <span className="rules__when">{timeAgo(e.at)}</span>
+                  {e.txHash && (
+                    <a
+                      className="rules__tx"
+                      href={`${EXPLORER}/tx/${e.txHash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="View this transaction on the explorer"
+                    >
+                      ↗
+                    </a>
+                  )}
+                </div>
+                {freshId === e.id && !reduce && (
+                  <motion.span
+                    aria-hidden
+                    style={{ position: "absolute", inset: 0, borderRadius: "inherit", pointerEvents: "none" }}
+                    initial={{ background: "rgba(166,32,33,0.18)" }}
+                    animate={{ background: "rgba(166,32,33,0)" }}
+                    transition={{ duration: 1.1 }}
+                  />
                 )}
-              </motion.div>
+              </motion.article>
             ))}
           </AnimatePresence>
         </div>
       )}
-    </div>
+
+      {rows.length > SHOW && (
+        <button className="rules__all" onClick={onViewAll} type="button">
+          See every decision
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -69,30 +113,8 @@ function timeAgo(iso: string): string {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return "";
   const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s`;
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h`;
-  return `${Math.floor(s / 86400)}d`;
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
 }
-
-const panel: React.CSSProperties = {
-  padding: 16,
-  borderRadius: 14,
-  background: "rgba(18,18,28,0.55)",
-  border: "1px solid rgba(255,255,255,0.07)",
-};
-const head: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 };
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
-const viewAll: React.CSSProperties = {
-  background: "none", border: "none", cursor: "pointer", padding: 0,
-  color: "#A0A0B8", fontSize: 12, fontFamily: "inherit",
-};
-const empty: React.CSSProperties = { fontSize: 13, color: "#7C7C92", padding: "14px 0 8px" };
-const row: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: 10,
-  padding: "9px 6px", borderRadius: 8, fontSize: 13, color: "#EDEDF4",
-};
-const dot: React.CSSProperties = { width: 7, height: 7, borderRadius: "50%", flex: "0 0 auto" };
-const rowLabel: React.CSSProperties = { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-const when: React.CSSProperties = { color: "#7C7C92", fontSize: 11.5, flex: "0 0 auto" };
-const txLink: React.CSSProperties = { color: "#A0A0B8", textDecoration: "none", fontSize: 12 };

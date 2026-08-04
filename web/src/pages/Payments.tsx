@@ -180,7 +180,7 @@ export default function Payments() {
               onChange={(e) => setPayAmt(e.target.value)}
             />
             {s && (
-              <div style={{ ...hint, color: overPerTask || overDaily ? "#E0A106" : "#7C7C92" }}>
+              <div style={{ ...hint, color: overPerTask || overDaily ? "var(--red)" : "var(--ink-2)" }}>
                 per-payment ≤ {fmtXlm(s.perTaskLimit)} XLM · {remaining !== null ? fmtXlm(remaining) : "—"} XLM left
                 today
                 {overPerTask && " — above your per-payment cap; it will be blocked"}
@@ -192,8 +192,8 @@ export default function Payments() {
               <span
                 style={{
                   ...signerChip,
-                  color: t.sessionActive ? "#E0A106" : "#7C7C92",
-                  borderColor: t.sessionActive ? "rgba(224,161,6,0.45)" : "rgba(255,255,255,0.12)",
+                  color: t.sessionActive ? "var(--ink)" : "var(--ink-2)",
+                  borderColor: t.sessionActive ? "var(--green)" : "var(--line)",
                 }}
               >
                 {t.sessionActive ? "⚡ the Leash signs — no popups" : "you approve each payment in your wallet"}
@@ -220,7 +220,7 @@ export default function Payments() {
                 <div key={e.id} style={histRow}>
                   <span style={{ ...dot, background: kindColor(e.kind), boxShadow: `0 0 6px ${kindColor(e.kind)}66` }} />
                   <span style={histLabel}>{e.label}</span>
-                  <span style={{ ...histBadge, color: e.kind === "blocked" ? "#FF5D5D" : "#00FF43" }}>
+                  <span style={{ ...histBadge, color: e.kind === "blocked" ? "var(--red)" : "var(--ink)" }}>
                     {e.kind === "blocked" ? "BLOCKED" : "paid ✓"}
                   </span>
                   {e.txHash && (
@@ -245,7 +245,7 @@ export default function Payments() {
                 <span
                   style={{
                     ...histBadge,
-                    color: verify[p.address] === true ? "#00FF43" : verify[p.address] === false ? "#7C7C92" : "#5C5C6E",
+                    color: verify[p.address] === true ? "var(--ink)" : verify[p.address] === false ? "var(--ink-2)" : "var(--ink-2)",
                   }}
                 >
                   {verify[p.address] === true
@@ -301,43 +301,43 @@ const wrap: React.CSSProperties = { maxWidth: 640, margin: "0 auto" };
 const tabs: React.CSSProperties = { display: "flex", gap: 6, marginBottom: 14 };
 const tabBtn: React.CSSProperties = {
   padding: "8px 16px", borderRadius: 100, cursor: "pointer", fontSize: 13.5, fontWeight: 600, fontFamily: "inherit",
-  background: "none", border: "1px solid rgba(255,255,255,0.1)", color: "#A0A0B8",
+  background: "none", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
 const tabActive: React.CSSProperties = {
-  ...tabBtn, background: "rgba(253,218,36,0.12)", border: "1px solid rgba(253,218,36,0.4)", color: "#FDDA24",
+  ...tabBtn, background: "var(--raise)", border: "1px solid var(--green)", color: "var(--ink)",
 };
 const card: React.CSSProperties = {
   padding: 18, borderRadius: 14,
-  background: "rgba(18,18,28,0.6)", border: "1px solid rgba(255,255,255,0.08)",
+  background: "var(--surface)", border: "1px solid var(--line)",
 };
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
+const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-2)" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
+  background: "var(--bg)", border: "1px solid var(--line)", color: "var(--ink)",
 };
 const primaryBtn: React.CSSProperties = {
   marginTop: 14, padding: "12px 18px", borderRadius: 11, border: "none", cursor: "pointer",
-  background: "#FDDA24", color: "#0F0F0F", fontWeight: 600, fontSize: 14.5, fontFamily: "inherit",
+  background: "var(--ink)", color: "var(--bg)", fontWeight: 600, fontSize: 14.5, fontFamily: "inherit",
 };
-const hint: React.CSSProperties = { marginTop: 8, fontSize: 12, color: "#7C7C92", lineHeight: 1.5 };
-const warn: React.CSSProperties = { marginTop: 8, fontSize: 12, color: "#E0A106" };
-const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "#FF5D5D" };
+const hint: React.CSSProperties = { marginTop: 8, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 };
+const warn: React.CSSProperties = { marginTop: 8, fontSize: 12, color: "var(--red)" };
+const inlineErr: React.CSSProperties = { marginTop: 8, fontSize: 12.5, color: "var(--red)" };
 const inlineLink: React.CSSProperties = {
   background: "none", border: "none", padding: 0, cursor: "pointer",
-  color: "#A0A0B8", textDecoration: "underline", font: "inherit", fontSize: 12,
+  color: "var(--ink-2)", textDecoration: "underline", font: "inherit", fontSize: 12,
 };
 const signerRow: React.CSSProperties = { marginTop: 12 };
 const signerChip: React.CSSProperties = {
-  fontSize: 12, padding: "4px 10px", borderRadius: 100, border: "1px solid", background: "rgba(0,0,0,0.25)",
+  fontSize: 12, padding: "4px 10px", borderRadius: 100, border: "1px solid", background: "var(--bg)",
 };
-const histRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, padding: "9px 2px", fontSize: 13, color: "#EDEDF4" };
+const histRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, padding: "9px 2px", fontSize: 13, color: "var(--ink)" };
 const histLabel: React.CSSProperties = { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 const histBadge: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, flex: "0 0 auto" };
 const dot: React.CSSProperties = { width: 7, height: 7, borderRadius: "50%", flex: "0 0 auto" };
-const txLink: React.CSSProperties = { color: "#A0A0B8", textDecoration: "none", fontSize: 12 };
+const txLink: React.CSSProperties = { color: "var(--ink-2)", textDecoration: "none", fontSize: 12 };
 const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 13 };
-const when: React.CSSProperties = { color: "#7C7C92", fontSize: 11.5 };
+const when: React.CSSProperties = { color: "var(--ink-2)", fontSize: 11.5 };
 const removeBtn: React.CSSProperties = {
-  background: "none", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 7, cursor: "pointer",
-  color: "#A0A0B8", fontSize: 11.5, padding: "3px 9px",
+  background: "none", border: "1px solid var(--line)", borderRadius: 7, cursor: "pointer",
+  color: "var(--ink-2)", fontSize: 11.5, padding: "3px 9px",
 };

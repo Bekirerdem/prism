@@ -37,6 +37,19 @@
          weight is requested on purpose: it never sets a heading or a paragraph. -->
     <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Geist:wght@300;400;500;600;700&family=Kalnia:wght@500&display=swap" rel="stylesheet" />
     <title>Eunomia — bounded agent treasury on Stellar</title>
+    <!-- Theme is applied before first paint, and for the whole document rather than just the
+         landing: useTheme only runs while the landing is mounted, so a dark preference was
+         dropped the moment someone opened the app shell (or reloaded inside it). Reading it
+         here also avoids a flash of the wrong palette. -->
+    <script>
+      try {
+        var t = localStorage.getItem("eunomia-theme");
+        if (t !== "dark" && t !== "light") {
+          t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) { /* private mode: the light default stands */ }
+    </script>
     <style>
       html,body{background:#08080b}
       /* pre-hydration splash — painted instantly, replaced when React mounts.

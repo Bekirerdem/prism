@@ -1,55 +1,90 @@
-/* App shell chrome — sidebar + topbar on desktop, top bar + bottom tabs on phones.
-   Layout lives here (media queries can't be inline); visual tokens match the app. */
+/* ============================================================================
+   App shell chrome — sidebar + topbar on desktop, top bar + bottom tabs on phones.
 
-.shell{ display:grid; grid-template-columns:232px 1fr; min-height:100vh; }
+   The product surface now speaks the landing's language: same cream, same ink,
+   same two meaning colours. A visitor who read the marketing page and then signs
+   in should not feel handed to a different company.
+
+   Hard rule carried over from the landing measurements: --green is FILL ONLY.
+   On cream it reads 1.84:1, so it can never carry text; anything written on top
+   of it is ink (6.31:1). --red works both ways (7.16:1 on cream).
+   ========================================================================== */
+
+.shell{
+  --bg: #fcffd5;
+  --surface: #f4fadc;
+  --ink: #223e05;
+  --ink-2: #55693f;
+  --green: #a2cb28;
+  --red: #a62021;
+  --line: rgba(34, 62, 5, 0.16);
+  --raise: rgba(34, 62, 5, 0.05);
+
+  --display: "Questrial", system-ui, sans-serif;
+  --body: "Geist", system-ui, -apple-system, sans-serif;
+  --code: ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  display:grid; grid-template-columns:236px 1fr; min-height:100vh;
+  background:var(--bg); color:var(--ink);
+  font-family:var(--body);
+}
+
+:root[data-theme="dark"] .shell{
+  --bg: #152a03;
+  --surface: #1e3a06;
+  --ink: #edf6d2;
+  --ink-2: #94a87a;
+  --line: rgba(162, 203, 40, 0.24);
+  --raise: rgba(162, 203, 40, 0.06);
+}
+
+.shell ::selection{ background:var(--green); color:#223e05; }
 
 /* ---- sidebar ------------------------------------------------------------------ */
 .shell__side{
   position:sticky; top:0; height:100vh; display:flex; flex-direction:column;
-  padding:20px 14px 16px;
-  border-right:1px solid rgba(255,255,255,0.07);
-  background:rgba(12,12,18,0.55);
-  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  padding:22px 14px 16px;
+  border-right:1px solid var(--line);
+  background:var(--surface);
 }
 .shell__brand{
-  display:flex; align-items:center; gap:9px; margin:2px 6px 22px;
+  display:flex; align-items:center; gap:9px; margin:2px 6px 24px;
   background:none; border:none; padding:0; cursor:pointer;
-  color:#F3F1EC; font-family:'Fraunces', Georgia, serif; font-weight:600; font-size:18px;
+  color:var(--ink); font-family:var(--display); font-size:19px; letter-spacing:-0.01em;
 }
 .shell__glyph{
   width:24px; height:24px; border-radius:6px;
   background:url('/favicon.png') center/cover no-repeat;
-  box-shadow:0 2px 12px rgba(0,0,0,.45);
 }
 .shell__nav{ display:flex; flex-direction:column; gap:2px; }
 .shell__item{
   position:relative; display:flex; align-items:center; gap:10px; text-align:left;
   background:none; border:none; cursor:pointer; width:100%;
   padding:9px 12px; border-radius:9px;
-  color:#A0A0B8; font-size:13.5px; font-weight:600; font-family:inherit;
+  color:var(--ink-2); font-size:13.5px; font-weight:500; font-family:inherit;
   transition:color .18s ease, background .18s ease;
 }
-.shell__item:hover{ color:#EDEDF4; background:rgba(255,255,255,0.04); }
-.shell__item.is-active{ color:#EDEDF4; background:rgba(255,255,255,0.05); }
+.shell__item:hover{ color:var(--ink); background:var(--raise); }
+.shell__item.is-active{ color:var(--ink); background:var(--raise); font-weight:600; }
 .shell__item.is-active::before{
-  content:""; position:absolute; left:0; top:8px; bottom:8px; width:2px;
-  border-radius:2px; background:#FDDA24;
+  content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px;
+  border-radius:2px; background:var(--green);
 }
-.shell__icon{ width:16px; text-align:center; font-size:13px; opacity:.85; }
+.shell__icon{ width:16px; text-align:center; font-size:13px; opacity:.75; }
 
 .shell__foot{ margin-top:auto; display:flex; flex-direction:column; gap:10px; padding:0 6px; }
 .shell__demo{
   background:none; border:none; padding:0; cursor:pointer; text-align:left;
-  color:#7C7C92; font-size:12.5px; font-family:inherit;
+  color:var(--ink-2); font-size:12.5px; font-family:inherit;
 }
-.shell__demo:hover{ color:#EDEDF4; }
-.shell__demo.is-active{ color:#FDDA24; }
+.shell__demo:hover{ color:var(--ink); }
+.shell__demo.is-active{ color:var(--ink); font-weight:600; }
 .shell__testnet{
-  padding:8px 10px; border-radius:9px; font-size:11.5px; line-height:1.45; color:#EDEDF4;
-  background:rgba(253,218,36,0.07); border:1px solid rgba(253,218,36,0.3);
+  padding:9px 11px; border-radius:9px; font-size:11.5px; line-height:1.45;
+  color:var(--ink); background:var(--raise); border:1px solid var(--line);
 }
-.shell__docs{ color:#7C7C92; font-size:12.5px; text-decoration:none; }
-.shell__docs:hover{ color:#EDEDF4; }
+.shell__docs{ color:var(--ink-2); font-size:12.5px; text-decoration:none; }
+.shell__docs:hover{ color:var(--ink); }
 
 /* ---- main column -------------------------------------------------------------- */
 .shell__main{ display:flex; flex-direction:column; min-width:0; }
@@ -57,66 +92,208 @@
   position:sticky; top:0; z-index:900;
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   padding:12px 22px;
-  background:rgba(10,10,14,0.55);
-  border-bottom:1px solid rgba(255,255,255,0.06);
-  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  background:var(--bg);
+  border-bottom:1px solid var(--line);
 }
-.shell__content{ flex:1; padding:26px 26px 40px; max-width:1120px; width:100%; margin:0 auto; box-sizing:border-box; }
+.shell__content{ flex:1; padding:26px 26px 40px; max-width:1180px; width:100%; margin:0 auto; box-sizing:border-box; }
 
 /* ---- treasury switcher --------------------------------------------------------- */
 .tswitch{ position:relative; }
 .tswitch__chip{
   display:inline-flex; align-items:center; gap:8px;
   padding:7px 12px; border-radius:9px; cursor:pointer;
-  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
-  color:#EDEDF4; font-family:ui-monospace, monospace; font-size:12.5px;
+  background:var(--surface); border:1px solid var(--line);
+  color:var(--ink); font-family:var(--code); font-size:12.5px;
   transition:background .18s ease;
 }
-.tswitch__chip:hover{ background:rgba(255,255,255,0.09); }
-.tswitch__caret{ font-size:10px; color:#7C7C92; }
+.tswitch__chip:hover{ background:var(--raise); }
+.tswitch__caret{ font-size:10px; color:var(--ink-2); }
 .tswitch__menu{
   position:absolute; left:0; top:calc(100% + 8px); min-width:280px; padding:6px;
-  border-radius:12px; background:rgba(14,14,20,0.97);
-  border:1px solid rgba(255,255,255,0.10);
-  box-shadow:0 16px 40px -12px rgba(0,0,0,0.7); z-index:1200;
+  border-radius:12px; background:var(--surface);
+  border:1px solid var(--line);
+  box-shadow:0 16px 40px -18px rgba(34,62,5,0.35); z-index:1200;
 }
 .tswitch__row{
   display:flex; align-items:center; gap:8px; width:100%;
   background:none; border:none; cursor:pointer; text-align:left;
   padding:9px 10px; border-radius:8px;
-  color:#EDEDF4; font-family:ui-monospace, monospace; font-size:12.5px;
+  color:var(--ink); font-family:var(--code); font-size:12.5px;
 }
-.tswitch__row:hover{ background:rgba(255,255,255,0.07); }
-.tswitch__row .is-unreg{ color:#7C7C92; font-size:11px; font-family:inherit; }
-.tswitch__row .is-current{ color:#FDDA24; }
+.tswitch__row:hover{ background:var(--raise); }
+.tswitch__row .is-unreg{ color:var(--ink-2); font-size:11px; font-family:var(--body); }
+.tswitch__row .is-current{ color:var(--ink); font-weight:600; }
 .tswitch__forget{
   background:none; border:none; cursor:pointer; padding:2px 6px;
-  color:#7C7C92; font-size:11px; border-radius:6px; opacity:0; transition:opacity .15s ease;
+  color:var(--ink-2); font-size:11px; border-radius:6px; opacity:0; transition:opacity .15s ease;
 }
 .tswitch__row:hover .tswitch__forget{ opacity:1; }
-.tswitch__forget:hover{ color:#FF5D5D; }
+.tswitch__forget:hover{ color:var(--red); }
 .tswitch__new{
-  margin-top:4px; border-top:1px solid rgba(255,255,255,0.08); border-radius:0 0 8px 8px;
-  color:#FDDA24; font-family:inherit;
+  margin-top:4px; border-top:1px solid var(--line); border-radius:0 0 8px 8px;
+  color:var(--ink); font-family:var(--body); font-weight:600;
 }
 
-/* ---- overview layout ----------------------------------------------------------- */
-/* minmax(0,…) rather than a bare fr: a plain `1fr` is `minmax(auto,1fr)`, so a grid item
-   can never shrink below its min-content. An activity row ("Drain attempt blocked on
-   GBGH…TDQS's treasury" + timestamp) made the card 394px inside a 390px phone, the
-   document scrolled sideways and the browser zoomed the page out to fit. */
-.ov__hero{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:18px; align-items:stretch; }
-.ov__lower{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:18px; }
-.ov__balance{ font-family:'Fraunces', Georgia, serif; font-weight:500; font-size:56px; letter-spacing:-0.02em; line-height:1.05; color:#EDEDF4; }
-.ov__balance small{ font-size:17px; color:#A0A0B8; font-family:inherit; margin-left:8px; }
+/* ---- the hero: what the rules did ---------------------------------------------
+   This page has one job and it is not reporting a balance. Every row is one
+   decision the contract made, and the stripe on its left is the decision itself —
+   the same device the landing uses for allowed and rejected cards. */
+.rules{ display:flex; flex-direction:column; }
+.rules__head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  margin-bottom:14px;
+}
+.rules__title{
+  font-family:var(--display); font-size:31px; letter-spacing:-0.015em; color:var(--ink);
+}
+.rules__count{ font-size:12.5px; color:var(--ink-2); }
+.rules__list{ display:flex; flex-direction:column; gap:6px; }
+.rules__row{
+  position:relative; overflow:hidden;
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px;
+  padding:15px 16px; border-radius:0 11px 11px 0;
+  border-left:5px solid var(--line);
+  background:var(--surface);
+}
+.rules__row--ok{ border-left-color:var(--green); }
+.rules__row--blocked{
+  border-left-color:var(--red);
+  background:color-mix(in oklab, var(--red) 13%, var(--surface));
+}
+.rules__what{ min-width:0; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.rules__verb{ font-family:var(--display); font-size:17px; color:var(--ink); }
+.rules__why{ font-size:13px; color:var(--ink-2); min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.rules__meta{ display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+.rules__when{ font-size:12px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.rules__tx{ color:var(--ink-2); text-decoration:none; font-size:13px; }
+.rules__tx:hover{ color:var(--ink); }
+.rules__empty{
+  padding:28px 18px; border-radius:11px; border:1px dashed var(--line);
+  color:var(--ink-2); font-size:13.5px; line-height:1.6;
+}
+.rules__all{
+  align-self:flex-start; margin-top:12px;
+  background:none; border:none; padding:0; cursor:pointer;
+  color:var(--ink-2); font-size:12.5px; font-family:inherit; text-decoration:underline;
+  text-underline-offset:3px;
+}
+.rules__all:hover{ color:var(--ink); }
+
+/* ---- second tier: the state behind the decisions -------------------------------- */
+.ov__tier{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:16px; margin-top:26px; }
+.ov__card{
+  padding:20px 22px; border-radius:14px;
+  background:var(--surface); border:1px solid var(--line);
+  display:flex; flex-direction:column;
+}
+.ov__label{
+  font-size:11px; text-transform:uppercase; letter-spacing:0.09em; color:var(--ink-2);
+}
+.ov__balance{
+  font-family:var(--display); font-size:56px; letter-spacing:-0.025em; line-height:1.02;
+  color:var(--ink); margin-top:10px;
+}
+.ov__balance small{ font-size:17px; color:var(--ink-2); font-family:var(--body); margin-left:8px; }
+.ov__chips{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.ov__chip{
+  font-size:12px; padding:4px 10px; border-radius:100px;
+  border:1px solid var(--line); color:var(--ink-2); background:var(--bg);
+}
+.ov__chip--live{ color:var(--ink); border-color:var(--green); }
+.ov__chip--paused{ color:var(--red); border-color:var(--red); }
+.ov__idrow{ display:flex; align-items:center; gap:10px; margin-top:16px; }
+.ov__id{ font-family:var(--code); font-size:13px; color:var(--ink-2); text-decoration:none; }
+.ov__id:hover{ color:var(--ink); }
+.ov__copy{
+  padding:3px 9px; border-radius:7px; font-size:11.5px; cursor:pointer; font-family:inherit;
+  background:transparent; border:1px solid var(--line); color:var(--ink-2);
+}
+.ov__copy:hover{ color:var(--ink); border-color:var(--ink-2); }
+
+.ov__track{
+  height:10px; border-radius:100px; background:var(--bg);
+  border:1px solid var(--line); margin-top:14px; overflow:hidden;
+}
+.ov__fill{ height:100%; background:var(--green); }
+.ov__spent{ font-family:var(--display); font-size:22px; color:var(--ink); margin-top:14px; }
+.ov__rule{ font-size:13px; color:var(--ink-2); margin-top:8px; }
+.ov__rule strong{ color:var(--ink); font-weight:500; }
+
+/* ---- actions -------------------------------------------------------------------- */
+.ov__actions{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+.ov__btn{
+  padding:11px 18px; border-radius:11px; cursor:pointer; font-size:14px; font-family:inherit;
+  border:1px solid var(--ink); background:var(--ink); color:var(--bg); font-weight:500;
+  transition:opacity .16s ease;
+}
+.ov__btn:hover{ opacity:.86; }
+.ov__btn--ghost{ background:transparent; color:var(--ink); }
+.ov__btn--ghost:hover{ background:var(--raise); opacity:1; }
+.ov__btn:disabled{ opacity:.5; cursor:default; }
+
+.ov__panel{
+  display:flex; gap:10px; align-items:flex-start; margin-top:12px; flex-wrap:wrap;
+  padding:14px; border-radius:12px; background:var(--surface); border:1px solid var(--line);
+}
+.ov__input{
+  flex:1; min-width:180px; box-sizing:border-box; padding:11px 13px; border-radius:10px;
+  background:var(--bg); border:1px solid var(--line); color:var(--ink); font-family:inherit;
+  font-size:14px;
+}
+.ov__input:focus{ outline:2px solid var(--green); outline-offset:1px; }
+.ov__err{ width:100%; font-size:12.5px; color:var(--red); }
+
+/* ---- one-line nudge (replaces the five-step strip once a treasury exists) -------- */
+.ov__next{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  margin-bottom:20px; padding:12px 16px; border-radius:11px;
+  background:var(--surface); border:1px solid var(--line); border-left:5px solid var(--green);
+  font-size:13.5px; line-height:1.5;
+}
+.ov__notice{
+  margin-bottom:16px; padding:12px 15px; border-radius:11px; font-size:13px; line-height:1.55;
+  background:var(--surface); border:1px solid var(--line); border-left:5px solid var(--red);
+  color:var(--ink);
+}
+.ov__notice button{
+  background:none; border:none; padding:0; cursor:pointer; font:inherit;
+  color:var(--ink); text-decoration:underline; text-underline-offset:3px;
+}
+
+/* ---- shared chrome borrowed from the landing nav ------------------------------
+   WalletChip ships its own dark-surface styling (appnav.css) because it also sits on the
+   marketing page. Inside the shell it has to speak the shell's palette, so the colours are
+   re-pointed at the tokens here rather than forked into a second component. */
+.shell .anav__chip{
+  background:var(--surface); border:1px solid var(--line); color:var(--ink);
+  font-family:var(--code);
+}
+.shell .anav__chip:hover{ background:var(--raise); }
+.shell .anav__dot{ background:var(--green); box-shadow:none; }
+.shell .anav__cta{ background:var(--ink); color:var(--bg); }
+.shell .anav__cta--ghost{
+  background:transparent; color:var(--ink); border:1px solid var(--line);
+}
+.shell .anav__cta--ghost:hover{ background:var(--raise); }
+.shell .anav__menu{
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:0 16px 40px -18px rgba(34,62,5,0.35);
+}
+.shell .anav__mitem{ color:var(--ink); }
+.shell .anav__mitem:hover{ background:var(--raise); }
 
 /* skeleton pulse for loading states */
-@keyframes shellPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:.25; } }
-.shell__skel{ border-radius:10px; background:rgba(255,255,255,0.06); animation:shellPulse 1.6s ease-in-out infinite; }
+@keyframes shellPulse{ 0%,100%{ opacity:.5; } 50%{ opacity:.2; } }
+.shell__skel{ border-radius:10px; background:var(--raise); animation:shellPulse 1.6s ease-in-out infinite; }
+
+@media(prefers-reduced-motion: reduce){
+  .shell__skel{ animation:none; }
+}
 
 @media(max-width:1023px){
-  .ov__hero,.ov__lower{ grid-template-columns:minmax(0,1fr); }
-  .ov__balance{ font-size:40px; }
+  .ov__tier{ grid-template-columns:minmax(0,1fr); }
+  .ov__balance{ font-size:42px; }
+  .rules__title{ font-size:22px; }
 }
 
 /* ---- mobile ------------------------------------------------------------------- */
@@ -131,17 +308,16 @@
     position:fixed; left:0; right:0; bottom:0; z-index:1000;
     display:flex; justify-content:space-around; align-items:stretch;
     padding:6px 4px calc(6px + env(safe-area-inset-bottom));
-    background:rgba(10,10,14,0.88);
-    border-top:1px solid rgba(255,255,255,0.08);
-    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    background:var(--surface);
+    border-top:1px solid var(--line);
   }
   .shell__tab{
     display:flex; flex-direction:column; align-items:center; gap:3px; flex:1;
     background:none; border:none; cursor:pointer; padding:6px 2px;
-    color:#7C7C92; font-size:10.5px; font-weight:600; font-family:inherit;
+    color:var(--ink-2); font-size:10.5px; font-weight:600; font-family:inherit;
   }
   .shell__tab .shell__icon{ font-size:16px; width:auto; }
-  .shell__tab.is-active{ color:#FDDA24; }
+  .shell__tab.is-active{ color:var(--ink); }
   .tswitch__chip{ padding:6px 9px; font-size:11.5px; }
   .tswitch__menu{ min-width:240px; }
   /* Lift the global feedback FAB above the bottom tab bar (it hid the Settings tab). */

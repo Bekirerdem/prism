@@ -68,26 +68,26 @@ export default function BottomSheet({
 }
 
 const backdrop: React.CSSProperties = {
-  position: "fixed", inset: 0, zIndex: 1300, background: "rgba(0,0,0,0.55)",
+  position: "fixed", inset: 0, zIndex: 1300, background: "rgba(34,62,5,0.45)",
 };
 const sheet: React.CSSProperties = {
   position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 1310,
   padding: "10px 16px calc(20px + env(safe-area-inset-bottom))",
   borderRadius: "18px 18px 0 0",
-  background: "#15151F", borderTop: "1px solid rgba(255,255,255,0.1)",
-  boxShadow: "0 -18px 48px -12px rgba(0,0,0,0.8)",
+  background: "var(--surface)", borderTop: "1px solid var(--line)",
+  boxShadow: "0 -18px 48px -12px rgba(34,62,5,0.28)",
 };
 const grabber: React.CSSProperties = {
   width: 40, height: 4, borderRadius: 100, margin: "0 auto 10px",
-  background: "rgba(255,255,255,0.18)",
+  background: "var(--line)",
 };
 const titleRow: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6,
 };
 const titleStyle: React.CSSProperties = {
-  fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92",
+  fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-2)",
 };
 const closeBtn: React.CSSProperties = {
-  background: "none", border: "none", cursor: "pointer", color: "#7C7C92",
+  background: "none", border: "none", cursor: "pointer", color: "var(--ink-2)",
   fontSize: 14, padding: 4, fontFamily: "inherit",
 };
