@@ -15,6 +15,7 @@ import {
   Account,
   Keypair,
   Operation,
+  Transaction,
   TransactionBuilder,
   xdr,
 } from "@stellar/stellar-sdk";
@@ -109,12 +110,26 @@ export async function submitHostFunction(
 }
 
 /** Submit an already-signed transaction envelope — passkey-kit's smart-wallet deployment,
- *  which arrives complete because the kit's own deployer signed and pays for it. */
+ *  which arrives complete because the kit's own deployer signed it.
+ *
+ *  It arrives with the kit's own inclusion fee, which we cannot influence and which the
+ *  network outbid: wallet creation came back `txInsufficientFee` while the treasury deploy
+ *  beside it succeeded. Re-signing is not an option — that would break the kit's signature —
+ *  so it goes out wrapped in a fee bump, which raises the fee from the outside and leaves the
+ *  inner transaction byte-for-byte intact. */
 export async function submitEnvelope(
   deps: SubmitDeps,
   envelopeXdr: string,
 ): Promise<{ hash: string; status: string }> {
-  const tx = TransactionBuilder.fromXDR(envelopeXdr, deps.networkPassphrase);
+  const inner = TransactionBuilder.fromXDR(envelopeXdr, deps.networkPassphrase);
+  const tx = TransactionBuilder.buildFeeBumpTransaction(
+    deps.keypair,
+    INCLUSION_FEE,
+    inner as Transaction,
+    deps.networkPassphrase,
+  );
+  tx.sign(deps.keypair);
+
   const sent = await deps.server.sendTransaction(tx);
   if (sent.status === "ERROR") {
     throw new RelaySubmitError(

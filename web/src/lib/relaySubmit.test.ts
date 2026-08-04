@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { Address, Keypair, Operation, xdr } from "@stellar/stellar-sdk";
-import { RelaySubmitError, submitHostFunction, type SubmittingServer } from "./relaySubmit";
+import { Account, Address, Keypair, Operation, TransactionBuilder, xdr } from "@stellar/stellar-sdk";
+import {
+  RelaySubmitError,
+  submitEnvelope,
+  submitHostFunction,
+  type SubmittingServer,
+} from "./relaySubmit";
 
 const PASSPHRASE = "Test SDF Network ; September 2015";
 const WALLET = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ";
@@ -157,6 +162,31 @@ describe("submitHostFunction", () => {
       }),
     });
     await expect(submitHostFunction(deps(s), FUNC, [signedEntry()])).rejects.toThrow(/archived/i);
+  });
+
+  it("wraps an already-signed envelope in a fee bump instead of touching it", async () => {
+    // passkey-kit signs the wallet deployment with its own inclusion fee, which the network
+    // outbid. Re-signing would invalidate the kit's signature, so the fee is raised from the
+    // outside and the inner transaction has to survive byte-for-byte.
+    const s = server();
+    const inner = new TransactionBuilder(new Account(keypair.publicKey(), "7"), {
+      fee: "100",
+      networkPassphrase: PASSPHRASE,
+    })
+      .addOperation(Operation.invokeHostFunction({ func: FUNC, auth: [] }))
+      .setTimeout(60)
+      .build();
+    inner.sign(keypair);
+    const before = inner.toXDR();
+
+    await submitEnvelope(deps(s), before);
+
+    const sent = (s.sendTransaction as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      innerTransaction: { toXDR(): string };
+      feeSource: { toString(): string };
+    };
+    expect(sent.innerTransaction.toXDR()).toBe(before);
+    expect(sent.feeSource.toString()).toBe(keypair.publicKey());
   });
 
   it("stops polling as soon as the ledger has a verdict", async () => {

@@ -318,16 +318,6 @@
 @media (max-width: 900px) {
   .lp__nav-mid { display: none; }
 }
-/* On a phone the same thing happened one level down: brand + Docs + GitHub + theme + wallet
- * button did not fit 390px, so every label was clipped mid-word ("E Eu", "Doc", "GitHu") and
- * the button wrapped onto two lines. Docs and GitHub leave — the footer carries both — and
- * what stays is the brand, the theme switch and the one action. */
-@media (max-width: 720px) {
-  .lp__nav { gap: 12px; }
-  .lp__nav-aux { display: none; }
-  .lp__nav-end { gap: 14px; }
-  .lp__nav-brand { font-size: 18px; }
-}
 .lp__nav-mask { display: inline-block; overflow: hidden; vertical-align: bottom; }
 .lp__nav-link {
   display: inline-block;
@@ -899,6 +889,16 @@
    * follows the shorter pin travel the scene now uses. */
   .lp__scene-line { line-height: 1.24; font-size: clamp(27px, 7.6vw, 46px); }
   .lp__how-copy { margin-top: 100svh; }
+
+  /* Brand + Docs + GitHub + theme + wallet button do not fit 390px: every label was clipped
+   * mid-word ("E Eu", "Doc", "GitHu") and the button wrapped onto two lines. Docs and GitHub
+   * leave — the footer carries both — keeping the brand, the theme switch and the one action.
+   * This has to sit AFTER `.lp__nav-mask { display: inline-block }`: same specificity, so the
+   * later rule wins and an earlier `display: none` was simply overwritten. */
+  .lp__nav { gap: 12px; }
+  .lp__nav-end { gap: 14px; }
+  .lp__nav-brand { font-size: 18px; }
+  .lp__nav-aux { display: none; }
 
   /* The counter is pinned to the bottom edge of a full-height hero on desktop. On a phone the
    * headline, lede and two buttons already fill that height, so an absolutely positioned foot
