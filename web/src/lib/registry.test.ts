@@ -42,18 +42,39 @@ describe("discoverTreasuries", () => {
 });
 
 describe("registerTreasury", () => {
-  it("builds the register call for the owner and signs + sends it", async () => {
-    const signAndSend = vi.fn().mockResolvedValue({});
-    mocks.register.mockResolvedValueOnce({ signAndSend });
-    await registerTreasury("GADDR", { signTransaction: vi.fn() }, "CTREASURY");
+  const executor = (address: string, submit = vi.fn().mockResolvedValue({})) =>
+    ({
+      address,
+      kind: address.startsWith("C") ? "passkey" : "wallet",
+      signer: { signTransaction: vi.fn() },
+      submit,
+    }) as unknown as Parameters<typeof registerTreasury>[0];
+
+  it("builds the register call for the owner and submits through the session", async () => {
+    const submit = vi.fn().mockResolvedValue({});
+    mocks.register.mockResolvedValueOnce({ signAndSend: vi.fn() });
+
+    await registerTreasury(executor("GADDR", submit), "CTREASURY");
+
     expect(mocks.register).toHaveBeenCalledWith({ owner: "GADDR", treasury: "CTREASURY" });
-    expect(signAndSend).toHaveBeenCalled();
+    expect(submit).toHaveBeenCalled();
+  });
+
+  it("submits a passkey session's registration the same way, through the relay", async () => {
+    // The regression: this used to sign with walletSignerFor() and send over RPC, so a
+    // passkey user's treasury silently never reached the registry — and cross-device
+    // recovery had nothing to find.
+    const submit = vi.fn().mockResolvedValue({});
+    mocks.register.mockResolvedValueOnce({ signAndSend: vi.fn() });
+
+    await registerTreasury(executor("CWALLET", submit), "CTREASURY");
+
+    expect(mocks.register).toHaveBeenCalledWith({ owner: "CWALLET", treasury: "CTREASURY" });
+    expect(submit).toHaveBeenCalled();
   });
 
   it("propagates a decline so the caller's best-effort catch handles it", async () => {
     mocks.register.mockRejectedValueOnce(new Error("User declined"));
-    await expect(
-      registerTreasury("GADDR", { signTransaction: vi.fn() }, "CTREASURY"),
-    ).rejects.toThrow("User declined");
+    await expect(registerTreasury(executor("GADDR"), "CTREASURY")).rejects.toThrow("User declined");
   });
 });

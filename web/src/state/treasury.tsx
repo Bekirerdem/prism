@@ -3,7 +3,7 @@
 // Workspace so all shell pages read one context. Transaction progress/results surface as
 // toasts; validation failures return `{ validation: true }` and render inline at the form.
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { connect as kitConnect, executorFor, walletSignerFor } from "../lib/walletKit";
+import { connect as kitConnect, executorFor } from "../lib/walletKit";
 import { useWalletAddress } from "../lib/useWalletAddress";
 import {
   clearTreasuryId,
@@ -30,7 +30,7 @@ import {
   type EunomiaState,
 } from "../lib/userTreasury";
 import { SERVICE, shortAddr } from "../config";
-import { fundWithFriendbot, getXlmBalance } from "../lib/funding";
+import { fundWithFriendbot, getContractXlmBalance, getXlmBalance } from "../lib/funding";
 import { connectErr, errText, sendErr } from "../lib/wallet-errors";
 import { parseXlmAmount } from "../lib/validate";
 import { trackError, trackViolation } from "../lib/analytics";
@@ -123,7 +123,11 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
 
   const refreshWalletXlm = useCallback(async (addr: string) => {
     try {
-      setWalletXlm(await getXlmBalance(addr));
+      // A smart wallet holds its XLM in the SAC; Horizon has no account record for it and
+      // answers a C-address with 400.
+      setWalletXlm(
+        isValidContractId(addr) ? await getContractXlmBalance(addr) : await getXlmBalance(addr),
+      );
     } catch {
       setWalletXlm(undefined);
     }
@@ -244,7 +248,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
         if (!testSignerAvailable()) {
           try {
             toast("info", "Backing it up on Stellar so you can open it from any device — confirm in your wallet…");
-            await registerTreasury(address, walletSignerFor(address), id);
+            await registerTreasury(await executorFor(address), id);
             registered = true;
             setRegistryIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
             void logActivity({ walletAddress: address, treasuryId: id, action: "register" });
@@ -633,7 +637,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     setBusy("register");
     toast("info", "Backing up on Stellar — confirm in your wallet…");
     try {
-      await registerTreasury(address, walletSignerFor(address), treasuryId);
+      await registerTreasury(await executorFor(address), treasuryId);
       setRegistryIds((ids) => (ids.includes(treasuryId) ? ids : [...ids, treasuryId]));
       void logActivity({ walletAddress: address, treasuryId, action: "register" });
       const msg = "Backed up on Stellar ✓ — open it from any device.";

@@ -38,6 +38,26 @@ describe("fundWithFriendbot", () => {
     const fetchFn = vi.fn().mockResolvedValue(res(400, {}));
     await expect(fundWithFriendbot("GABC", fetchFn)).rejects.toThrow(/already funded/);
   });
+
+  it("sends a smart wallet to the dispenser instead — friendbot cannot fund a contract", async () => {
+    // Friendbot creates classic accounts, and a classic payment cannot reach a contract
+    // address at all, so a passkey user pressing this button was asking for the impossible.
+    const fetchFn = vi.fn().mockResolvedValue(res(200, {}));
+    const wallet = "CBBUJFC4JUV3DYJOGFAYYSVLZCYPXZJIPQZARQEGSFAVVG37HP7YPGFU";
+
+    await expect(fundWithFriendbot(wallet, fetchFn)).resolves.toBeUndefined();
+
+    const [url, init] = fetchFn.mock.calls[0];
+    expect(url).toBe("/api/faucet");
+    expect(JSON.parse(init.body)).toEqual({ wallet });
+  });
+
+  it("reports a wallet that already drew its allocation (409)", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(res(409, { error: "This wallet already has funds." }));
+    const wallet = "CBBUJFC4JUV3DYJOGFAYYSVLZCYPXZJIPQZARQEGSFAVVG37HP7YPGFU";
+
+    await expect(fundWithFriendbot(wallet, fetchFn)).rejects.toThrow(/already has its starting/i);
+  });
 });
 
 describe("needsFunding", () => {
