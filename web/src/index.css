@@ -449,6 +449,8 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
    either scope's tokens. It carries the brand values directly and flips with the theme
    attribute the document now always has. */
 .feedback-fab{
+  display:inline-block; padding:11px 17px; border-radius:999px;
+  font-size:13.5px; font-weight:600; line-height:1.4;
   background:#223e05; border:1px solid #223e05; color:#fcffd5;
   box-shadow:0 8px 24px -10px rgba(34,62,5,0.3);
   transition:opacity .16s ease;

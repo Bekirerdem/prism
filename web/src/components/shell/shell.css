@@ -179,7 +179,72 @@
 }
 .rules__all:hover{ color:var(--ink); }
 
-/* ---- second tier: the state behind the decisions -------------------------------- */
+/* ---- the workspace ------------------------------------------------------------
+   Two columns, not a stack of full-width blocks. The left one carries the treasury and
+   then what its rules did; the right one answers the questions you ask about those
+   decisions — how much of today is left, who may be paid, how the week went. Every cell
+   has a different job, so nothing is filler. */
+.ov__grid{
+  display:grid;
+  grid-template-columns:minmax(0,8fr) minmax(0,4fr);
+  /* Named areas rather than auto-placement: the rules column is the tallest thing on the
+     page and its height changes with the feed, so left to flow, the week chart dropped
+     under it into the left column and left the right one half empty. */
+  grid-template-areas:
+    "treasury today"
+    "rules    payees"
+    "rules    week";
+  grid-template-rows:auto auto 1fr;
+  gap:16px;
+  align-items:start;
+}
+.ov__card--treasury{ grid-area:treasury; }
+.ov__card--today{ grid-area:today; }
+.ov__rules{ grid-area:rules; min-width:0; }
+.ov__card--payees{ grid-area:payees; }
+.ov__card--week{ grid-area:week; }
+.ov__cardhead{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.ov__count{ font-family:var(--display); font-size:20px; color:var(--ink); }
+.ov__empty{ font-size:13px; color:var(--ink-2); line-height:1.6; margin:12px 0 0; }
+.ov__payees{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.ov__payees a{
+  font-family:var(--code); font-size:13px; color:var(--ink); text-decoration:none;
+  display:block; padding:8px 10px; border-radius:8px; background:var(--bg); border:1px solid var(--line);
+}
+.ov__payees a:hover{ border-color:var(--ink-2); }
+.ov__btn--full{ width:100%; margin-top:14px; text-align:center; }
+
+.ov__weekline{
+  display:flex; gap:16px; margin-top:14px; font-size:12.5px; color:var(--ink-2);
+}
+.ov__weekline span{ display:inline-flex; align-items:center; gap:6px; }
+.ov__key{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+.ov__key--ok{ background:var(--green); }
+.ov__key--blocked{ background:var(--red); }
+
+/* ---- charts -------------------------------------------------------------------- */
+.chart--spark{ width:132px; height:34px; overflow:visible; }
+.chart__radial{ position:relative; width:132px; margin:16px auto 4px; }
+.chart__radial svg{ width:100%; display:block; }
+.chart__radial-mid{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px; text-align:center;
+}
+.chart__radial-mid strong{ font-family:var(--display); font-size:24px; color:var(--ink); font-weight:400; }
+.chart__radial-mid span{ font-size:11px; color:var(--ink-2); }
+
+.chart__bars{ display:flex; align-items:flex-end; gap:7px; height:96px; margin-top:16px; }
+.chart__col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end; }
+.chart__stack{
+  width:100%; min-height:3px; display:flex; flex-direction:column-reverse;
+  border-radius:4px; overflow:hidden; background:var(--line);
+}
+.chart__seg{ display:block; width:100%; }
+.chart__seg--ok{ background:var(--green); }
+.chart__seg--blocked{ background:var(--red); }
+.chart__tick{ font-size:10.5px; color:var(--ink-2); }
+
+/* kept for the tier used elsewhere */
 .ov__tier{ display:grid; grid-template-columns:minmax(0,7fr) minmax(0,5fr); gap:16px; margin-top:26px; }
 .ov__card{
   padding:20px 22px; border-radius:14px;
@@ -291,9 +356,18 @@
 }
 
 @media(max-width:1023px){
+  .ov__grid{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:none;
+    grid-template-rows:none;
+  }
+  .ov__card--treasury,.ov__card--today,.ov__rules,.ov__card--payees,.ov__card--week{ grid-area:auto; }
   .ov__tier{ grid-template-columns:minmax(0,1fr); }
   .ov__balance{ font-size:42px; }
   .rules__title{ font-size:22px; }
+  /* Decisions before the side panels: on a narrow screen the column order becomes reading
+     order, and the rules are still the subject. */
+  .ov__rules{ order:-1; }
 }
 
 /* ---- mobile ------------------------------------------------------------------- */
@@ -320,6 +394,20 @@
   .shell__tab.is-active{ color:var(--ink); }
   .tswitch__chip{ padding:6px 9px; font-size:11.5px; }
   .tswitch__menu{ min-width:240px; }
-  /* Lift the global feedback FAB above the bottom tab bar (it hid the Settings tab). */
-  body:has(.shell) .feedback-fab{ bottom:calc(78px + env(safe-area-inset-bottom)) !important; }
+  /* The feedback FAB is a marketing-page affordance. Inside the app on a phone it is a
+     full-width-ish pill floating over the content you are trying to read — it sat on top of
+     the treasury card. Here it becomes a small round mark above the tab bar: still reachable,
+     no longer competing with the page. */
+  body:has(.shell) .feedback-fab{
+    bottom:calc(78px + env(safe-area-inset-bottom)) !important;
+    right:14px;
+    width:42px; height:42px; padding:0; border-radius:50%;
+    display:grid; place-items:center;
+    /* font-size:0 shrinks the label to nothing but does not stop it wrapping out of a
+       42px box — a stray "fe" showed under the circle. overflow clips what is left. */
+    font-size:0; overflow:hidden; line-height:0;
+  }
+  body:has(.shell) .feedback-fab::before{
+    content:"✎"; font-size:18px; line-height:1;
+  }
 }

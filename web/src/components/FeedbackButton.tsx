@@ -21,9 +21,10 @@ export default function FeedbackButton() {
 // both .lp and .shell, so it cannot read either one's tokens — and an inline colour would win
 // over the stylesheet anyway, which is how it stayed on the old dark-and-yellow palette after
 // everything around it moved.
+// Only geometry stays inline. Anything the shell needs to override on a phone — size,
+// radius, and the type itself — lives in the stylesheet, because an inline value wins over
+// a class and that is exactly how this button kept resisting every change made around it.
 const fab: CSSProperties = {
   position: "fixed", right: 18, bottom: 18, zIndex: 1500,
-  padding: "11px 17px", borderRadius: 999, cursor: "pointer",
-  display: "inline-block", textDecoration: "none", fontFamily: "inherit", lineHeight: 1.4,
-  fontWeight: 600, fontSize: 13.5,
+  cursor: "pointer", textDecoration: "none", fontFamily: "inherit",
 };

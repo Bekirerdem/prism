@@ -18,6 +18,8 @@ import { needsFunding, MIN_XLM } from "../lib/funding";
 import type { View } from "../lib/routes";
 import RecentActivity from "../components/shell/RecentActivity";
 import BottomSheet from "../components/shell/BottomSheet";
+import { DecisionBars, RadialLimit, Sparkline } from "../components/shell/Charts";
+import { decisionsByDay, spendByDay, weekTotals } from "../lib/insights";
 import { useIsMobile } from "../lib/useIsMobile";
 
 // What the user should do next, in their words — one line, not a five-step strip. The
@@ -71,10 +73,18 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   const [fundAmt, setFundAmt] = useState("");
   const [fundErr, setFundErr] = useState("");
 
-  const payeeCount = useMemo(() => {
-    if (analytics.status === "loading" && analytics.events.length === 0) return null;
-    return mergePayees(payeesFromEvents(analytics.events), loadPayeeBook(treasuryId)).length;
-  }, [analytics.events, analytics.status, treasuryId]);
+  const payees = useMemo(
+    () => mergePayees(payeesFromEvents(analytics.events), loadPayeeBook(treasuryId)),
+    [analytics.events, treasuryId],
+  );
+  const payeeCount =
+    analytics.status === "loading" && analytics.events.length === 0 ? null : payees.length;
+
+  // The charts read the same feed the list below them renders, so a bar and a row can never
+  // disagree about what happened.
+  const week = useMemo(() => decisionsByDay(rows), [rows]);
+  const totals = useMemo(() => weekTotals(week), [week]);
+  const spend = useMemo(() => spendByDay(rows), [rows]);
 
   // Durable truths from the activity log — chain events older than the RPC's retention
   // window can't be re-scanned, but the Supabase log remembers them.
@@ -154,7 +164,6 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
   };
 
   const s = t.state;
-  const spentPct = s && s.dailyLimit > 0n ? Math.min(100, (Number(s.daySpent) / Number(s.dailyLimit)) * 100) : 0;
   const remaining = s ? (s.dailyLimit > s.daySpent ? s.dailyLimit - s.daySpent : 0n) : 0n;
   const leashOn = t.sessionActive;
 
@@ -202,15 +211,16 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
         </div>
       )}
 
-      {/* HERO — what the rules did */}
-      <motion.div {...fadeUp(0)}>
-        <RecentActivity rows={rows} freshId={freshId} onViewAll={() => onGo("activity")} />
-      </motion.div>
+      <div className="ov__grid">
+        {/* ---- left: the treasury, then what its rules did ---- */}
+        <motion.section className="ov__card ov__card--treasury" {...fadeUp(0)}>
+          <div className="ov__cardhead">
+            <div className="ov__label">Treasury</div>
+            {!t.loading && s && (
+              <Sparkline values={spend} label="Spending over the last seven days" />
+            )}
+          </div>
 
-      {/* SECOND TIER — the state behind those decisions */}
-      <motion.div className="ov__tier" {...fadeUp(0.12)}>
-        <div className="ov__card">
-          <div className="ov__label">Treasury</div>
           {t.loading || !s ? (
             <>
               <div className="shell__skel" style={{ height: 56, width: "70%", marginTop: 10 }} />
@@ -229,8 +239,6 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
                   <span className="ov__chip ov__chip--live">Rules live</span>
                 )}
                 <span className="ov__chip">{leashOn ? "Leash active" : "No leash"}</span>
-              </div>
-              <div className="ov__idrow">
                 <a className="ov__id" href={`${EXPLORER}/contract/${treasuryId}`} target="_blank" rel="noreferrer">
                   {shortAddr(treasuryId)} ↗
                 </a>
@@ -238,69 +246,95 @@ export default function Overview({ onGo }: { onGo: (v: View) => void }) {
                   {copied ? "Copied" : "Copy ID"}
                 </button>
               </div>
+
+              <div className="ov__actions">
+                <button
+                  className="ov__btn"
+                  onClick={() => (fundOpen ? setFundOpen(false) : openFund())}
+                  disabled={!!t.busy && t.busy !== "fund"}
+                  type="button"
+                >
+                  Fund
+                </button>
+                <button className="ov__btn ov__btn--ghost" onClick={() => onGo("payments")} type="button">
+                  Send payment
+                </button>
+                <button className="ov__btn ov__btn--ghost" onClick={() => onGo("agent")} type="button">
+                  {leashOn ? "Leash active" : "Start leash"}
+                </button>
+              </div>
+
+              {fundOpen && !isMobile && (
+                <div className="ov__panel" ref={fundPanel}>
+                  {fundForm(false)}
+                </div>
+              )}
             </>
           )}
-        </div>
+        </motion.section>
 
-        <div className="ov__card">
-          <div className="ov__label">Today's limit</div>
+        {/* ---- right, top: how much of today is left ---- */}
+        <motion.section className="ov__card ov__card--today" {...fadeUp(0.08)}>
+          <div className="ov__label">Today</div>
           {t.loading || !s ? (
-            <>
-              <div className="shell__skel" style={{ height: 10, marginTop: 14 }} />
-              <div className="shell__skel" style={{ height: 22, width: "60%", marginTop: 14 }} />
-              <div className="shell__skel" style={{ height: 14, width: "50%", marginTop: 10 }} />
-            </>
+            <div className="shell__skel" style={{ height: 132, marginTop: 14, borderRadius: 999 }} />
           ) : (
             <>
-              <div className="ov__track">
-                <motion.div
-                  className="ov__fill"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${spentPct}%` }}
-                  transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
-                />
-              </div>
-              <div className="ov__spent">
-                {fmtXlm(s.daySpent)} / {fmtXlm(s.dailyLimit)} XLM
-              </div>
+              <RadialLimit spent={Number(s.daySpent)} limit={Number(s.dailyLimit)}>
+                <strong>{fmtXlm(remaining)}</strong>
+                <span>XLM left</span>
+              </RadialLimit>
               <div className="ov__rule">
-                <strong>{fmtXlm(remaining)} XLM</strong> left today
+                <strong>{fmtXlm(s.daySpent)}</strong> of {fmtXlm(s.dailyLimit)} XLM spent
               </div>
               <div className="ov__rule">
                 At most <strong>{fmtXlm(s.perTaskLimit)} XLM</strong> per payment
               </div>
-              <div className="ov__rule">
-                {payeeCount === null ? "Checking approved payees…" : (
-                  <><strong>{payeeCount}</strong> approved payee{payeeCount === 1 ? "" : "s"}</>
-                )}
-              </div>
             </>
           )}
-        </div>
-      </motion.div>
+        </motion.section>
 
-      <motion.div className="ov__actions" {...fadeUp(0.2)}>
-        <button
-          className="ov__btn"
-          onClick={() => (fundOpen ? setFundOpen(false) : openFund())}
-          disabled={!!t.busy && t.busy !== "fund"}
-          type="button"
-        >
-          Fund
-        </button>
-        <button className="ov__btn ov__btn--ghost" onClick={() => onGo("payments")} type="button">
-          Send payment
-        </button>
-        <button className="ov__btn ov__btn--ghost" onClick={() => onGo("agent")} type="button">
-          {leashOn ? "Leash active" : "Start leash"}
-        </button>
-      </motion.div>
+        {/* ---- left, below: the decisions themselves ---- */}
+        <motion.div className="ov__rules" {...fadeUp(0.16)}>
+          <RecentActivity rows={rows} freshId={freshId} onViewAll={() => onGo("activity")} />
+        </motion.div>
 
-      {fundOpen && !isMobile && (
-        <div className="ov__panel" ref={fundPanel}>
-          {fundForm(false)}
-        </div>
-      )}
+        {/* ---- right, below: who may be paid, and the week in one glance ---- */}
+        <motion.section className="ov__card ov__card--payees" {...fadeUp(0.2)}>
+          <div className="ov__cardhead">
+            <div className="ov__label">Approved payees</div>
+            <span className="ov__count">{payeeCount ?? "—"}</span>
+          </div>
+          {payees.length === 0 ? (
+            <p className="ov__empty">
+              No one is approved yet, so every payment would be refused. Approve the first
+              address your agent is allowed to pay.
+            </p>
+          ) : (
+            <ul className="ov__payees">
+              {payees.slice(0, 4).map((p) => (
+                <li key={p.address}>
+                  <a href={`${EXPLORER}/account/${p.address}`} target="_blank" rel="noreferrer">
+                    {shortAddr(p.address)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button className="ov__btn ov__btn--ghost ov__btn--full" onClick={() => onGo("payments")} type="button">
+            {payees.length === 0 ? "Approve a payee" : "Manage payees"}
+          </button>
+        </motion.section>
+
+        <motion.section className="ov__card ov__card--week" {...fadeUp(0.24)}>
+          <div className="ov__label">Last 7 days</div>
+          <DecisionBars buckets={week} />
+          <div className="ov__weekline">
+            <span><i className="ov__key ov__key--ok" /> {totals.allowed} allowed</span>
+            <span><i className="ov__key ov__key--blocked" /> {totals.blocked} stopped</span>
+          </div>
+        </motion.section>
+      </div>
       <BottomSheet open={fundOpen && isMobile} onClose={() => setFundOpen(false)} title="Fund treasury">
         <div className="ov__panel" style={{ marginTop: 0, border: "none", padding: 0, background: "none" }}>
           {fundForm(true)}
