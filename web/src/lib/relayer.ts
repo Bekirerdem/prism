@@ -11,8 +11,6 @@ export type FetchLike = (
   init?: { method?: string; headers?: Record<string, string>; body?: string },
 ) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>;
 
-/** Shown when OpenZeppelin's free fee quota for our key is spent (resets 24h after first use). */
-export const RELAY_QUOTA_MSG = "We can't send transactions right now — please try again shortly.";
 const GENERIC_MSG = "Couldn't submit that transaction. Try again.";
 const UNBUILT_MSG = "That transaction could not be prepared — try again.";
 
@@ -47,7 +45,11 @@ async function post(fetchImpl: FetchLike, payload: unknown): Promise<{ hash?: st
   const body = (await res.json().catch(() => ({}))) as { hash?: string; error?: string };
 
   if (!res.ok) {
-    throw new Error(body.error === "FEE_LIMIT_EXCEEDED" ? RELAY_QUOTA_MSG : GENERIC_MSG);
+    // The endpoint keeps its reasons to itself on purpose (its URL is public), but the status
+    // and whatever it did say belong in the console — otherwise every relay failure looks the
+    // same from here, which is how one live failure cost a whole round.
+    console.error(`[relay] ${res.status}:`, body.error ?? "(no detail)");
+    throw new Error(GENERIC_MSG);
   }
   return { hash: body.hash };
 }

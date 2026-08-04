@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { relayTx, RELAY_QUOTA_MSG } from "./relayer";
+import { relayTx } from "./relayer";
 
 const b64 = (s: string) => ({ toXDR: () => s });
 
@@ -28,11 +28,6 @@ describe("relayTx", () => {
     const fetchImpl = respond(true, 200, { hash: "h" });
     await relayTx(fetchImpl, assembled([]));
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body).auth).toEqual([]);
-  });
-
-  it("turns a spent fee quota into something the user can act on", async () => {
-    const fetchImpl = respond(false, 429, { error: "FEE_LIMIT_EXCEEDED" });
-    await expect(relayTx(fetchImpl, assembled())).rejects.toThrow(RELAY_QUOTA_MSG);
   });
 
   it("never leaks the raw server error", async () => {

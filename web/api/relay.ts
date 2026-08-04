@@ -1,15 +1,21 @@
-// Vercel serverless function: the only place the OZ Channels API key exists.
+// Vercel serverless function: fee sponsorship for passkey users.
 //
-// It carries NO fee-payer secret and funds no account — OpenZeppelin pays the fees. What it
-// does hold is a fee quota, and in an open-source repo this endpoint's URL is public, so every
-// request is admitted only after the server itself decodes what the transaction actually does.
-// A caller-supplied "this goes to contract X" claim is never trusted.
-import { ChannelsClient } from "@openzeppelin/relayer-plugin-channels";
-import { rpc, xdr } from "@stellar/stellar-sdk";
+// A smart wallet holds no XLM, so somebody else has to source the transaction. This endpoint
+// does that — and nothing more. Authorisation stays with the user: the auth entries are signed
+// by their passkey and bound to their wallet's address, so the account paying the fee has no
+// say over what the transaction may do. In an open-source repo this URL is public, so every
+// request is admitted only after the server decodes what the call actually is. A caller-
+// supplied "this goes to contract X" claim is never trusted.
+//
+// This used to forward to OpenZeppelin Channels. It cannot: passkey-kit signs Protocol 27
+// address-bound credentials and the Channels plugin runs stellar-sdk 14.6.1, which fails to
+// parse them. See src/lib/relaySubmit.ts for the measurement.
+import { Keypair, rpc, xdr } from "@stellar/stellar-sdk";
 // Explicit .js extensions — see the note in api/faucet.ts.
 import process from "node:process";
 import { classifyHostFunction, hostFunctionFromEnvelope } from "../src/lib/hostFunction.js";
 import { isRelayAllowed } from "../src/lib/relayGuard.js";
+import { submitEnvelope, submitHostFunction } from "../src/lib/relaySubmit.js";
 
 // Invisible characters smuggled into an env value have bitten this project twice (a BOM in
 // the Supabase key, a BOM+CRLF in the WalletConnect id) — both times the symptom was a silent
@@ -22,8 +28,8 @@ const csv = (v: string | undefined): string[] =>
 
 const ALLOWED_CONTRACTS = csv(process.env.RELAY_ALLOWED_CONTRACTS);
 const ALLOWED_WASM = csv(process.env.RELAY_ALLOWED_WASM);
-const RPC_URL = process.env.RELAY_RPC_URL ?? "https://soroban-testnet.stellar.org";
-const CHANNELS_URL = process.env.OZ_CHANNELS_BASE_URL ?? "https://channels.openzeppelin.com/testnet";
+const RPC_URL = clean(process.env.RELAY_RPC_URL) || "https://soroban-testnet.stellar.org";
+const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
 
 const json = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -62,8 +68,17 @@ async function admit(func: string): Promise<boolean> {
 async function handler(req: Request): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const apiKey = clean(process.env.OZ_CHANNELS_API_KEY);
-  if (!apiKey) return json({ error: "Relay is not configured." }, 503);
+  // The same throwaway testnet key the faucet uses. It pays fees and holds nothing of the
+  // user's. Both endpoints sourcing from one account means two simultaneous requests can
+  // collide on its sequence number; at this traffic that is a retry, not a design.
+  const secret = clean(process.env.DISPENSER_SECRET);
+  let keypair: Keypair | null = null;
+  try {
+    if (secret) keypair = Keypair.fromSecret(secret);
+  } catch {
+    keypair = null;
+  }
+  if (!keypair) return json({ error: "Relay is not configured." }, 503);
 
   let body: { func?: unknown; auth?: unknown; xdr?: unknown };
   try {
@@ -85,15 +100,23 @@ async function handler(req: Request): Promise<Response> {
   const gated = isFuncCall ? (func as string) : hostFunctionFromEnvelope(envelope as string);
   if (!gated || !(await admit(gated))) return json({ error: "Not allowed." }, 403);
 
+  const deps = {
+    server: new rpc.Server(RPC_URL),
+    keypair,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  };
+
   try {
-    const client = new ChannelsClient({ baseUrl: CHANNELS_URL, apiKey });
     const result = isFuncCall
-      ? await client.submitSorobanTransaction({ func: func as string, auth: auth as string[] })
-      : await client.submitTransaction({ xdr: envelope as string });
+      ? await submitHostFunction(
+          deps,
+          xdr.HostFunction.fromXDR(func as string, "base64"),
+          (auth as string[]).map((a) => xdr.SorobanAuthorizationEntry.fromXDR(a, "base64")),
+        )
+      : await submitEnvelope(deps, envelope as string);
     return json({ hash: result.hash, status: result.status }, 200);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    if (msg.includes("FEE_LIMIT_EXCEEDED")) return json({ error: "FEE_LIMIT_EXCEEDED" }, 429);
     console.error("relay failed:", msg);
     return json({ error: "Relay failed." }, 502);
   }
