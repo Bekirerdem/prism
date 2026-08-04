@@ -13,7 +13,6 @@
 // admission gate in the caller still decides what is allowed through at all.
 import {
   Account,
-  BASE_FEE,
   Keypair,
   Operation,
   TransactionBuilder,
@@ -43,6 +42,19 @@ export interface SubmitDeps {
 
 export class RelaySubmitError extends Error {}
 
+/** Inclusion fee in stroops (0.01 XLM). The network floor loses the moment there is a queue. */
+const INCLUSION_FEE = "100000";
+
+/** Simulation prices the resources against ledger state that has usually moved on by the time
+ *  the transaction lands — a deploy came back `txInsufficientFee` on an estimate that was
+ *  right when it was made. A margin costs a fraction of a cent and is refunded when unused:
+ *  Soroban charges what the execution actually consumed, not what was offered. */
+function padResourceFee(data: xdr.SorobanTransactionData): xdr.SorobanTransactionData {
+  const quoted = BigInt(data.resourceFee().toString());
+  data.resourceFee(xdr.Int64.fromString(((quoted * 130n) / 100n).toString()));
+  return data;
+}
+
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /** Build, sign and submit `func` with the caller's already-signed `auth` entries.
@@ -60,7 +72,10 @@ export async function submitHostFunction(
 
   const build = (sorobanData?: xdr.SorobanTransactionData) =>
     new TransactionBuilder(new Account(address, sequence), {
-      fee: BASE_FEE,
+      // Inclusion fee, on top of whatever the resources cost. BASE_FEE is the network floor
+      // and gets outbid the moment testnet has any queue at all — a deploy came back
+      // txInsufficientFee against it. This is still a fraction of a cent.
+      fee: INCLUSION_FEE,
       networkPassphrase: deps.networkPassphrase,
       ...(sorobanData ? { sorobanData } : {}),
     })
@@ -80,7 +95,7 @@ export async function submitHostFunction(
   // Deliberately not rpc.assembleTransaction: it adds minResourceFee to the base fee, and
   // since stellar-base 14.1.0 build() adds the resource fee again — the fee comes out double.
   // Handing sorobanData to the builder counts it exactly once.
-  const tx = build(sim.transactionData.build());
+  const tx = build(padResourceFee(sim.transactionData.build()));
   tx.sign(deps.keypair);
 
   const sent = await deps.server.sendTransaction(tx);

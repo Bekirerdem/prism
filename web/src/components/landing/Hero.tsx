@@ -107,12 +107,12 @@ export default function Hero({
           </span>
 
           <span className="lp__nav-end">
-            <span className="lp__nav-mask">
+            <span className="lp__nav-mask lp__nav-aux">
               <a className="lp__nav-link" href="/docs/">
                 Docs
               </a>
             </span>
-            <span className="lp__nav-mask">
+            <span className="lp__nav-mask lp__nav-aux">
               <a
                 className="lp__nav-link"
                 href="https://github.com/eunomia-finance/eunomia"

@@ -92,12 +92,25 @@ describe("submitHostFunction", () => {
   it("counts the resource fee once, not twice", async () => {
     // rpc.assembleTransaction adds minResourceFee to the base fee and build() adds it again
     // (stellar-base >= 14.1.0), which overpays every transaction. Passing sorobanData to the
-    // builder is what keeps it single-counted.
+    // builder is what keeps it single-counted: inclusion fee + one padded resource fee.
     const s = server();
     await submitHostFunction(deps(s), FUNC, [signedEntry()]);
 
     const tx = (s.sendTransaction as ReturnType<typeof vi.fn>).mock.calls[0][0] as { fee: string };
-    expect(Number(tx.fee)).toBe(100 + 25102);
+    expect(Number(tx.fee)).toBe(100_000 + Math.floor((25102 * 130) / 100));
+  });
+
+  it("pads the quoted resource fee, because simulation prices a ledger that has moved on", async () => {
+    // A deploy came back txInsufficientFee against an estimate that was correct when it was
+    // made. The margin is refunded when unused — Soroban charges what execution consumed.
+    const s = server();
+    await submitHostFunction(deps(s), FUNC, [signedEntry()]);
+
+    const tx = (s.sendTransaction as ReturnType<typeof vi.fn>).mock.calls[0][0] as {
+      toEnvelope(): { v1(): { tx(): { ext(): { sorobanData(): { resourceFee(): unknown } } } } };
+    };
+    const charged = tx.toEnvelope().v1().tx().ext().sorobanData().resourceFee();
+    expect(Number(String(charged))).toBeGreaterThan(25102);
   });
 
   it("signs with the fee account and submits under the account's own sequence", async () => {

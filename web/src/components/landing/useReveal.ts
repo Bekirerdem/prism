@@ -372,10 +372,15 @@ export function useReveal(): void {
               },
             });
 
+            // Two viewports of travel is a large-screen luxury. On a phone the second half of
+            // that — where the lines have already merged and only shrink — is a long stretch of
+            // scrolling with nothing new happening, and the scene has already made its point.
+            const sceneTravel = window.innerWidth <= 720 ? 1.15 : 2;
+
             ScrollTrigger.create({
               trigger: scene,
               start: "top top",
-              end: `+=${window.innerHeight * 2}`,
+              end: `+=${Math.round(window.innerHeight * sceneTravel)}`,
               pin: true,
               scrub: 1,
               pinSpacing: false,
