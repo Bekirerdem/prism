@@ -13,6 +13,10 @@ security-gated; see [Roadmap](/roadmap) for what must land first.
   failed transfer reverts the whole call. Soroban additionally forbids host-level
   reentrancy.
 - **Overflow-checked arithmetic.** Spend accounting panics (reverts) rather than wrapping.
+- **Sponsored fees are not custody.** A passkey user holds no XLM, so someone else pays the
+  transaction fee. That account cannot redirect or alter the payment: authorisation is a
+  signature from your own passkey, bound to your smart wallet's address, and the contract
+  checks it independently of whoever submitted the transaction.
 - **Deliberately non-upgradeable.** No upgrade entrypoint — "the rules are enforced"
   never degrades into "trust the admin". Exit = pause → withdraw → fresh treasury.
 - **Hardened ZK verifier.** Proofs are bound to the owner's anchored policy and each

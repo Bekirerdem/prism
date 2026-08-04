@@ -1,5 +1,5 @@
 ---
-name: prism-bounded-treasury
+name: eunomia-bounded-treasury
 description: >
   Use when giving an AI agent a safe, non-custodial spending account on Stellar: deploying a
   bounded treasury (per-payment + rolling daily limits, payee whitelist), issuing time-bound
@@ -8,7 +8,7 @@ description: >
   agent payments complied with policy via a Groth16/BN254 zero-knowledge proof verified on-chain.
   Also use when users mention agent spending limits, bounded agents, agent treasuries, autonomous
   payments with guardrails, confidential compliance, or "the wallet an AI agent can't drain" —
-  even if they don't mention PRISM by name.
+  even if they don't mention Eunomia by name (the project was previously called PRISM).
 license: MIT
 compatibility: Designed for Claude Code and compatible AI coding assistants. Building the contracts requires Rust + stellar-cli; the web client and prover run on Node.
 metadata:
@@ -16,10 +16,10 @@ metadata:
   version: "0.4"
 ---
 
-# PRISM — Bounded Agent Treasury on Stellar
+# Eunomia — Bounded Agent Treasury on Stellar
 
-PRISM is a non-custodial Soroban treasury that lets an AI agent spend real money while the
-**contract** — not the model's good intentions — enforces the policy. Every violation (unknown
+Eunomia (formerly PRISM) is a non-custodial Soroban treasury that lets an AI agent spend real
+money while the **contract** — not the model's good intentions — enforces the policy. Every violation (unknown
 payee, over-limit payment, expired session) is rejected **on-chain**. A ZK layer proves a batch of
 payments complied with policy without revealing amounts or payees.
 
@@ -27,7 +27,7 @@ payments complied with policy without revealing amounts or payees.
 - Deep docs in-repo: `README.md` (product tour), `DEPLOYMENT.md` (all deployed contracts),
   `SECURITY.md` (audit findings + known limitations), `ROADMAP.md`, `docs/TRY-IT.md` (5-minute walkthrough).
 
-## When to reach for PRISM
+## When to reach for Eunomia
 
 1. An agent must pay for APIs/services autonomously, but its blast radius must be capped by contract.
 2. You need auditable, task-attributed agent spending (`task_id` accounting, on-chain events).
@@ -42,15 +42,17 @@ payments complied with policy without revealing amounts or payees.
 | Treasury Registry (cross-device discovery) | `CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7` |
 | Compliance Verifier (ZK, hardened, policy-anchored) | `CCOLX7NEBDJRRVTPFVSK3UJLHMG3HO4UVYJW3NFBOTUG7Q7GOP63DBRH` |
 | Reputation Oracle (stellar-8004 stand-in) | `CCJFIEYFNPRTJVCOGOSESYC5Z6FHHHYAH36V7QTZEDPKESY6O5TPINKY` |
-| Prism Policy (OpenZeppelin ComplianceHooks adapter) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
+| Eunomia Policy (OpenZeppelin ComplianceHooks adapter) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
 
 The full (historical + demo) address table lives in `DEPLOYMENT.md`.
 
 ## Quickstart
 
-**Fastest path:** open https://eunomia.finance → connect a wallet (Freighter, xBull,
-Albedo, LOBSTR, Rabet, Hana, or WalletConnect on mobile) → *Create your own treasury* → fund →
-whitelist a payee → pay. Over-limit payments are rejected by the contract, visibly.
+**Fastest path:** open https://eunomia.finance → *Create your treasury with a passkey*
+(Face ID, a fingerprint or a device PIN — no wallet, no seed phrase, and no XLM needed: the
+passkey controls a Stellar smart wallet and transaction fees are sponsored) → fund → approve a
+payee → pay. Over-limit payments are rejected by the contract, visibly. Browser wallets
+(Freighter, xBull, Albedo, LOBSTR, Rabet, Hana, or WalletConnect on mobile) work the same way.
 
 **CLI path — deploy your own treasury from the installed wasm (no build needed):**
 
@@ -132,7 +134,7 @@ public inputs) and **replay-guarded** (one attestation per `periodId`). Prover t
 - **Soroban `getEvents` scans ~10k ledgers per page** — paginate with the cursor to the head or a
   24h window will silently miss recent events (the app does this).
 - **x402 facilitator note:** as of `@x402/*` v2.12 the OpenZeppelin Channels facilitator requires
-  an `OZ_API_KEY` even on testnet. PRISM's bundled flow settles directly through the treasury and
+  an `OZ_API_KEY` even on testnet. Eunomia's bundled flow settles directly through the treasury and
   does not need the facilitator.
 - **Old verifier `CA3A7AOG…WS5B` is deprecated** (pre-hardening constructor); use `CCOLX7NE…DBRH`.
 

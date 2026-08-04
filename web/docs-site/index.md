@@ -6,12 +6,18 @@ checked and enforced on Stellar. Anything outside the rules is blocked, automati
 
 ## How it works
 
-1. **Create** a treasury from your wallet — the rules are built into it at creation.
+1. **Create** a treasury — with a passkey (Face ID, fingerprint or device PIN) or with a
+   Stellar wallet you already use. The rules are built into it at creation.
 2. **Fund** it — the treasury pays from its own balance, never from your wallet.
 3. **Approve payees** — payments can only go to addresses you've approved.
 4. **Hand it to your agent on a Leash** — a spending cap and a time limit. The agent
    pays on its own, no popups; every payment is still checked against your rules,
    and you can revoke instantly.
+
+Signing in with a passkey needs no wallet, no seed phrase and no XLM: the passkey
+controls a Stellar smart wallet, and transaction fees are sponsored. It stays
+self-custodial — the account paying the fee cannot move your funds or redirect a
+payment.
 
 When a payment breaks the rules, the network rejects it — that's the product working,
 not a failure. The block is visible on-chain, so "my agent can't drain me" is something
