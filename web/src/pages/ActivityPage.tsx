@@ -38,32 +38,54 @@ export default function ActivityPage() {
   }, [active, mineOnly, t.treasuryId]);
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto" }}>
-      <div style={chipRow}>
-        <button
-          style={active.size === 0 ? chipActive : chip}
-          onClick={() => setActive(new Set())}
-          type="button"
-        >
-          All
-        </button>
-        {(Object.keys(KIND_GROUPS) as KindGroup[]).map((g) => (
-          <button key={g} style={active.has(g) ? chipActive : chip} onClick={() => toggle(g)} type="button">
-            {GROUP_LABEL[g]}
-          </button>
-        ))}
-        {t.treasuryId && (
-          <button style={mineOnly ? chipActive : chip} onClick={() => setMineOnly((m) => !m)} type="button">
-            ◇ my treasury only
-          </button>
-        )}
+    <div className="page">
+      <div className="page__main">
+        <ActivityFeed filter={filter} />
       </div>
-      <ActivityFeed filter={filter} />
+
+      {/* Filters as a standing panel rather than a chip strip above the ledger: which slice
+          you are looking at should be visible while you read it, not scrolled off. */}
+      <div className="page__side">
+        <div style={panel}>
+          <div style={panelLabel}>Show</div>
+          <div style={chipRow}>
+            <button
+              style={active.size === 0 ? chipActive : chip}
+              onClick={() => setActive(new Set())}
+              type="button"
+            >
+              All
+            </button>
+            {(Object.keys(KIND_GROUPS) as KindGroup[]).map((g) => (
+              <button key={g} style={active.has(g) ? chipActive : chip} onClick={() => toggle(g)} type="button">
+                {GROUP_LABEL[g]}
+              </button>
+            ))}
+          </div>
+          {t.treasuryId && (
+            <button
+              style={{ ...(mineOnly ? chipActive : chip), width: "100%", marginTop: 10 }}
+              onClick={() => setMineOnly((m) => !m)}
+              type="button"
+            >
+              ◇ my treasury only
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-const chipRow: React.CSSProperties = { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 };
+const panel: React.CSSProperties = {
+  padding: 18, borderRadius: 16,
+  background: "var(--surface)", border: "1px solid var(--line)",
+};
+const panelLabel: React.CSSProperties = {
+  fontSize: 11, textTransform: "uppercase", letterSpacing: "0.09em",
+  color: "var(--ink-2)", marginBottom: 12,
+};
+const chipRow: React.CSSProperties = { display: "flex", gap: 6, flexWrap: "wrap" };
 const chip: React.CSSProperties = {
   padding: "6px 12px", borderRadius: 100, cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit",
   background: "none", border: "1px solid var(--line)", color: "var(--ink-2)",

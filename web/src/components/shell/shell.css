@@ -222,6 +222,19 @@
 .ov__key--ok{ background:var(--green); }
 .ov__key--blocked{ background:var(--red); }
 
+/* ---- the shared page shape -----------------------------------------------------
+   Every page in the app is a wide working column beside a narrower one that carries the
+   context you need while working in it: who you may pay while sending a payment, what the
+   limits are while changing them. Overview declares its own areas because its rules column
+   spans two rows; the rest use this. */
+.page{
+  display:grid;
+  grid-template-columns:minmax(0,8fr) minmax(0,4fr);
+  gap:16px;
+  align-items:start;
+}
+.page__main,.page__side{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+
 /* ---- charts -------------------------------------------------------------------- */
 .chart--spark{ width:132px; height:34px; overflow:visible; }
 .chart__radial{ position:relative; width:132px; margin:16px auto 4px; }
@@ -362,6 +375,7 @@
     grid-template-rows:none;
   }
   .ov__card--treasury,.ov__card--today,.ov__rules,.ov__card--payees,.ov__card--week{ grid-area:auto; }
+  .page{ grid-template-columns:minmax(0,1fr); }
   .ov__tier{ grid-template-columns:minmax(0,1fr); }
   .ov__balance{ font-size:42px; }
   .rules__title{ font-size:22px; }

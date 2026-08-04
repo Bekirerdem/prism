@@ -15,13 +15,11 @@ import { fetchActivityHistory, mergeFeedEvents, subscribeActivity } from "../lib
 import { filterFeed, kindColor } from "../lib/feedFilter";
 import type { FeedEvent } from "../lib/events";
 
-type Tab = "send" | "payees";
 type Verify = Record<string, boolean | undefined>; // address -> on-chain whitelist truth
 
 export default function Payments() {
   const t = useTreasury();
   const treasuryId = t.treasuryId as string;
-  const [tab, setTab] = useState<Tab>("send");
 
   // ---- payee list (derived, no state: refreshKey bumps after every action) -------
   const [verify, setVerify] = useState<Verify>({});
@@ -126,18 +124,8 @@ export default function Payments() {
   );
 
   return (
-    <div style={wrap}>
-      <div style={tabs}>
-        <button style={tab === "send" ? tabActive : tabBtn} onClick={() => setTab("send")} type="button">
-          Send
-        </button>
-        <button style={tab === "payees" ? tabActive : tabBtn} onClick={() => setTab("payees")} type="button">
-          Payees {payees.length > 0 ? `(${payees.length})` : ""}
-        </button>
-      </div>
-
-      {tab === "send" ? (
-        <>
+    <div className="page">
+      <div className="page__main">
           <div style={card}>
             <div style={label}>To</div>
             <input
@@ -166,7 +154,7 @@ export default function Payments() {
                 <button style={inlineLink} type="button" onClick={() => setPayTo(SERVICE)}>
                   use the sample vendor ({shortAddr(SERVICE)})
                 </button>{" "}
-                or approve one in the Payees tab.
+                or approve one on the right.
               </div>
             )}
 
@@ -211,14 +199,14 @@ export default function Payments() {
             {sendErr && <div style={inlineErr}>{sendErr}</div>}
           </div>
 
-          <div style={{ ...label, margin: "20px 0 8px" }}>Payment history</div>
-          {paymentRows.length === 0 ? (
-            <div style={hint}>No payments yet.</div>
-          ) : (
-            <div style={card}>
-              {paymentRows.map((e) => (
+          <div style={card}>
+            <div style={label}>Payment history</div>
+            {paymentRows.length === 0 ? (
+              <div style={hint}>Nothing sent yet. Every attempt lands here, allowed or refused.</div>
+            ) : (
+              paymentRows.map((e) => (
                 <div key={e.id} style={histRow}>
-                  <span style={{ ...dot, background: kindColor(e.kind), boxShadow: `0 0 6px ${kindColor(e.kind)}66` }} />
+                  <span style={{ ...dot, background: kindColor(e.kind) }} />
                   <span style={histLabel}>{e.label}</span>
                   <span style={{ ...histBadge, color: e.kind === "blocked" ? "var(--red)" : "var(--ink)" }}>
                     {e.kind === "blocked" ? "BLOCKED" : "paid ✓"}
@@ -229,19 +217,24 @@ export default function Payments() {
                     </a>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </>
-      ) : (
+              ))
+            )}
+          </div>
+      </div>
+
+      {/* The payee list used to live behind a tab, which meant the one rule that decides
+          whether a payment goes through was invisible while writing it. */}
+      <div className="page__side">
         <div style={card}>
+          <div style={label}>Approved payees</div>
           {payees.length === 0 ? (
             <div style={hint}>No payees yet — approve an address to start paying it.</div>
           ) : (
             payees.map((p) => (
               <div key={p.address} style={histRow}>
-                <span style={{ ...mono, flex: 1 }}>{shortAddr(p.address)}</span>
-                {p.addedAt && <span style={when}>added {p.addedAt.slice(5, 10)}</span>}
+                <button style={{ ...mono, flex: 1, ...pickBtn }} onClick={() => setPayTo(p.address)} type="button">
+                  {shortAddr(p.address)}
+                </button>
                 <span
                   style={{
                     ...histBadge,
@@ -292,19 +285,17 @@ export default function Payments() {
           </div>
           {payeeErr && <div style={inlineErr}>{payeeErr}</div>}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-const wrap: React.CSSProperties = { maxWidth: 640, margin: "0 auto" };
-const tabs: React.CSSProperties = { display: "flex", gap: 6, marginBottom: 14 };
-const tabBtn: React.CSSProperties = {
-  padding: "8px 16px", borderRadius: 100, cursor: "pointer", fontSize: 13.5, fontWeight: 600, fontFamily: "inherit",
-  background: "none", border: "1px solid var(--line)", color: "var(--ink-2)",
-};
-const tabActive: React.CSSProperties = {
-  ...tabBtn, background: "var(--raise)", border: "1px solid var(--green)", color: "var(--ink)",
+// Clicking a payee fills the form — the list is the fastest way to address a payment, so it
+// has to read as something you can press rather than as a label.
+const pickBtn: React.CSSProperties = {
+  background: "none", border: "none", padding: 0, cursor: "pointer",
+  textAlign: "left", fontFamily: "ui-monospace, monospace",
+  color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 3,
 };
 const card: React.CSSProperties = {
   padding: 18, borderRadius: 14,
@@ -336,7 +327,6 @@ const histBadge: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, flex: 
 const dot: React.CSSProperties = { width: 7, height: 7, borderRadius: "50%", flex: "0 0 auto" };
 const txLink: React.CSSProperties = { color: "var(--ink-2)", textDecoration: "none", fontSize: 12 };
 const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 13 };
-const when: React.CSSProperties = { color: "var(--ink-2)", fontSize: 11.5 };
 const removeBtn: React.CSSProperties = {
   background: "none", border: "1px solid var(--line)", borderRadius: 7, cursor: "pointer",
   color: "var(--ink-2)", fontSize: 11.5, padding: "3px 9px",

@@ -45,7 +45,8 @@ export default function Settings() {
   };
 
   return (
-    <div style={wrap}>
+    <div className="page">
+      <div className="page__main">
       {/* ---- treasury identity ---- */}
       <div style={card}>
         <div style={label}>Treasury</div>
@@ -121,8 +122,11 @@ export default function Settings() {
         {t.legacy && <div style={hint}>This is an early treasury — limit updates need a fresh treasury.</div>}
         {!t.legacy && <div style={hint}>Effective immediately, enforced on Stellar.</div>}
       </div>
+      </div>
 
-      {/* ---- danger zone ---- */}
+      {/* The exit paths sit apart from the settings you change day to day — pausing and
+          withdrawing are not edits, they are ways out. */}
+      <div className="page__side">
       <div style={{ ...card, borderColor: "var(--red)" }}>
         <div style={{ ...label, color: "var(--red)" }}>Danger zone</div>
 
@@ -178,11 +182,11 @@ export default function Settings() {
           </>
         )}
       </div>
+      </div>
     </div>
   );
 }
 
-const wrap: React.CSSProperties = { maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 };
 const card: React.CSSProperties = {
   padding: 20, borderRadius: 14,
   background: "var(--surface)", border: "1px solid var(--line)",

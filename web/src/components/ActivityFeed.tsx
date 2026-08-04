@@ -164,7 +164,7 @@ function timeAgo(iso: string): string {
 
 // Shell-embedded: the AppShell provides page padding/centering; the card fills its slot.
 const card: React.CSSProperties = {
-  width: "100%", maxWidth: 640, margin: "0 auto", boxSizing: "border-box", padding: 24, borderRadius: 18,
+  width: "100%", boxSizing: "border-box", padding: 24, borderRadius: 18,
   background: "var(--surface)", border: "1px solid var(--line)",
   color: "var(--ink)",
 };

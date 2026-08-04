@@ -45,7 +45,8 @@ export default function Agent() {
   }
 
   return (
-    <div style={wrap}>
+    <div className="page">
+      <div className="page__main">
       {active ? (
         <div style={{ ...card, borderColor: "var(--green)" }}>
           <div style={{ ...label, color: "var(--ink)" }}>⚡ Leash active</div>
@@ -136,9 +137,43 @@ export default function Agent() {
           {err && <div style={inlineErr}>{err}</div>}
         </div>
       )}
+      </div>
+
+      {/* A Leash hands an agent the ability to spend without asking. The rules that still
+          bound it belong on the same screen as that decision, not one page away. */}
+      <div className="page__side">
+        <div style={card}>
+          <div style={label}>Your rules still apply</div>
+          {t.state ? (
+            <>
+              <div style={body}>
+                A Leash lets the agent sign without a popup. It does not lift anything —
+                every payment is still checked on Stellar.
+              </div>
+              <ul style={ruleList}>
+                <li>
+                  <strong>{fmtXlm(t.state.dailyLimit)} XLM</strong> a day, at most
+                </li>
+                <li>
+                  <strong>{fmtXlm(t.state.perTaskLimit)} XLM</strong> per payment, at most
+                </li>
+                <li>Approved payees only — anything else is refused</li>
+                <li>Revocable instantly, from here</li>
+              </ul>
+            </>
+          ) : (
+            <div style={body}>Loading your treasury's rules…</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
+const ruleList: React.CSSProperties = {
+  margin: "14px 0 0", padding: "0 0 0 18px", display: "flex", flexDirection: "column", gap: 9,
+  fontSize: 13, lineHeight: 1.5, color: "var(--ink-2)",
+};
 
 function countdown(ms: number): string {
   if (ms <= 0) return "expired";
