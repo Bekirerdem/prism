@@ -13,7 +13,6 @@ import {
 } from "@stellar/stellar-sdk";
 import { Client, type Session } from "./treasuryClient";
 import { contractErr, errText } from "./wallet-errors";
-import type { ContractSigner } from "./walletSigner";
 import type { SubmittableTx, TxExecutor } from "./executor";
 import { NETWORK_PASSPHRASE, RPC_URL } from "../config";
 
@@ -142,14 +141,24 @@ export async function deployTreasury(
   return contractId;
 }
 
-/** Fund a treasury by transferring native XLM from the wallet into the treasury contract
- *  (a SAC transfer; the `from` auth is the tx source, so the wallet signature covers it). */
+/** Fund a treasury by transferring native XLM from the session's address into the treasury
+ *  contract — a SAC transfer either way, but authorised differently.
+ *
+ *  A wallet is the transaction source, so its own signature covers the `from` auth. A smart
+ *  wallet cannot be a source at all: it signs the auth entry instead and the relay submits.
+ *  Passing its C-address to `getAccount` below is what produced "invalid version byte". */
 export async function fundTreasury(
   contractId: string,
-  address: string,
-  signer: ContractSigner,
+  executor: TxExecutor,
   amountXlm: number,
-): Promise<string> {
+): Promise<string | undefined> {
+  if (executor.transferXlm) {
+    await executor.transferXlm(contractId, toStroops(amountXlm));
+    return undefined;
+  }
+
+  const address = executor.address;
+  const signer = executor.signer;
   const server = new rpc.Server(RPC_URL);
   const account = await server.getAccount(address);
   const sac = new Contract(XLM_SAC);

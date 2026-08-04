@@ -26,7 +26,13 @@ const clean = (v: string | undefined): string => (v ?? "").replace(/[^\x20-\x7E]
 const csv = (v: string | undefined): string[] =>
   clean(v).split(",").map((s) => s.trim()).filter(Boolean);
 
-const ALLOWED_CONTRACTS = csv(process.env.RELAY_ALLOWED_CONTRACTS);
+// The native XLM SAC on testnet. This is not configuration: a treasury holds XLM, and both
+// funding one and paying out of it are SAC calls, so a passkey session cannot do anything at
+// all unless the relay admits it. Widening the gate this far is deliberate and bounded — the
+// transfer's `from` is the user's own wallet and only their passkey can authorise it, so the
+// worst a stranger can do is spend our testnet fee on moving their own funds.
+const NATIVE_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+const ALLOWED_CONTRACTS = [...csv(process.env.RELAY_ALLOWED_CONTRACTS), NATIVE_SAC];
 const ALLOWED_WASM = csv(process.env.RELAY_ALLOWED_WASM);
 const RPC_URL = clean(process.env.RELAY_RPC_URL) || "https://soroban-testnet.stellar.org";
 const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";

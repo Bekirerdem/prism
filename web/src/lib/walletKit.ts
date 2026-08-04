@@ -33,7 +33,12 @@ import {
   type AssembledLike,
   type FetchLike,
 } from "./relayer";
-import { deployFromSmartWallet } from "./smartWalletDeploy";
+import {
+  deployFromSmartWallet,
+  transferFromSmartWallet,
+  type SmartWalletDeps,
+} from "./smartWalletTx";
+import { XLM_SAC } from "./userTreasury";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
 // over WalletConnect v2 — so without this module a mobile visitor with the wallet installed
@@ -305,23 +310,22 @@ export async function executorFor(address: string): Promise<TxExecutor> {
     await wallet.ensureConnected(sessionStorage.getItem(KEY_ID_KEY) ?? undefined);
     // `built` is opaque to the executor and structural to the relay; decode() validates it
     // at runtime and throws a user-facing message if the transaction was never assembled.
+    const asWallet: SmartWalletDeps = {
+      server: new rpc.Server(RPC_URL),
+      networkPassphrase: NETWORK_PASSPHRASE,
+      simulationSource: ADMIN,
+      signAuthEntry: (entry) => wallet.signAuthEntry(entry),
+      relay: (func, auth) => relayHostFunction(fetch as unknown as FetchLike, func, auth),
+    };
+
     return makePasskeyExecutor(
       address,
       wallet,
       (tx) => relayTx(fetch as unknown as FetchLike, tx as AssembledLike),
       (wasmHash, constructorArgs) =>
-        deployFromSmartWallet(
-          {
-            server: new rpc.Server(RPC_URL),
-            networkPassphrase: NETWORK_PASSPHRASE,
-            simulationSource: ADMIN,
-            signAuthEntry: (entry) => wallet.signAuthEntry(entry),
-            relay: (func, auth) => relayHostFunction(fetch as unknown as FetchLike, func, auth),
-          },
-          address,
-          wasmHash,
-          constructorArgs,
-        ),
+        deployFromSmartWallet(asWallet, address, wasmHash, constructorArgs),
+      (to, amountStroops) =>
+        transferFromSmartWallet(asWallet, address, XLM_SAC, to, amountStroops),
     );
   }
   return makeWalletExecutor(address, walletSignerFor(address));

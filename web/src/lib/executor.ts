@@ -32,6 +32,11 @@ export interface TxExecutor {
    *  Only the passkey path defines it. A wallet deploys the ordinary way — from its own
    *  transaction source account — and that path is left exactly as it was. */
   deployContract?: (wasmHash: string, constructorArgs: xdr.ScVal[]) => Promise<string>;
+  /** Move XLM from this session's address into a contract, authorised by its own signature.
+   *
+   *  Only the passkey path defines it. A wallet moves its XLM the ordinary way — it can
+   *  source and pay for a transaction, so nothing has to be delegated. */
+  transferXlm?: (to: string, amountStroops: bigint) => Promise<void>;
 }
 
 /** The existing path, unchanged. */
@@ -55,6 +60,7 @@ export function makePasskeyExecutor(
   wallet: PasskeyWallet,
   relay: (tx: SubmittableTx) => Promise<{ hash?: string }>,
   deployContract: (wasmHash: string, constructorArgs: xdr.ScVal[]) => Promise<string>,
+  transferXlm: (to: string, amountStroops: bigint) => Promise<void>,
 ): TxExecutor {
   return {
     address: contractId,
@@ -67,5 +73,6 @@ export function makePasskeyExecutor(
     },
     submit: async (tx) => relay(await wallet.sign(tx)),
     deployContract,
+    transferXlm,
   };
 }

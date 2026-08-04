@@ -1,4 +1,4 @@
-// Deploying a contract *from* a smart wallet, rather than from a transaction source account.
+// Acting *as* a smart wallet, rather than from a transaction source account.
 //
 // The ordinary path — the contract client's `Client.deploy` — deploys from whatever account
 // the transaction is built on, and Soroban authorises that with SOURCE_ACCOUNT credentials.
@@ -16,9 +16,11 @@ import {
   Account,
   Address,
   BASE_FEE,
+  Contract,
   Operation,
   Transaction,
   TransactionBuilder,
+  nativeToScVal,
   xdr,
 } from "@stellar/stellar-sdk";
 
@@ -30,7 +32,7 @@ export interface SimulatingServer {
   }>;
 }
 
-export interface SmartWalletDeployDeps {
+export interface SmartWalletDeps {
   server: SimulatingServer;
   networkPassphrase: string;
   /** Any funded classic account. Simulation has to be built on *something*, and it is never
@@ -52,18 +54,52 @@ function freshSalt(): Uint8Array {
 /** Deploy `wasmHash` with `walletAddress` as the deployer, returning the new contract id.
  *  The wallet signs; the relayer pays and submits. */
 export async function deployFromSmartWallet(
-  deps: SmartWalletDeployDeps,
+  deps: SmartWalletDeps,
   walletAddress: string,
   wasmHash: string,
   constructorArgs: xdr.ScVal[],
 ): Promise<string> {
-  const op = Operation.createCustomContract({
-    address: new Address(walletAddress),
-    wasmHash: Buffer.from(wasmHash, "hex"),
-    salt: freshSalt(),
-    constructorArgs,
-  });
+  const retval = await runAsSmartWallet(
+    deps,
+    Operation.createCustomContract({
+      address: new Address(walletAddress),
+      wasmHash: Buffer.from(wasmHash, "hex"),
+      salt: freshSalt(),
+      constructorArgs,
+    }),
+  );
+  // The chain names the contract during simulation, so there is no second implementation of
+  // the id derivation to keep in step with the host's.
+  return Address.fromScVal(retval).toString();
+}
 
+/** Move XLM out of the wallet through the native SAC. The `from` argument is the wallet, so
+ *  the transfer is authorised by its signature — which is what lets somebody else source and
+ *  pay for the transaction without being able to redirect it. */
+export async function transferFromSmartWallet(
+  deps: SmartWalletDeps,
+  walletAddress: string,
+  sac: string,
+  to: string,
+  amountStroops: bigint,
+): Promise<void> {
+  await runAsSmartWallet(
+    deps,
+    new Contract(sac).call(
+      "transfer",
+      new Address(walletAddress).toScVal(),
+      new Address(to).toScVal(),
+      nativeToScVal(amountStroops, { type: "i128" }),
+    ),
+  );
+}
+
+/** Simulate an operation as the wallet, have the passkey sign the auth it requires, and hand
+ *  the result to the relay. Returns whatever the call returned. */
+async function runAsSmartWallet(
+  deps: SmartWalletDeps,
+  op: xdr.Operation,
+): Promise<xdr.ScVal> {
   const tx = new TransactionBuilder(new Account(deps.simulationSource, "0"), {
     fee: BASE_FEE,
     networkPassphrase: deps.networkPassphrase,
@@ -76,13 +112,9 @@ export async function deployFromSmartWallet(
   if (sim.error || !sim.result?.retval) {
     // The user-facing message stays one sentence; the reason belongs in the console, or a
     // live failure is indistinguishable from every other one.
-    console.error("[deploy] simulation did not yield a contract:", sim.error ?? sim);
+    console.error("[smart wallet] simulation failed:", sim.error ?? sim);
     throw new Error(PREPARE_FAILED);
   }
-
-  // The chain names the contract during simulation, so there is no second implementation of
-  // the id derivation to keep in step with the host's.
-  const contractId = Address.fromScVal(sim.result.retval).toString();
 
   const signed = await Promise.all((sim.result.auth ?? []).map((e) => deps.signAuthEntry(e)));
 
@@ -91,5 +123,5 @@ export async function deployFromSmartWallet(
     signed.map((e) => e.toXDR("base64")),
   );
 
-  return contractId;
+  return sim.result.retval;
 }

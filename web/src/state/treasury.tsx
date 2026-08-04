@@ -295,7 +295,7 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setBusy("fund");
       toast("info", "Funding — confirm in your wallet…");
       try {
-        const hash = await fundTreasury(treasuryId, address, walletSignerFor(address), amt.value);
+        const hash = await fundTreasury(treasuryId, await executorFor(address), amt.value);
         void logActivity({ walletAddress: address, treasuryId, action: "fund", txHash: hash, amountXlm: amt.value });
         toast("success", "Funded ✓", { hash });
         bump();

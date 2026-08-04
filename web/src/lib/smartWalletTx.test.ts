@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
-import { deployFromSmartWallet, type SimulatingServer } from "./smartWalletDeploy";
+import { Address, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
+import {
+  deployFromSmartWallet,
+  transferFromSmartWallet,
+  type SimulatingServer,
+} from "./smartWalletTx";
 import { classifyHostFunction } from "./hostFunction";
 
 const WALLET = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ";
@@ -8,6 +12,7 @@ const DEPLOYED = "CCU3NHMJGYNFNGWH5IZ3RTE7PPETD7QVVWK2H6DIQCFJKGXGLKKRHWO7";
 const SOURCE = "GDPKXL6CNHUXBV4PM54CPTRZNQRYVTIMO4YGBW3M2MNSCMQ7TTNINXP6";
 const PASSPHRASE = "Test SDF Network ; September 2015";
 const WASM = "475cfbe2ca79d7977c8e4d29438ae70b9d95a12cb2bfcd9fed4e4f7a26d798b2";
+const XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
 /** An address-credentials auth entry, the shape Soroban returns when the deployer is a
  *  contract — and the only shape the relayer accepts. */
@@ -117,6 +122,27 @@ describe("deployFromSmartWallet", () => {
         .toString("hex"),
     );
     expect(salts[0]).not.toBe(salts[1]);
+  });
+
+  it("moves XLM with the wallet as the `from` argument, so its signature authorises it", async () => {
+    // The wallet cannot source a transaction, so the transfer has to be authorised by
+    // signature instead. `from` being the wallet is what stops whoever pays the fee from
+    // redirecting the funds.
+    const d = deps();
+    const TREASURY = "CCU3NHMJGYNFNGWH5IZ3RTE7PPETD7QVVWK2H6DIQCFJKGXGLKKRHWO7";
+
+    await transferFromSmartWallet(d, WALLET, XLM_SAC, TREASURY, 5_000_000n);
+
+    const [func] = (d.relay as ReturnType<typeof vi.fn>).mock.calls[0];
+    const fn = xdr.HostFunction.fromXDR(func as string, "base64");
+    const call = fn.invokeContract();
+
+    expect(Address.fromScAddress(call.contractAddress()).toString()).toBe(XLM_SAC);
+    expect(call.functionName().toString()).toBe("transfer");
+    const [from, to, amount] = call.args();
+    expect(Address.fromScVal(from).toString()).toBe(WALLET);
+    expect(Address.fromScVal(to).toString()).toBe(TREASURY);
+    expect(scValToNative(amount)).toBe(5_000_000n);
   });
 
   it("surfaces a simulation failure as something the user can act on", async () => {
