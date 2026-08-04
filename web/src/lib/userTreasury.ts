@@ -9,6 +9,7 @@ import {
   rpc,
   StrKey,
   TransactionBuilder,
+  xdr,
 } from "@stellar/stellar-sdk";
 import { Client, type Session } from "./treasuryClient";
 import { contractErr, errText } from "./wallet-errors";
@@ -85,12 +86,34 @@ export function makeTreasury(contractId: string, executor: TxExecutor): Treasury
   };
 }
 
+/** The `__constructor(admin, agent, token, daily_limit, per_task_limit)` arguments, in the
+ *  order the contract declares them. Only the smart-wallet deploy path needs them positionally
+ *  — the contract client builds them from its own spec. */
+function constructorArgs(owner: string, dailyXlm: number, perTaskXlm: number): xdr.ScVal[] {
+  return [
+    new Address(owner).toScVal(),
+    new Address(owner).toScVal(),
+    new Address(XLM_SAC).toScVal(),
+    nativeToScVal(toStroops(dailyXlm), { type: "i128" }),
+    nativeToScVal(toStroops(perTaskXlm), { type: "i128" }),
+  ];
+}
+
 /** Deploy a fresh treasury owned by `address` (admin = agent = the wallet). Returns its id. */
 export async function deployTreasury(
   executor: TxExecutor,
   dailyXlm: number,
   perTaskXlm: number,
 ): Promise<string> {
+  // A smart wallet has to deploy as itself: it holds no XLM to source a transaction from, and
+  // the relayer that pays on its behalf only accepts authorisation bound to an address.
+  if (executor.deployContract) {
+    return executor.deployContract(
+      TREASURY_WASM_HASH,
+      constructorArgs(executor.address, dailyXlm, perTaskXlm),
+    );
+  }
+
   const tx = await Client.deploy(
     {
       admin: executor.address,

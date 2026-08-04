@@ -36,20 +36,31 @@ describe("makePasskeyExecutor", () => {
   const wallet = () => ({
     create: vi.fn(),
     connect: vi.fn(),
+    ensureConnected: vi.fn(),
     sign: vi.fn().mockImplementation((tx) => Promise.resolve({ ...tx, signed: true })),
+    signAuthEntry: vi.fn(),
   });
 
   it("uses the smart wallet address and marks the passkey path", () => {
-    const ex = makePasskeyExecutor(C, wallet(), vi.fn());
+    const ex = makePasskeyExecutor(C, wallet(), vi.fn(), vi.fn());
     expect(ex.address).toBe(C);
     expect(ex.kind).toBe("passkey");
+  });
+
+  it("carries a deploy path, which is what tells the treasury code it cannot use a source account", () => {
+    const deploy = vi.fn().mockResolvedValue(C);
+    const ex = makePasskeyExecutor(C, wallet(), vi.fn(), deploy);
+
+    expect(ex.deployContract).toBe(deploy);
+    // The wallet executor deliberately has none — its presence is the branch condition.
+    expect(makeWalletExecutor(G, { signTransaction: vi.fn() }).deployContract).toBeUndefined();
   });
 
   it("signs with the passkey and relays instead of touching RPC", async () => {
     const w = wallet();
     const signAndSend = vi.fn();
     const relay = vi.fn().mockResolvedValue({ hash: "relayed1" });
-    const ex = makePasskeyExecutor(C, w, relay);
+    const ex = makePasskeyExecutor(C, w, relay, vi.fn());
 
     await expect(ex.submit({ signAndSend, built: { operations: [] } })).resolves.toEqual({ hash: "relayed1" });
 
@@ -62,7 +73,7 @@ describe("makePasskeyExecutor", () => {
   it("exposes a signer that refuses the callback path", async () => {
     // Nothing should route a passkey session through the wallet-style XDR callback; failing
     // loudly here beats a confusing signature error deeper in the SDK.
-    const ex = makePasskeyExecutor(C, wallet(), vi.fn());
+    const ex = makePasskeyExecutor(C, wallet(), vi.fn(), vi.fn());
     await expect(ex.signer.signTransaction("XDR")).rejects.toThrow(/passkey/i);
   });
 });

@@ -1,6 +1,45 @@
-import { describe, it, expect } from "vitest";
-import { isValidContractId, readLifecycle, toStroops, XLM_SAC } from "./userTreasury";
+import { describe, it, expect, vi } from "vitest";
+import { Address, scValToNative } from "@stellar/stellar-sdk";
+import {
+  deployTreasury,
+  isValidContractId,
+  readLifecycle,
+  toStroops,
+  TREASURY_WASM_HASH,
+  XLM_SAC,
+} from "./userTreasury";
 import type { Client } from "./treasuryClient";
+import type { TxExecutor } from "./executor";
+
+const SMART_WALLET = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ";
+const DEPLOYED = "CCU3NHMJGYNFNGWH5IZ3RTE7PPETD7QVVWK2H6DIQCFJKGXGLKKRHWO7";
+
+describe("deployTreasury", () => {
+  it("deploys through the session's own deploy path when it has one", async () => {
+    // A passkey session cannot deploy from a transaction source account: the smart wallet
+    // holds no XLM, and the relayer that pays for it rejects source-account authorisation.
+    const deployContract = vi.fn().mockResolvedValue(DEPLOYED);
+    const executor = {
+      address: SMART_WALLET,
+      kind: "passkey",
+      signer: { signTransaction: vi.fn() },
+      submit: vi.fn(),
+      deployContract,
+    } as unknown as TxExecutor;
+
+    await expect(deployTreasury(executor, 100, 10)).resolves.toBe(DEPLOYED);
+
+    const [wasmHash, args] = deployContract.mock.calls[0];
+    expect(wasmHash).toBe(TREASURY_WASM_HASH);
+    // admin and agent are both the smart wallet: ownership rides on the constructor
+    // arguments, never on whoever submitted the transaction.
+    expect(Address.fromScVal(args[0]).toString()).toBe(SMART_WALLET);
+    expect(Address.fromScVal(args[1]).toString()).toBe(SMART_WALLET);
+    expect(Address.fromScVal(args[2]).toString()).toBe(XLM_SAC);
+    expect(scValToNative(args[3])).toBe(toStroops(100));
+    expect(scValToNative(args[4])).toBe(toStroops(10));
+  });
+});
 
 describe("isValidContractId", () => {
   it("accepts a real contract id", () => {

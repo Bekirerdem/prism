@@ -17,15 +17,23 @@ import {
   WALLET_CONNECT_ID,
   type TWalletConnectModuleParams as WalletConnectModuleParams,
 } from "@creit.tech/stellar-wallets-kit/modules/wallet-connect";
-import { NETWORK_PASSPHRASE } from "../config";
+import { rpc } from "@stellar/stellar-sdk";
+import { ADMIN, NETWORK_PASSPHRASE, RPC_URL } from "../config";
 import { makeWalletSigner, type ContractSigner } from "./walletSigner";
 import { currentDevice, logFunnel } from "./funnel";
 import { errText } from "./wallet-errors";
 import { sortWalletsForDevice } from "./walletDevice";
 import { testSignerAvailable, getTestSigner } from "./testSigner";
-import { makePasskeyWallet, realPasskeyBackend } from "./passkey";
+import { makePasskeyWallet, realPasskeyBackend, resetPasskeyBackend } from "./passkey";
 import { makePasskeyExecutor, makeWalletExecutor, type TxExecutor } from "./executor";
-import { relayEnvelope, relayTx, type AssembledLike, type FetchLike } from "./relayer";
+import {
+  relayEnvelope,
+  relayHostFunction,
+  relayTx,
+  type AssembledLike,
+  type FetchLike,
+} from "./relayer";
+import { deployFromSmartWallet } from "./smartWalletDeploy";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
 // over WalletConnect v2 — so without this module a mobile visitor with the wallet installed
@@ -127,6 +135,9 @@ const ADDR_KEY = "prism_wallet_address";
 const WALLET_ID_KEY = "prism_wallet_id";
 /** Marks a session as belonging to a passkey smart wallet rather than a browser wallet. */
 const PASSKEY_ID = "passkey";
+/** The passkey credential a smart-wallet session is signing with. Kept so a reload can
+ *  re-attach the kit to the same wallet without asking the user to pick a passkey again. */
+const KEY_ID_KEY = "prism_passkey_key_id";
 let connectedAddress: string | null =
   typeof sessionStorage !== "undefined"
     ? sessionStorage.getItem(ADDR_KEY)
@@ -232,6 +243,8 @@ export async function disconnect(): Promise<void> {
   connectedAddress = null;
   sessionStorage.removeItem(ADDR_KEY);
   sessionStorage.removeItem(WALLET_ID_KEY);
+  sessionStorage.removeItem(KEY_ID_KEY);
+  resetPasskeyBackend();
   notifyAddress();
 }
 
@@ -249,17 +262,19 @@ export async function connectPasskey(
     const wallet = makePasskeyWallet(await realPasskeyBackend(), "Eunomia");
 
     let contractId: string;
+    let keyId: string;
     if (mode === "create") {
       const created = await wallet.create(userLabel);
-      contractId = created.contractId;
+      ({ contractId, keyId } = created);
       await relayEnvelope(fetch as unknown as FetchLike, created.signedTx);
     } else {
-      contractId = await wallet.connect();
+      ({ contractId, keyId } = await wallet.connect());
     }
 
     connectedAddress = contractId;
     sessionStorage.setItem(ADDR_KEY, contractId);
     sessionStorage.setItem(WALLET_ID_KEY, PASSKEY_ID);
+    sessionStorage.setItem(KEY_ID_KEY, keyId);
     notifyAddress();
     logFunnel({ event: "connect_result", outcome: "success", walletId: PASSKEY_ID });
     return contractId;
@@ -284,10 +299,29 @@ export function isPasskeySession(): boolean {
 export async function executorFor(address: string): Promise<TxExecutor> {
   if (isPasskeySession()) {
     const wallet = makePasskeyWallet(await realPasskeyBackend(), "Eunomia");
+    // passkey-kit signs nothing until a wallet is attached, and a reload leaves the kit
+    // empty while the session (address in sessionStorage) still looks connected. Reattaching
+    // by the stored key id raises no prompt.
+    await wallet.ensureConnected(sessionStorage.getItem(KEY_ID_KEY) ?? undefined);
     // `built` is opaque to the executor and structural to the relay; decode() validates it
     // at runtime and throws a user-facing message if the transaction was never assembled.
-    return makePasskeyExecutor(address, wallet, (tx) =>
-      relayTx(fetch as unknown as FetchLike, tx as AssembledLike),
+    return makePasskeyExecutor(
+      address,
+      wallet,
+      (tx) => relayTx(fetch as unknown as FetchLike, tx as AssembledLike),
+      (wasmHash, constructorArgs) =>
+        deployFromSmartWallet(
+          {
+            server: new rpc.Server(RPC_URL),
+            networkPassphrase: NETWORK_PASSPHRASE,
+            simulationSource: ADMIN,
+            signAuthEntry: (entry) => wallet.signAuthEntry(entry),
+            relay: (func, auth) => relayHostFunction(fetch as unknown as FetchLike, func, auth),
+          },
+          address,
+          wasmHash,
+          constructorArgs,
+        ),
     );
   }
   return makeWalletExecutor(address, walletSignerFor(address));

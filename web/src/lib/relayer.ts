@@ -57,6 +57,17 @@ export async function relayTx(fetchImpl: FetchLike, tx: AssembledLike): Promise<
   return post(fetchImpl, decode(tx));
 }
 
+/** Submit a host function and its signed auth entries directly. Deploying a treasury from a
+ *  smart wallet builds its own operation rather than going through a contract client, so
+ *  there is no assembled transaction here to decode. */
+export async function relayHostFunction(
+  fetchImpl: FetchLike,
+  func: string,
+  auth: string[],
+): Promise<{ hash?: string }> {
+  return post(fetchImpl, { func, auth });
+}
+
 /** Submit an already-signed transaction envelope — what passkey-kit hands back when it
  *  registers a passkey and deploys the smart wallet. */
 export async function relayEnvelope(

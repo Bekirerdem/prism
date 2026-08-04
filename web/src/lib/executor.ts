@@ -8,6 +8,7 @@
 // The passkey path cannot use RPC at all — a smart wallet holds no XLM, so there is nobody to
 // pay the fee. It signs the assembled transaction with the passkey and hands it to the relay,
 // which submits from its own channel account.
+import type { xdr } from "@stellar/stellar-sdk";
 import type { ContractSigner } from "./walletSigner";
 import type { PasskeyWallet } from "./passkey";
 
@@ -26,6 +27,11 @@ export interface TxExecutor {
   signer: ContractSigner;
   /** Sign and submit, returning the on-chain hash when there is one. */
   submit: (tx: SubmittableTx) => Promise<{ hash?: string }>;
+  /** Deploy a contract with this session as the deployer, returning its id.
+   *
+   *  Only the passkey path defines it. A wallet deploys the ordinary way — from its own
+   *  transaction source account — and that path is left exactly as it was. */
+  deployContract?: (wasmHash: string, constructorArgs: xdr.ScVal[]) => Promise<string>;
 }
 
 /** The existing path, unchanged. */
@@ -48,6 +54,7 @@ export function makePasskeyExecutor(
   contractId: string,
   wallet: PasskeyWallet,
   relay: (tx: SubmittableTx) => Promise<{ hash?: string }>,
+  deployContract: (wasmHash: string, constructorArgs: xdr.ScVal[]) => Promise<string>,
 ): TxExecutor {
   return {
     address: contractId,
@@ -59,5 +66,6 @@ export function makePasskeyExecutor(
         Promise.reject(new Error("A passkey session signs transactions, not raw XDR.")),
     },
     submit: async (tx) => relay(await wallet.sign(tx)),
+    deployContract,
   };
 }
