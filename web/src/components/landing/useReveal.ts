@@ -243,39 +243,69 @@ export function useReveal(): void {
             );
 
             gsap.set(cards, { clipPath: "inset(0 0 100% 0)" });
+            const jail = proof.querySelector<HTMLElement>(".lp__jail");
+            if (jail) gsap.set(jail, { clipPath: "inset(0 0 100% 0)", opacity: 0 });
 
-            const proofTl = gsap.timeline({
-              scrollTrigger: {
-                trigger: proof,
-                start: "top top",
-                // Longer now that the jailbreak block reveals inside the same pin.
-                end: `+=${Math.round(window.innerHeight * 2)}`,
-                pin: true,
-                scrub: true,
-                invalidateOnRefresh: true,
-              },
-            });
+            // The pin is a desktop affordance and does not survive the trip to a phone. Pinned,
+            // this section holds still for three screen-heights while the cards clip open one
+            // at a time — and a card that has not opened yet still occupies its slot, so what
+            // you scroll past is a column of empty rectangles. Choreography on a large screen,
+            // dead space on a small one.
+            //
+            // Narrow screens keep the same mechanic (each card wipes open) but drop the scrub:
+            // a card opens when it arrives, on its own trigger, and is finished by the time you
+            // have read it. Nothing waits on the scroll position of the section as a whole.
+            //
+            // Read once rather than through gsap.matchMedia: the timeline is rebuilt on remount
+            // and a phone does not change width mid-visit.
+            const canPin = window.matchMedia("(min-width: 1024px)").matches;
 
-            proofTl.to(".lp__proof .lp__sheet", { opacity: 1, ease: "none", duration: 3 }, 0);
-            ordered.forEach((card, i) => {
-              const blocked = card.classList.contains("lp__card--blocked");
-              proofTl.to(
-                card,
-                { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 },
-                i * 0.85 + (blocked ? 0.45 : 0),
-              );
-            });
+            if (canPin) {
+              const proofTl = gsap.timeline({
+                scrollTrigger: {
+                  trigger: proof,
+                  start: "top top",
+                  // Longer now that the jailbreak block reveals inside the same pin.
+                  end: `+=${Math.round(window.innerHeight * 2)}`,
+                  pin: true,
+                  scrub: true,
+                  invalidateOnRefresh: true,
+                },
+              });
 
-            // The jailbreak account is the payoff of this section, so it cannot already be
-            // sitting there while the cards are still arriving. It joins the same scrub, last.
-            const jail = proof.querySelector(".lp__jail");
-            if (jail) {
-              gsap.set(jail, { clipPath: "inset(0 0 100% 0)", opacity: 0 });
-              proofTl.to(
-                jail,
-                { clipPath: "inset(0 0 0% 0)", opacity: 1, ease: "none", duration: 1.2 },
-                2.9,
-              );
+              proofTl.to(".lp__proof .lp__sheet", { opacity: 1, ease: "none", duration: 3 }, 0);
+              ordered.forEach((card, i) => {
+                const blocked = card.classList.contains("lp__card--blocked");
+                proofTl.to(
+                  card,
+                  { clipPath: "inset(0 0 0% 0)", ease: "none", duration: 1 },
+                  i * 0.85 + (blocked ? 0.45 : 0),
+                );
+              });
+
+              // The jailbreak account is the payoff of this section, so it cannot already be
+              // sitting there while the cards are still arriving. It joins the same scrub, last.
+              if (jail) {
+                proofTl.to(
+                  jail,
+                  { clipPath: "inset(0 0 0% 0)", opacity: 1, ease: "none", duration: 1.2 },
+                  2.9,
+                );
+              }
+            } else {
+              gsap.set(".lp__proof .lp__sheet", { opacity: 1 });
+              const openOnArrival = (el: HTMLElement, delay = 0) =>
+                gsap.to(el, {
+                  clipPath: "inset(0 0 0% 0)",
+                  opacity: 1,
+                  duration: 0.5,
+                  delay,
+                  ease: "power3.out",
+                  scrollTrigger: { trigger: el, start: "top 88%", once: true },
+                });
+
+              ordered.forEach((card, i) => openOnArrival(card, i * 0.06));
+              if (jail) openOnArrival(jail);
             }
           }
 

@@ -877,4 +877,24 @@
   .lp__section { padding: 60px 20px; }
   .lp__hero { padding-top: 68px; }
   .lp__final { padding: 44px 22px; }
+
+  /* The counter is pinned to the bottom edge of a full-height hero on desktop. On a phone the
+   * headline, lede and two buttons already fill that height, so an absolutely positioned foot
+   * landed on top of them — its rule cut straight through "I have a wallet". Back into the
+   * flow, where it can simply follow the content. */
+  .lp__hero { min-height: 0; padding-bottom: 44px; }
+  .lp__hero-foot { position: static; margin-top: 40px; }
+
+  /* Three counters and an award wrapped 1 / 2 / 1 across three ragged rows. A two-column grid
+   * gives them a shape, and the award — which is the only one somebody else granted — gets its
+   * own full-width row rather than being stranded beside a number. */
+  .lp__counter {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+    justify-items: start;
+    padding-top: 20px;
+  }
+  .lp__counter .lp__award { grid-column: 1 / -1; justify-self: center; }
+  .lp__counter b { font-size: 20px; }
 }
