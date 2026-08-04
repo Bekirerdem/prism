@@ -161,7 +161,7 @@ const gateCard: React.CSSProperties = { maxWidth: 440, textAlign: "center", padd
 const gateGlyph: React.CSSProperties = { fontSize: 40, color: "var(--ink)", marginBottom: 14 };
 const gateTitle: React.CSSProperties = {
   margin: 0, fontSize: 30, letterSpacing: "-0.02em",
-  fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
+  fontFamily: "'Questrial', system-ui, sans-serif", fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
 };
 const gateSub: React.CSSProperties = { color: "var(--ink-2)", fontSize: 14.5, lineHeight: 1.6, marginTop: 12 };
 const demoLink: React.CSSProperties = {
@@ -171,7 +171,7 @@ const demoLink: React.CSSProperties = {
 const wizWrap: React.CSSProperties = { maxWidth: 560, margin: "0 auto" };
 const wizTitle: React.CSSProperties = {
   margin: 0, fontSize: 27, letterSpacing: "-0.02em",
-  fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500, color: "var(--ink)",
+  fontFamily: "'Questrial', system-ui, sans-serif", fontWeight: 500, color: "var(--ink)",
 };
 const wizSub: React.CSSProperties = { color: "var(--ink-2)", fontSize: 14, marginTop: 6, marginBottom: 18 };
 const stepCard: React.CSSProperties = {

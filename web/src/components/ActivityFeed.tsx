@@ -106,14 +106,14 @@ export default function ActivityFeed({ filter }: { filter?: FeedFilter }) {
           {state === "live" ? "● live" : state === "connecting" ? "○ connecting" : "○ offline"}
         </span>
       </div>
-      <p style={{ color: "#A0A0B8", marginTop: 6, fontSize: 14 }}>
+      <p style={{ color: "var(--ink-2)", marginTop: 6, fontSize: 14 }}>
         Every treasury action across Eunomia — full history, streamed live. On-chain events
         from the demo treasury, the ZK verifier and your own treasury ride on top.
       </p>
 
       <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 8 }}>
         {shown.list.length === 0 ? (
-          <div style={{ color: "#7C7C92", fontSize: 14, padding: "20px 0" }}>
+          <div style={{ color: "var(--ink-2)", fontSize: 14, padding: "20px 0" }}>
             {state === "error"
               ? "Couldn't reach the network — retrying…"
               : state === "connecting"
@@ -128,7 +128,7 @@ export default function ActivityFeed({ filter }: { filter?: FeedFilter }) {
               <>
                 <span style={kindTag(e.kind)}>{e.kind}</span>
                 <span style={{ flex: 1, fontSize: 13.5 }}>{e.label}</span>
-                <span style={{ color: "#7C7C92", fontSize: 11.5 }}>{timeAgo(e.at)}</span>
+                <span style={{ color: "var(--ink-2)", fontSize: 11.5 }}>{timeAgo(e.at)}</span>
               </>
             );
             return e.txHash ? (
@@ -165,29 +165,33 @@ function timeAgo(iso: string): string {
 // Shell-embedded: the AppShell provides page padding/centering; the card fills its slot.
 const card: React.CSSProperties = {
   width: "100%", maxWidth: 640, margin: "0 auto", boxSizing: "border-box", padding: 24, borderRadius: 18,
-  background: "rgba(18,18,28,0.72)", border: "1px solid rgba(255,255,255,0.08)",
-  backdropFilter: "blur(12px)", color: "#EDEDF4",
+  background: "var(--surface)", border: "1px solid var(--line)",
+  color: "var(--ink)",
 };
 const loadMore: React.CSSProperties = {
   marginTop: 12, width: "100%", padding: "9px 14px", borderRadius: 10, cursor: "pointer",
-  background: "transparent", border: "1px solid rgba(255,255,255,0.14)", color: "#A0A0B8",
+  background: "transparent", border: "1px solid var(--line)", color: "var(--ink-2)",
   fontSize: 13, fontFamily: "inherit",
 };
 const item: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 11,
-  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)",
-  color: "#EDEDF4", textDecoration: "none",
+  background: "var(--line)", border: "1px solid var(--line)",
+  color: "var(--ink)", textDecoration: "none",
 };
+// A tag per event kind used to mean six different hues. Only two of them ever carried
+// information — a rejection and something the rules let through — so the rest are neutral
+// now. Green is fill only (1.84:1 on cream), so a tag that fills with it writes in ink.
+const ALLOWED: [string, string] = ["color-mix(in oklab, var(--green) 34%, transparent)", "var(--ink)"];
+const NEUTRAL: [string, string] = ["var(--raise)", "var(--ink-2)"];
 const KIND_COLORS: Record<string, [string, string]> = {
-  attested: ["rgba(34,211,238,0.16)", "#22D3EE"],
-  blocked: ["rgba(255,45,85,0.16)", "#FF6E8A"],
-  fund: ["rgba(201,255,35,0.13)", "#C9FF23"],
-  deploy: ["rgba(201,255,35,0.13)", "#C9FF23"],
-  leash: ["rgba(253,218,36,0.15)", "#FDDA24"],
-  lifecycle: ["rgba(160,160,184,0.14)", "#A0A0B8"],
+  blocked: ["color-mix(in oklab, var(--red) 14%, transparent)", "var(--red)"],
+  paid: ALLOWED,
+  fund: ALLOWED,
+  deploy: ALLOWED,
+  whitelist: ALLOWED,
 };
 const kindTag = (kind: string): React.CSSProperties => {
-  const [bg, fg] = KIND_COLORS[kind] ?? ["rgba(124,58,237,0.18)", "#C4A8FF"];
+  const [bg, fg] = KIND_COLORS[kind] ?? NEUTRAL;
   return {
     fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700,
     padding: "3px 7px", borderRadius: 6, whiteSpace: "nowrap",
@@ -196,5 +200,5 @@ const kindTag = (kind: string): React.CSSProperties => {
 };
 const dot = (state: string): React.CSSProperties => ({
   fontSize: 12, fontWeight: 600,
-  color: state === "live" ? "#00FF43" : state === "error" ? "#FF5D5D" : "#A0A0B8",
+  color: state === "live" ? "var(--ink)" : state === "error" ? "var(--red)" : "var(--ink-2)",
 });
