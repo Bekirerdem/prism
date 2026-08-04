@@ -40,6 +40,20 @@
 
 .shell ::selection{ background:var(--green); color:#223e05; }
 
+/* Form fields inherit nothing by default — not the body face, not a size. They were rendering
+ * in the system font at the browser's own default, which on iOS is under the 16px threshold:
+ * tapping any field zoomed the page in, and the zoomed viewport is what "exploded" the layout.
+ * Anything below 16px triggers it, so on narrow screens that is the floor. */
+.shell input,
+.shell textarea,
+.shell select{ font-family:var(--body); font-size:15px; color:var(--ink); }
+
+@media(max-width:1023px){
+  .shell input,
+  .shell textarea,
+  .shell select{ font-size:16px; }
+}
+
 /* ---- sidebar ------------------------------------------------------------------ */
 .shell__side{
   position:sticky; top:0; height:100vh; display:flex; flex-direction:column;
