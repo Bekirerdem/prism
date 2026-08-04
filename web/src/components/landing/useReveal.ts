@@ -100,16 +100,25 @@ export function useReveal(): void {
           const curtain = document.querySelector<HTMLElement>(".lp__curtain");
           const half1 = document.querySelector<HTMLElement>(".lp__brand-start");
           const half2 = document.querySelector<HTMLElement>(".lp__brand-end");
+          // How far the gap has to open for BOTH panels to leave the stage. Filled in below
+          // once the seam is known; the fallback only matters if the curtain isn't there.
+          let curtainGap = Math.ceil(window.innerWidth * 1.1);
+
           if (curtain && half1 && half2) {
             const w1 = half1.getBoundingClientRect().width;
             const w2 = half2.getBoundingClientRect().width;
             // The curtain is `inset: 0` inside the hero, so its width excludes the scrollbar
-            // — while window.innerWidth includes it. Measuring the window put the seam a
-            // scrollbar's width to the right of where the panels actually meet: the right
-            // panel started late, leaving a strip of page showing beside it with the first
-            // letter of "nomia" stranded in the gap.
+            // — while window.innerWidth includes it.
             const stage = curtain.getBoundingClientRect().width;
-            curtain.style.setProperty("--seam", `${(stage - (w1 + w2)) / 2 + w1}px`);
+            const seam = (stage - (w1 + w2)) / 2 + w1;
+            curtain.style.setProperty("--seam", `${seam}px`);
+
+            // Each panel's width is its side of the seam minus half the gap, so the gap must
+            // be twice the WIDER side to close both. The seam is deliberately off-centre
+            // ("Eu" and "nomia" are different widths), so a flat 1.1 × viewport closed the
+            // wide side and left the narrow one as a ~40px strip on screen — with the first
+            // letter of "nomia" still sitting in it until the whole scene faded.
+            curtainGap = Math.ceil(2 * Math.max(seam, stage - seam) + 48);
           }
 
           const tl = gsap.timeline({
@@ -136,7 +145,7 @@ export function useReveal(): void {
           //     owns the screen.
           tl.to(
             ".lp__curtain",
-            { "--gap": `${Math.ceil(window.innerWidth * 1.1)}px`, duration: 2 },
+            { "--gap": `${curtainGap}px`, duration: 2 },
             "<1.25",
           );
 

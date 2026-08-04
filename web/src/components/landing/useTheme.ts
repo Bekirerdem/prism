@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 export type Theme = "light" | "dark";
 
 const KEY = "eunomia-theme";
-const SWEEP_MS = 560;
+const SWEEP_MS = 900;
 
 /** Light is the default and dark is a preference — that decision is in the landing spec.
  *
@@ -72,7 +72,7 @@ export function useTheme(): { theme: Theme; toggle: (e?: { clientX: number; clie
         },
         {
           duration: SWEEP_MS,
-          easing: "cubic-bezier(0.2, 0.7, 0.3, 1)",
+          easing: "cubic-bezier(0.33, 0, 0.15, 1)",
           pseudoElement: "::view-transition-new(root)",
         },
       );
