@@ -17,11 +17,13 @@ export default function FeedbackButton() {
   );
 }
 
+// Colours live in index.css under .feedback-fab, not here: this button is rendered outside
+// both .lp and .shell, so it cannot read either one's tokens — and an inline colour would win
+// over the stylesheet anyway, which is how it stayed on the old dark-and-yellow palette after
+// everything around it moved.
 const fab: CSSProperties = {
   position: "fixed", right: 18, bottom: 18, zIndex: 1500,
   padding: "11px 17px", borderRadius: 999, cursor: "pointer",
   display: "inline-block", textDecoration: "none", fontFamily: "inherit", lineHeight: 1.4,
-  background: "rgba(18,18,28,0.82)", border: "1px solid rgba(253,218,36,0.45)",
-  color: "#FDDA24", fontWeight: 600, fontSize: 13.5, backdropFilter: "blur(8px)",
-  boxShadow: "0 8px 24px -10px rgba(0,0,0,0.6)",
+  fontWeight: 600, fontSize: 13.5,
 };

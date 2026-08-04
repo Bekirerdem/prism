@@ -132,15 +132,15 @@ export default function Wallet() {
   }, [address, dest, amount, loadBalance]);
 
   const statusColor =
-    status.kind === "success" ? "#00FF43" : status.kind === "error" ? "#FF5D5D" : "#A0A0B8";
+    status.kind === "success" ? "var(--ink)" : status.kind === "error" ? "var(--red)" : "var(--ink-2)";
 
   return (
     <div style={wrap}>
       <div style={card}>
-        <h1 style={{ margin: 0, fontSize: 27, letterSpacing: "-0.02em", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 500 }}>
-          <span style={{ color: "#FDDA24" }}>◭</span> Wallet
+        <h1 style={{ margin: 0, fontSize: 27, letterSpacing: "-0.02em", fontFamily: "'Questrial', system-ui, sans-serif", fontWeight: 500 }}>
+          <span style={{ color: "var(--ink)" }}>◭</span> Wallet
         </h1>
-        <p style={{ color: "#A0A0B8", marginTop: 6, fontSize: 14 }}>
+        <p style={{ color: "var(--ink-2)", marginTop: 6, fontSize: 14 }}>
           Connect any Stellar wallet, view your testnet XLM balance, and send a payment.
         </p>
 
@@ -174,7 +174,7 @@ export default function Wallet() {
                     : `${balance.toLocaleString(undefined, { maximumFractionDigits: 7 })} XLM`}
               </div>
               {balanceError && (
-                <div style={{ color: "#FF5D5D", fontSize: 12.5, marginTop: 4 }}>
+                <div style={{ color: "var(--red)", fontSize: 12.5, marginTop: 4 }}>
                   Couldn't read your balance — tap refresh to retry.
                 </div>
               )}
@@ -229,24 +229,24 @@ export default function Wallet() {
 const wrap: React.CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: "84px 16px 24px" };
 const card: React.CSSProperties = {
   width: "100%", maxWidth: 460, padding: 28, borderRadius: 18,
-  background: "rgba(18,18,28,0.72)", border: "1px solid rgba(255,255,255,0.08)",
-  backdropFilter: "blur(12px)", color: "#EDEDF4",
+  background: "var(--surface)", border: "1px solid var(--line)",
+  backdropFilter: "blur(12px)", color: "var(--ink)",
 };
-const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7C7C92" };
+const label: React.CSSProperties = { fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--ink-2)" };
 const mono: React.CSSProperties = { fontFamily: "ui-monospace, monospace", fontSize: 14, marginTop: 2 };
 const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20 };
-const balanceBox: React.CSSProperties = { marginTop: 16, padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.04)" };
+const balanceBox: React.CSSProperties = { marginTop: 16, padding: 16, borderRadius: 12, background: "var(--line)" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", marginTop: 8, padding: "11px 13px", borderRadius: 10,
-  background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#EDEDF4",
+  background: "var(--bg)", border: "1px solid var(--line)", color: "var(--ink)",
 };
 const primaryBtn: React.CSSProperties = {
   width: "100%", marginTop: 16, padding: "12px 16px", borderRadius: 11, border: "none", cursor: "pointer",
-  background: "#FDDA24", color: "#0F0F0F", fontWeight: 600, fontSize: 15,
+  background: "var(--ink)", color: "var(--bg)", fontWeight: 600, fontSize: 15,
 };
 const ghostBtn: React.CSSProperties = {
   padding: "7px 12px", borderRadius: 9, cursor: "pointer", fontSize: 13,
-  background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#A0A0B8",
+  background: "transparent", border: "1px solid var(--line)", color: "var(--ink-2)",
 };
-const linkBtn: React.CSSProperties = { marginTop: 8, background: "none", border: "none", color: "#FDDA24", cursor: "pointer", fontSize: 13, padding: 0 };
+const linkBtn: React.CSSProperties = { marginTop: 8, background: "none", border: "none", color: "var(--ink)", cursor: "pointer", fontSize: 13, padding: 0 };
 const statusBox: React.CSSProperties = { marginTop: 18, padding: "10px 13px", borderRadius: 10, border: "1px solid", fontSize: 13.5, lineHeight: 1.4 };

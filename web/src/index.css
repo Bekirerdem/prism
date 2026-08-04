@@ -443,3 +443,18 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
 .hcard__bar{ height:7px; border-radius:99px; background:rgba(255,255,255,0.08); margin-top:13px; overflow:hidden; }
 .hcard__bar span{ display:block; height:100%; border-radius:99px; background:var(--lavender); }
 @media(max-width:920px){ .hero__cards{ max-width:100%; margin:20px 0 0; } .hcard--ok,.hcard--mid,.hcard--rej{ margin-left:0; margin-right:0; } }
+
+/* ---- global feedback FAB -------------------------------------------------------
+   Rendered outside both .lp and .shell (App mounts it as a sibling), so it cannot read
+   either scope's tokens. It carries the brand values directly and flips with the theme
+   attribute the document now always has. */
+.feedback-fab{
+  background:#223e05; border:1px solid #223e05; color:#fcffd5;
+  box-shadow:0 8px 24px -10px rgba(34,62,5,0.3);
+  transition:opacity .16s ease;
+}
+.feedback-fab:hover{ opacity:.88; }
+:root[data-theme="dark"] .feedback-fab{
+  background:#edf6d2; border-color:#edf6d2; color:#152a03;
+  box-shadow:0 8px 24px -10px rgba(0,0,0,0.5);
+}
