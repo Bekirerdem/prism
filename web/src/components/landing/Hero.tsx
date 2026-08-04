@@ -125,7 +125,7 @@ export default function Hero({
             <span className="lp__nav-mask">
               <button
                 className="lp__nav-link lp__theme"
-                onClick={toggle}
+                onClick={(e) => toggle(e)}
                 type="button"
                 aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
                 title={theme === "dark" ? "Light" : "Dark"}

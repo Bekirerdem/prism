@@ -3,16 +3,15 @@ import { useCallback, useEffect, useState } from "react";
 export type Theme = "light" | "dark";
 
 const KEY = "eunomia-theme";
+const SWEEP_MS = 560;
 
 /** Light is the default and dark is a preference — that decision is in the landing spec.
  *
- *  The dark values already exist as tokens (`:root[data-theme="dark"] .lp`); what was missing
- *  was anything to set that attribute. Order of precedence: an explicit past choice, then the
- *  operating system, then light.
- *
- *  Scoped to the landing on purpose: the tokens live under `.lp`, so flipping the attribute
- *  cannot disturb the dashboard, which keeps its own dark shell until its own redesign. */
-export function useTheme(): { theme: Theme; toggle: () => void } {
+ *  The attribute is set on the document (not the landing root) because the app shell reads
+ *  the same tokens; index.html applies the stored choice before first paint so neither
+ *  surface flashes the wrong palette. Order of precedence: an explicit past choice, then the
+ *  operating system, then light. */
+export function useTheme(): { theme: Theme; toggle: (e?: { clientX: number; clientY: number }) => void } {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
     try {
@@ -33,8 +32,51 @@ export function useTheme(): { theme: Theme; toggle: () => void } {
     }
   }, [theme]);
 
-  const toggle = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  /** Flip the palette as a circle opening from wherever the switch was pressed, rather than
+   *  the whole page changing at once. The new theme is painted as a View Transition layer and
+   *  revealed by a growing clip-path, so the old palette stays underneath while it sweeps.
+   *
+   *  Falls back to an instant flip wherever the API is missing (Firefox today) or where the
+   *  visitor has asked for reduced motion — the state change is identical either way, only
+   *  the reveal differs. */
+  const toggle = useCallback((e?: { clientX: number; clientY: number }) => {
+    const flip = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
+    const start = (document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void> };
+    }).startViewTransition;
+
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!start || reduced || !e) {
+      flip();
+      return;
+    }
+
+    // Radius to the furthest corner, so the circle finishes by covering the viewport rather
+    // than stopping short of it.
+    const x = e.clientX;
+    const y = e.clientY;
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    const transition = start.call(document, flip);
+    void transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`],
+        },
+        {
+          duration: SWEEP_MS,
+          easing: "cubic-bezier(0.2, 0.7, 0.3, 1)",
+          pseudoElement: "::view-transition-new(root)",
+        },
+      );
+    });
   }, []);
 
   return { theme, toggle };

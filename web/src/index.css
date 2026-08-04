@@ -444,6 +444,22 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
 .hcard__bar span{ display:block; height:100%; border-radius:99px; background:var(--lavender); }
 @media(max-width:920px){ .hero__cards{ max-width:100%; margin:20px 0 0; } .hcard--ok,.hcard--mid,.hcard--rej{ margin-left:0; margin-right:0; } }
 
+/* ---- theme sweep ---------------------------------------------------------------
+   The palette flip is revealed as a circle opening from the switch (see useTheme). The
+   browser's default cross-fade would run underneath that and turn the sweep into a wash,
+   so both layers are held still and only the clip-path animates. The new palette is drawn
+   on top; the old one stays put beneath it and is simply uncovered. */
+::view-transition-old(root),
+::view-transition-new(root){ animation:none; mix-blend-mode:normal; }
+::view-transition-old(root){ z-index:1; }
+::view-transition-new(root){ z-index:2; }
+
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root){ animation:none !important; }
+}
+
 /* ---- global feedback FAB -------------------------------------------------------
    Rendered outside both .lp and .shell (App mounts it as a sibling), so it cannot read
    either scope's tokens. It carries the brand values directly and flips with the theme

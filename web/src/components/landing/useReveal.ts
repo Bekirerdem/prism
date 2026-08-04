@@ -103,10 +103,13 @@ export function useReveal(): void {
           if (curtain && half1 && half2) {
             const w1 = half1.getBoundingClientRect().width;
             const w2 = half2.getBoundingClientRect().width;
-            curtain.style.setProperty(
-              "--seam",
-              `${(window.innerWidth - (w1 + w2)) / 2 + w1}px`,
-            );
+            // The curtain is `inset: 0` inside the hero, so its width excludes the scrollbar
+            // — while window.innerWidth includes it. Measuring the window put the seam a
+            // scrollbar's width to the right of where the panels actually meet: the right
+            // panel started late, leaving a strip of page showing beside it with the first
+            // letter of "nomia" stranded in the gap.
+            const stage = curtain.getBoundingClientRect().width;
+            curtain.style.setProperty("--seam", `${(stage - (w1 + w2)) / 2 + w1}px`);
           }
 
           const tl = gsap.timeline({
@@ -573,6 +576,14 @@ export function useReveal(): void {
               { yPercent: 20, opacity: 0, duration: 0.95, ease: "expo.out" },
               "<0.16",
             );
+          });
+
+          // The fixed nav sits on bare page while the hero is in view and takes a surface once
+          // it is over anything else — otherwise section text scrolls up behind bare links.
+          ScrollTrigger.create({
+            start: "top -60",
+            onEnter: () => root?.classList.add("lp--nav-solid"),
+            onLeaveBack: () => root?.classList.remove("lp--nav-solid"),
           });
 
           // Remaining card rows keep a quiet entrance; proof and privacy drive their own.
