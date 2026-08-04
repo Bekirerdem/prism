@@ -73,7 +73,12 @@ export async function deployFromSmartWallet(
     .build();
 
   const sim = await deps.server.simulateTransaction(tx);
-  if (sim.error || !sim.result?.retval) throw new Error(PREPARE_FAILED);
+  if (sim.error || !sim.result?.retval) {
+    // The user-facing message stays one sentence; the reason belongs in the console, or a
+    // live failure is indistinguishable from every other one.
+    console.error("[deploy] simulation did not yield a contract:", sim.error ?? sim);
+    throw new Error(PREPARE_FAILED);
+  }
 
   // The chain names the contract during simulation, so there is no second implementation of
   // the id derivation to keep in step with the host's.

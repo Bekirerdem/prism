@@ -51,9 +51,14 @@ const GENERIC = "Couldn't use your passkey. Try again or connect a wallet instea
 
 /** The browser reports a dismissed prompt and a timeout the same way (NotAllowedError), and
  *  neither is worth showing verbatim. An ownership failure is kept separate: telling that user
- *  "cancelled" would send them round in circles. */
-function humanise(e: unknown): Error {
+ *  "cancelled" would send them round in circles.
+ *
+ *  Every passkey step funnels into the same three sentences, so the original error is logged
+ *  with the step that raised it. Without this, a failure anywhere in the chain is indis-
+ *  tinguishable from any other — which is exactly how one live failure cost a whole round. */
+function humanise(step: string, e: unknown): Error {
   const msg = e instanceof Error ? e.message : String(e);
+  console.error(`[passkey] ${step} failed:`, e);
   if (/ownership/i.test(msg)) return new Error(OWNERSHIP);
   if (/notallowed|aborterror|timed out|cancel/i.test(msg)) return new Error(CANCELLED);
   return new Error(GENERIC);
@@ -108,14 +113,14 @@ export function makePasskeyWallet(be: PasskeyBackend, app: string): PasskeyWalle
       try {
         return await be.createWallet(app, user);
       } catch (e) {
-        throw humanise(e);
+        throw humanise("create wallet", e);
       }
     },
     async connect(keyId) {
       try {
         return await be.connectWallet(keyId);
       } catch (e) {
-        throw humanise(e);
+        throw humanise("connect wallet", e);
       }
     },
     async ensureConnected(keyId) {
@@ -123,21 +128,21 @@ export function makePasskeyWallet(be: PasskeyBackend, app: string): PasskeyWalle
       try {
         await be.connectWallet(keyId);
       } catch (e) {
-        throw humanise(e);
+        throw humanise(`reattach wallet (keyId ${keyId ? "stored" : "missing"})`, e);
       }
     },
     async sign(tx) {
       try {
         return await be.sign(tx);
       } catch (e) {
-        throw humanise(e);
+        throw humanise("sign transaction", e);
       }
     },
     async signAuthEntry(entry) {
       try {
         return await be.signAuthEntry(entry);
       } catch (e) {
-        throw humanise(e);
+        throw humanise("sign auth entry", e);
       }
     },
   };
