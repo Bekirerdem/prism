@@ -108,9 +108,13 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       setLifecycle(lc);
       setLegacy(lc === null);
       setSessionSecret(loadSessionSecret(id));
-    } catch {
+    } catch (e) {
       setState(null);
       setLifecycle(null);
+      // The message below is deliberately vague; the reason is not. Without this, a client
+      // that could not even build its source account looked identical to a treasury that
+      // genuinely is not on chain.
+      console.error("[treasury] could not read", id, e);
       toast("error", "Could not read this treasury — it may not exist on testnet.");
     } finally {
       setLoading(false);

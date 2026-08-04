@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { Address, scValToNative } from "@stellar/stellar-sdk";
 import {
   deployTreasury,
+  makeTreasury,
   isValidContractId,
   readLifecycle,
   toStroops,
@@ -13,6 +14,30 @@ import type { TxExecutor } from "./executor";
 
 const SMART_WALLET = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ";
 const DEPLOYED = "CCU3NHMJGYNFNGWH5IZ3RTE7PPETD7QVVWK2H6DIQCFJKGXGLKKRHWO7";
+
+describe("makeTreasury", () => {
+  const executor = (address: string, kind: "wallet" | "passkey") =>
+    ({
+      address,
+      kind,
+      signer: { signTransaction: vi.fn() },
+      submit: vi.fn(),
+    }) as unknown as TxExecutor;
+
+  it("does not hand a smart wallet address to the contract client", () => {
+    // The regression: the client resolves publicKey with getAccount(), and a C-address comes
+    // back "invalid version byte. expected 48, got 16" — so every read on a passkey user's
+    // treasury failed and the UI reported the treasury might not exist.
+    const t = makeTreasury(DEPLOYED, executor(SMART_WALLET, "passkey"));
+    expect((t.client.options as { publicKey?: string }).publicKey).toBeUndefined();
+  });
+
+  it("keeps handing a wallet session its own address", () => {
+    const g = "GDPKXL6CNHUXBV4PM54CPTRZNQRYVTIMO4YGBW3M2MNSCMQ7TTNINXP6";
+    const t = makeTreasury(DEPLOYED, executor(g, "wallet"));
+    expect((t.client.options as { publicKey?: string }).publicKey).toBe(g);
+  });
+});
 
 describe("deployTreasury", () => {
   it("deploys through the session's own deploy path when it has one", async () => {

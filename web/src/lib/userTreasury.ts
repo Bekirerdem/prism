@@ -79,7 +79,13 @@ export function makeTreasury(contractId: string, executor: TxExecutor): Treasury
       contractId,
       networkPassphrase: NETWORK_PASSPHRASE,
       rpcUrl: RPC_URL,
-      publicKey: executor.address,
+      // A smart wallet is not a classic account. The contract client resolves `publicKey`
+      // with getAccount(), which answers a C-address with "invalid version byte. expected
+      // 48, got 16" — so passing one made every read and write on the treasury fail before
+      // it reached the chain. Left unset, the SDK simulates against its null account, which
+      // is all a simulation needs. Authorisation is unaffected: the treasury requires its
+      // admin to sign, and the admin is the wallet, so the auth entry still binds to it.
+      ...(executor.kind === "passkey" ? {} : { publicKey: executor.address }),
       signTransaction: executor.signer.signTransaction,
     }),
     submit: executor.submit,
