@@ -39,6 +39,10 @@ describe("makePasskeyExecutor", () => {
     ensureConnected: vi.fn(),
     sign: vi.fn().mockImplementation((tx) => Promise.resolve({ ...tx, signed: true })),
     signAuthEntry: vi.fn(),
+    createKey: vi.fn(),
+    addRecoverySigner: vi.fn(),
+    addPasskeyFromRecovery: vi.fn(),
+    connectRecovered: vi.fn(),
   });
 
   it("uses the smart wallet address and marks the passkey path", () => {

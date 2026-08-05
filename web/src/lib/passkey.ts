@@ -10,6 +10,8 @@
 //
 // Raw WebAuthn and kit errors never reach the user.
 
+import { walletOnlyLimits } from "./recovery";
+
 export interface PasskeyIdentity {
   contractId: string;
   /** Base64url credential id — what lets a later session re-attach without a ceremony. */
@@ -18,11 +20,27 @@ export interface PasskeyIdentity {
 
 export interface PasskeyBackend {
   createWallet(app: string, user: string): Promise<PasskeyIdentity & { signedTx: string }>;
-  connectWallet(keyId?: string): Promise<PasskeyIdentity>;
+  /** `contractHint` feeds the kit's `getContractId` lookup — a recovered wallet's new
+   *  key id derives the WRONG address, so the hint is what finds the right contract. */
+  connectWallet(keyId?: string, contractHint?: string): Promise<PasskeyIdentity>;
   /** Whether the kit currently holds a connected wallet. A freshly built one does not. */
   connected(): boolean;
   sign<T>(tx: T): Promise<T>;
   signAuthEntry<T>(entry: T): Promise<T>;
+  /** Register a bare passkey — a WebAuthn ceremony with no wallet deploy attached. */
+  createKey(app: string, user: string): Promise<{ keyId: string; publicKey: Uint8Array }>;
+  /** Build the add-Ed25519-signer transaction on the CONNECTED wallet and sign it
+   *  with the session passkey. The caller relays the result. */
+  addEd25519Signer(publicKey: string, limits: Map<string, undefined>): Promise<unknown>;
+  /** Attach `wallet` without a ceremony (the fresh key id is not a signer yet, so
+   *  connectWallet's ownership check would reject it), build the add-passkey
+   *  transaction and sign it with the recovery secret. The caller relays the result. */
+  addSecp256r1Signer(
+    wallet: string,
+    keyId: string,
+    publicKey: Uint8Array,
+    secret: string,
+  ): Promise<unknown>;
 }
 
 export interface PasskeyWallet {
@@ -43,6 +61,23 @@ export interface PasskeyWallet {
   /** Sign one standalone auth entry — the shape a deploy produces, where there is no
    *  contract-client transaction to hand over. */
   signAuthEntry<T>(entry: T): Promise<T>;
+  /** Register a bare passkey for recovery — no wallet deploy attached. */
+  createKey(user: string): Promise<{ keyId: string; publicKey: Uint8Array }>;
+  /** Add a recovery signer scoped to the wallet contract alone: it can re-key the
+   *  wallet, it can never authorize a treasury call. Returns the signed transaction
+   *  for the relay. */
+  addRecoverySigner(publicKey: string, walletContractId: string): Promise<unknown>;
+  /** Install a fresh passkey on the wallet, authorized by the recovery secret instead
+   *  of the lost passkey. Returns the signed transaction for the relay. */
+  addPasskeyFromRecovery(
+    wallet: string,
+    keyId: string,
+    publicKey: Uint8Array,
+    secret: string,
+  ): Promise<unknown>;
+  /** Connect a just-recovered wallet: the new key id plus the wallet address the
+   *  recovery code carried. */
+  connectRecovered(keyId: string, wallet: string): Promise<PasskeyIdentity>;
 }
 
 const CANCELLED = "Passkey prompt cancelled — try again.";
@@ -97,13 +132,44 @@ async function buildPasskeyBackend(): Promise<PasskeyBackend> {
       const { contractId, signedTx, keyIdBase64 } = await kit.createWallet(app, user);
       return { contractId, signedTx, keyId: keyIdBase64 };
     },
-    connectWallet: async (keyId) => {
-      const { contractId, keyIdBase64 } = await kit.connectWallet(keyId ? { keyId } : undefined);
+    connectWallet: async (keyId, contractHint) => {
+      const { contractId, keyIdBase64 } = await kit.connectWallet(
+        keyId || contractHint
+          ? {
+              ...(keyId ? { keyId } : {}),
+              ...(contractHint ? { getContractId: async () => contractHint } : {}),
+            }
+          : undefined,
+      );
       return { contractId, keyId: keyIdBase64 };
     },
     connected: () => !!kit.wallet,
     sign: (tx) => kit.sign(tx as never) as never,
     signAuthEntry: (entry) => kit.signAuthEntry(entry as never) as never,
+    createKey: async (app, user) => {
+      const { keyId, publicKey } = await kit.createKey(app, user);
+      return { keyId, publicKey };
+    },
+    addEd25519Signer: async (publicKey, limits) => {
+      const { SignerStore } = await import("passkey-kit");
+      // Persistent storage: a recovery signer that silently expired would be a
+      // recovery signer that does not exist on the day it is needed.
+      const tx = await kit.addEd25519(publicKey, limits, SignerStore.Persistent);
+      return kit.sign(tx);
+    },
+    addSecp256r1Signer: async (wallet, keyId, publicKey, secret) => {
+      const { PasskeyClient, SignerStore, Ed25519Signer } = await import("passkey-kit");
+      // No ceremony can attach this wallet — the fresh key id is not a signer yet,
+      // so connectWallet's ownership check would reject exactly the session that
+      // needs it. The kit's wallet field is public; hand it a client directly.
+      kit.wallet = new PasskeyClient({
+        contractId: wallet,
+        rpcUrl: RPC_URL,
+        networkPassphrase: NETWORK_PASSPHRASE,
+      });
+      const tx = await kit.addSecp256r1(keyId, publicKey, undefined, SignerStore.Persistent);
+      return kit.sign(tx, Ed25519Signer.fromSecret(secret));
+    },
   };
 }
 
@@ -143,6 +209,34 @@ export function makePasskeyWallet(be: PasskeyBackend, app: string): PasskeyWalle
         return await be.signAuthEntry(entry);
       } catch (e) {
         throw humanise("sign auth entry", e);
+      }
+    },
+    async createKey(user) {
+      try {
+        return await be.createKey(app, user);
+      } catch (e) {
+        throw humanise("register recovery passkey", e);
+      }
+    },
+    async addRecoverySigner(publicKey, walletContractId) {
+      try {
+        return await be.addEd25519Signer(publicKey, walletOnlyLimits(walletContractId));
+      } catch (e) {
+        throw humanise("add recovery signer", e);
+      }
+    },
+    async addPasskeyFromRecovery(wallet, keyId, publicKey, secret) {
+      try {
+        return await be.addSecp256r1Signer(wallet, keyId, publicKey, secret);
+      } catch (e) {
+        throw humanise("re-key wallet from recovery", e);
+      }
+    },
+    async connectRecovered(keyId, wallet) {
+      try {
+        return await be.connectWallet(keyId, wallet);
+      } catch (e) {
+        throw humanise("connect recovered wallet", e);
       }
     },
   };

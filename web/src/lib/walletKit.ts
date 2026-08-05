@@ -38,6 +38,11 @@ import {
   transferFromSmartWallet,
   type SmartWalletDeps,
 } from "./smartWalletTx";
+import {
+  activateRecoverySigner,
+  recoverWallet,
+  type RecoveryDeps,
+} from "./recoveryFlow";
 import { XLM_SAC } from "./userTreasury";
 
 // The extension modules only work on desktop. Freighter (and Lobstr) on a phone connect
@@ -288,6 +293,57 @@ export async function connectPasskey(
       event: "connect_result",
       outcome: "error",
       walletId: PASSKEY_ID,
+      detail: errText(e),
+    });
+    throw e;
+  }
+}
+
+/** The recovery path gets its own funnel id so its drop-off is measurable apart
+ *  from ordinary passkey connects. */
+const PASSKEY_RECOVERY_ID = "passkey_recovery";
+
+async function recoveryDeps(): Promise<RecoveryDeps> {
+  const wallet = makePasskeyWallet(await realPasskeyBackend(), "Eunomia");
+  return {
+    wallet,
+    relayTx: (tx) => relayTx(fetch as unknown as FetchLike, tx as AssembledLike),
+  };
+}
+
+/** Write the recovery signer for the connected passkey session — one passkey prompt.
+ *  Call only after the user has confirmed the code is saved; the code itself never
+ *  leaves the browser. */
+export async function activateRecovery(publicKey: string, address: string): Promise<void> {
+  const deps = await recoveryDeps();
+  // A reload between deploy and this step leaves the kit empty while the session
+  // still looks connected — same reattach executorFor() does before every signature.
+  await deps.wallet.ensureConnected(sessionStorage.getItem(KEY_ID_KEY) ?? undefined);
+  await activateRecoverySigner(deps, publicKey, address);
+}
+
+/** Recover a wallet from a pasted code: register a fresh passkey, have the recovery
+ *  signer authorize it through the relay, and adopt the wallet as the session. */
+export async function connectPasskeyRecovery(
+  code: string,
+  userLabel = "Eunomia user",
+): Promise<string> {
+  logFunnel({ event: "connect_click", walletId: PASSKEY_RECOVERY_ID });
+  try {
+    const { contractId, keyId } = await recoverWallet(await recoveryDeps(), code, userLabel);
+
+    connectedAddress = contractId;
+    sessionStorage.setItem(ADDR_KEY, contractId);
+    sessionStorage.setItem(WALLET_ID_KEY, PASSKEY_ID);
+    sessionStorage.setItem(KEY_ID_KEY, keyId);
+    notifyAddress();
+    logFunnel({ event: "connect_result", outcome: "success", walletId: PASSKEY_RECOVERY_ID });
+    return contractId;
+  } catch (e) {
+    logFunnel({
+      event: "connect_result",
+      outcome: "error",
+      walletId: PASSKEY_RECOVERY_ID,
       detail: errText(e),
     });
     throw e;
