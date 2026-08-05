@@ -125,7 +125,10 @@ Deployed with the `seyit` identity; per-user deploys in the app instantiate v3.
 
 | Item | Value |
 |------|-------|
-| **Treasury v3.2 wasm hash (current)** | `475cfbe2ca79d7977c8e4d29438ae70b9d95a12cb2bfcd9fed4e4f7a26d798b2` |
+| **Treasury v3.3 wasm hash (current)** | `56a4d92660256b939433b51f35618515f4e77290f0978f72dcf64be719936795` |
+| v3.3 upload tx (2026-08-05 audit: **M1** window holds a full 24h · **M3** daily limit bounds committed value) | [`71899b55…963c`](https://stellar.expert/explorer/testnet/tx/71899b55dd20d56b00bbdf09735736cc2b8f619d8f64482c92429b77ddcd963c) |
+| v3.3 smoke treasury | [`CBGPB5JG…7OZK`](https://stellar.expert/explorer/testnet/contract/CBGPB5JGKGVGLY3HHTR6Z2G4OC6PI3NOWSE7WGBCHGIEC5MALCDZ7OZK) |
+| Treasury v3.2 wasm hash (previous) | `475cfbe2ca79d7977c8e4d29438ae70b9d95a12cb2bfcd9fed4e4f7a26d798b2` |
 | v3.2 upload tx (audit **C3** closure: instance-storage TTL auto-extended on every mutation) | [`d97fc74f…7ab1`](https://stellar.expert/explorer/testnet/tx/d97fc74fe0c2f750b27669690c9b7c58caffe4532501c7b98ed63afd5cbe7ab1) |
 | Treasury v3.1 wasm hash (previous) | `7e103d8c177f3b46d4f7ccee695e7c9a92f5d3e5e55b96324173f923db9f9ae7` |
 | v3.1 upload tx (audit hardening: `admin_cancel_escrow` + deadline validation + escrow TTL + whitelist/rep-gate events) | [`e12e748b…43b3c`](https://stellar.expert/explorer/testnet/tx/e12e748bdaafa39a08c2bfe56e009fa507f951d93af16455cb7ece019a243b3c) |
@@ -153,14 +156,32 @@ Verified live on the smoke treasury:
 Contract tests: `cargo test -p treasury` → **51/51** · `cargo test -p treasury_registry` → **3/3** ·
 `cargo test -p compliance_verifier` → **6/6**.
 
-> **Pending — verifier hardening redeploy (coordinated).** The compliance verifier's `verify`
-> now fails closed on malformed input lengths with typed errors (`Error(Contract, #1)`
-> InvalidProofLength / `#2` InvalidPublicInputLength) instead of an opaque panic. The code is
-> merged and tested, but the **on-chain verifier is not yet redeployed**: a new `VERIFIER_ID`
-> would leave the live ZK attestation showcase (`ATTESTED_TX` in `web/src/config.ts`) empty
-> until a fresh proof is submitted, which needs the Groth16 `.zkey`. Redeploy the verifier and
-> re-run `circuits/scripts/prove-and-submit.ts` **together**, then bump `VERIFIER_ID` +
-> `ATTESTED_TX`, so the showcase stays consistent.
+### v3.3 live verification (2026-08-05)
+
+Proved on the smoke treasury above (`daily_limit = per_task_limit = 100` stroops), because
+"the tests pass" is not the same claim as "the chain enforces it":
+
+| Step | Result |
+|---|---|
+| `create_escrow(100)` | ✅ escrowed · `day_spent() = 100` — **the fix**: on v3.2 this read `0`, because only `release` charged the window |
+| `locked()` | `100` |
+| `create_escrow(1)` — a second commitment | ❌ `Error(Contract, #4)` ExceedsDailyLimit |
+| `pay(1)` — a direct payment | ❌ `Error(Contract, #4)` |
+| `admin_withdraw` | ✅ still succeeds — the owner's exit is never blocked by what the agent committed |
+
+M1 (the 24h window boundary) is covered by `window_never_frees_before_a_full_24h` rather than
+on-chain: proving it live would mean waiting out a real 23-25h window on testnet.
+
+> **Pending — verifier redeploy, now bundled with the ZK rework.** The compliance verifier's
+> `verify` fails closed on malformed input lengths with typed errors (`Error(Contract, #1)`
+> InvalidProofLength / `#2` InvalidPublicInputLength) and, since the 2026-08-05 audit, rejects
+> non-canonical field encodings (`#3` NonCanonicalSignal — audit M2, which closed a replay
+> bypass). None of that is on chain yet, and it is **deliberately** still pending: audit finding
+> **H1** (the proof is not bound to the treasury it describes) requires a circuit change, which
+> means new public signals, a new `.zkey` and therefore another verifier address. Redeploying
+> now would spend the coordinated `VERIFIER_ID` + `ATTESTED_TX` migration twice for no gain.
+> Do it once, with H1: redeploy the verifier and re-run `circuits/scripts/prove-and-submit.ts`
+> **together**, then bump both constants so the showcase stays consistent.
 
 ## Error codes
 
