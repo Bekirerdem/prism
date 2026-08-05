@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { connectPasskey } from "../../lib/walletKit";
 import { passkeyCapability, type PasskeyCapability } from "../../lib/passkeySupport";
 import { errText } from "../../lib/wallet-errors";
 
 /** The page's single dark block. Colour earns its weight by being rare — if every section
  *  were filled, none of them would stand out. */
-export default function FinalCta({ onEnter }: { onEnter: () => void }) {
+export default function FinalCta({ onCreate }: { onCreate: () => Promise<void> }) {
   const [capability, setCapability] = useState<PasskeyCapability>("none");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -18,8 +17,7 @@ export default function FinalCta({ onEnter }: { onEnter: () => void }) {
     setErr("");
     setBusy(true);
     try {
-      await connectPasskey("create");
-      onEnter();
+      await onCreate();
     } catch (e) {
       setErr(errText(e) || "Couldn't create your passkey. Try again.");
     } finally {

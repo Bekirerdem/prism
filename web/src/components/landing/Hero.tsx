@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { connectPasskey } from "../../lib/walletKit";
 import { passkeyCapability, type PasskeyCapability } from "../../lib/passkeySupport";
 import { errText } from "../../lib/wallet-errors";
 import { TRACTION } from "./traction";
@@ -35,11 +34,15 @@ const loaderChars = (word: string, keyBase: string) =>
  *  Still no product screenshot: a dashboard image here reads as a tool demo, not a company.
  *  The counter carries the evidence instead. */
 export default function Hero({
-  onEnter,
+  onCreate,
   onWallet,
+  onRecover,
 }: {
-  onEnter: () => void;
+  /** Registers the passkey and deploys — the recovery step that follows routes in. */
+  onCreate: () => Promise<void>;
   onWallet: () => void;
+  /** Opens the paste-your-recovery-code flow. */
+  onRecover: () => void;
 }) {
   const { theme, toggle } = useTheme();
   const [capability, setCapability] = useState<PasskeyCapability>("none");
@@ -54,8 +57,7 @@ export default function Hero({
     setErr("");
     setBusy(true);
     try {
-      await connectPasskey("create");
-      onEnter();
+      await onCreate();
     } catch (e) {
       setErr(errText(e) || "Couldn't create your passkey. Try again.");
     } finally {
@@ -185,6 +187,15 @@ export default function Hero({
           </p>
         )}
 
+        {/* The quiet door back in for someone whose device — and passkey — is gone. */}
+        {capability !== "none" && (
+          <div className="lp__rise-box">
+            <button className="lp__rise" style={recoverLink} onClick={onRecover} type="button">
+              Lost your passkey? Restore access →
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Sits on the bottom edge of the scene, not stacked under the buttons. */}
@@ -212,3 +223,8 @@ export default function Hero({
     </section>
   );
 }
+
+const recoverLink: React.CSSProperties = {
+  background: "none", border: "none", padding: 0, marginTop: 12, cursor: "pointer",
+  color: "var(--ink-2)", fontSize: 13, fontFamily: "inherit",
+};

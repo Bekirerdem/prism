@@ -7,6 +7,8 @@
 // Design tokens and the contrast measurements behind them: web/docs/design/palette-preview.html
 // Spec: docs/superpowers/specs/2026-08-02-landing-redesign-design.md
 import "./landing.css";
+import { useState } from "react";
+import { connectPasskey } from "../lib/walletKit";
 import { useReveal } from "./landing/useReveal";
 import Hero from "./landing/Hero";
 import Proof from "./landing/Proof";
@@ -15,6 +17,8 @@ import Guarantees from "./landing/Guarantees";
 import Privacy from "./landing/Privacy";
 import FinalCta from "./landing/FinalCta";
 import Footer from "./landing/Footer";
+import RecoverySetup from "./landing/RecoverySetup";
+import RecoveryRestore from "./landing/RecoveryRestore";
 
 export default function Landing({
   onEnter,
@@ -27,18 +31,39 @@ export default function Landing({
 }) {
   useReveal();
 
+  // Creating a wallet no longer routes straight in: the recovery step sits between
+  // "deployed" and "you're in", and it is the one that fires onEnter.
+  const [recoveryFor, setRecoveryFor] = useState<string | null>(null);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+
+  const createPasskey = async () => {
+    const address = await connectPasskey("create");
+    setRecoveryFor(address);
+  };
+
   return (
     // `lp--pending` hides the reveal targets from the first paint; useReveal either animates
     // them in or removes the class outright. See landing.css for why it is not a media query.
     <div className="lp lp--pending">
       {/* The wallet chip now lives in the hero's nav — the scene owns the top of the page. */}
-      <Hero onEnter={onEnter} onWallet={onWallet} />
+      <Hero
+        onCreate={createPasskey}
+        onWallet={onWallet}
+        onRecover={() => setRestoreOpen(true)}
+      />
       <Proof />
       <HowItWorks />
       <Guarantees />
       <Privacy />
-      <FinalCta onEnter={onEnter} />
+      <FinalCta onCreate={createPasskey} />
       <Footer />
+
+      {recoveryFor && (
+        <RecoverySetup address={recoveryFor} onDone={onEnter} />
+      )}
+      {restoreOpen && (
+        <RecoveryRestore onDone={onEnter} onClose={() => setRestoreOpen(false)} />
+      )}
     </div>
   );
 }
