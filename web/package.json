@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run docs:build && tsc -b && vite build",
+    "build": "npm run docs:build && tsc -b && vite build && npm run check:no-secrets",
+    "check:no-secrets": "node scripts/check-no-secrets.mjs",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
     "lint": "eslint .",

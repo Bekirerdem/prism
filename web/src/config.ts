@@ -24,6 +24,16 @@ export const AGENT_SECRET = "SC6F5K7IPNX6MMN2JAV766FU7WKWYQ3M34W3MOLCPXTU55HSKS2
 // key must NEVER live in frontend code: it ships verbatim inside the JS bundle. If this
 // build is ever pointed at a non-testnet network, refuse to load — move signing to a
 // backend proxy or a wallet (e.g. Freighter) first.
+// Deliberately unconditional — NOT gated on import.meta.env.PROD. Pointing a local
+// dev build at mainnet with this key embedded is just as dangerous as shipping it,
+// so the guard has to fire there too.
+//
+// Its real weakness is different: both sides of the comparison are literals in this
+// one file, so the only thing that trips it is a human editing the line above, and
+// the same human under cutover pressure can delete these six lines to unblock a
+// build. The independent control is `npm run check:no-secrets`, which greps the
+// built bundle for this key and fails the build — it runs on every `npm run build`
+// and does not live in the file being edited.
 const TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
 if (NETWORK_PASSPHRASE !== TESTNET_PASSPHRASE) {
   throw new Error(

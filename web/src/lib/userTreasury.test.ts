@@ -3,11 +3,13 @@ import { Address, scValToNative } from "@stellar/stellar-sdk";
 import {
   deployTreasury,
   makeTreasury,
+  isOwnedBy,
   isValidContractId,
   readLifecycle,
   toStroops,
   TREASURY_WASM_HASH,
   XLM_SAC,
+  type EunomiaState,
 } from "./userTreasury";
 import type { Client } from "./treasuryClient";
 import type { TxExecutor } from "./executor";
@@ -121,5 +123,32 @@ describe("readLifecycle", () => {
       },
     } as unknown as Client;
     expect(await readLifecycle({ client: legacyTreasury, submit: async () => ({}) })).toBeNull();
+  });
+});
+
+// --- H2 (2026-08-05 audit): registry poisoning ---------------------------------
+describe("isOwnedBy", () => {
+  const ME = "GBGHXQXR7BQZMZ3EPWXVMBNVFHXHVZQJPVWQGCTLPXQHRTFHXQXR7BQZ";
+  const THEM = "GDPKXL6CNHUXBV4PM54CPTRZNQRYVTIMO4YGBW3M2MNSCMQ7TTNINXP6";
+
+  it("accepts a treasury whose on-chain admin is the connected wallet", () => {
+    expect(isOwnedBy({ admin: ME } as EunomiaState, ME)).toBe(true);
+  });
+
+  // TreasuryRegistry.register() records an unverified claim: anyone can register
+  // ANY contract address under their own name, and the app auto-adopts the newest
+  // entry on a fresh device. Without this check a single signature on a
+  // zero-value "back up your treasury" call could point a victim at a treasury
+  // the attacker administers - and the victim would fund it.
+  it("rejects a treasury administered by somebody else", () => {
+    expect(isOwnedBy({ admin: THEM } as EunomiaState, ME)).toBe(false);
+  });
+
+  it("rejects rather than assumes when there is no state to check", () => {
+    expect(isOwnedBy(null, ME)).toBe(false);
+  });
+
+  it("rejects when no wallet is connected", () => {
+    expect(isOwnedBy({ admin: ME } as EunomiaState, null)).toBe(false);
   });
 });

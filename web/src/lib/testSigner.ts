@@ -23,7 +23,18 @@ declare global {
   }
 }
 
+/// Gated on `DEV` as well as the flag, and the order matters.
+///
+/// The flag alone was a process convention, not a control: nothing tied it to the
+/// build, so `VITE_ENABLE_TEST_SIGNER=true` reaching a production build environment
+/// (a Vercel "All Environments" checkbox, a leaked CI var) would have shipped a
+/// connect path that signs treasury operations straight from a page global, with no
+/// wallet prompt and no passkey ceremony. `vite build` sets DEV=false regardless of
+/// any custom VITE_* value, so the flag can no longer arm anything in production.
+/// Leading with the constant also lets the minifier fold this to `false` and drop
+/// the branch, instead of leaving the secret-reading code in the public bundle.
 const TEST_SIGNER_ENABLED: boolean =
+  import.meta.env.DEV &&
   (import.meta.env.VITE_ENABLE_TEST_SIGNER as string | undefined) === "true";
 
 export interface InjectedTestSigner {
@@ -45,6 +56,12 @@ export function testSignerAvailable(): boolean {
  * Safe to call only after testSignerAvailable() returns true.
  */
 export function getTestSigner(): InjectedTestSigner | null {
+  // Re-checking the constant (not just testSignerAvailable()) is what lets the
+  // minifier prove this whole body unreachable and remove it. Before this, the live
+  // bundle still carried the literal `__EUNOMIA_TEST_SIGNER__` and the key-reading
+  // logic as dead code — ready-made material for a "paste this in your console to
+  // fix your wallet" social-engineering script.
+  if (!TEST_SIGNER_ENABLED) return null;
   if (!testSignerAvailable()) return null;
   const secretKey = window.__EUNOMIA_TEST_SIGNER__!.secretKey;
   const keypair = Keypair.fromSecret(secretKey);

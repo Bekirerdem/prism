@@ -18,6 +18,7 @@ import {
   deployTreasury,
   fundTreasury,
   isValidContractId,
+  isOwnedBy,
   makeTreasury,
   pay,
   readLifecycle,
@@ -102,7 +103,20 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
     if (opts?.markLoading !== false) setLoading(true);
     try {
       const t = makeTreasury(id, await executorFor(addr));
-      setState(await readState(t));
+      const st = await readState(t);
+      // The chain, not the registry, decides whose treasury this is. TreasuryRegistry
+      // stores an unverified claim and this app adopts the newest one on a fresh
+      // device, so without this check one signature on a zero-value "back up your
+      // treasury" call could hand a victim a treasury the attacker administers — and
+      // the victim would fund it. Fails closed: unknown ownership is refused.
+      if (!isOwnedBy(st, addr)) {
+        setState(null);
+        setLifecycle(null);
+        console.error("[treasury] refusing", id, "— admin is", st.admin, "not", addr);
+        toast("error", "That treasury is administered by a different wallet, so it wasn't opened.");
+        return;
+      }
+      setState(st);
       // One probe decides v3 vs legacy: pre-M2 treasuries have no get_session/is_paused.
       const lc = await readLifecycle(t);
       setLifecycle(lc);

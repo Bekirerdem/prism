@@ -50,6 +50,20 @@ export interface EunomiaState {
   token: string;
 }
 
+/** Whether the connected wallet actually administers this treasury.
+ *
+ *  TreasuryRegistry.register() stores an UNVERIFIED claim — it checks that the
+ *  caller signed, never that the registered contract is a treasury they admin. The
+ *  app then auto-adopts the newest registered entry on a fresh device. So one
+ *  signature on a zero-value "back up your treasury" call is enough to point a
+ *  victim at a treasury the attacker administers, and the victim funds it.
+ *
+ *  The chain already answers this: the treasury's own `admin` must be the wallet in
+ *  hand. Fails closed — no state or no wallet means no. */
+export function isOwnedBy(state: EunomiaState | null, wallet: string | null): boolean {
+  return !!state && !!wallet && state.admin === wallet;
+}
+
 export interface PayResult {
   ok: boolean;
   hash?: string;
