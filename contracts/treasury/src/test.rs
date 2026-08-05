@@ -493,26 +493,26 @@ fn escrow_unknown_id_not_found() {
 
 /// The daily limit gates `release_escrow` at the real moment of outflow (path #4).
 #[test]
-fn release_escrow_exceeds_daily_limit() {
+fn escrow_commitment_respects_the_daily_limit() {
     let env = Env::default();
     env.mock_all_auths();
     let (payee, client, token) = setup(&env, 100_i128, 100_i128);
     client.add_payee(&payee);
 
+    // 60 paid leaves 40 of the 100/day allowance. A 50 commitment no longer gets
+    // accepted-then-blocked-at-release; it is refused at the moment it is made.
     client.pay(&1_u64, &payee, &60_i128);
-    let id = client.create_escrow(&2_u64, &payee, &50_i128, &SECONDS_PER_DAY);
     assert_eq!(
-        client.try_release_escrow(&id),
+        client.try_create_escrow(&2_u64, &payee, &50_i128, &SECONDS_PER_DAY),
         Err(Ok(Error::ExceedsDailyLimit))
     );
 
-    // Once the earlier spend ages out of the window the allowance is whole again
-    // and the release clears.
-    env.ledger()
-        .with_mut(|li| li.timestamp = SECONDS_PER_DAY + 3_600);
+    // What fits, fits — and settles without touching the allowance a second time.
+    let id = client.create_escrow(&3_u64, &payee, &40_i128, &SECONDS_PER_DAY);
+    assert_eq!(client.day_spent(), 100);
     client.release_escrow(&id);
-    assert_eq!(client.day_spent(), 50);
-    assert_eq!(token.balance(&payee), 110);
+    assert_eq!(client.day_spent(), 100);
+    assert_eq!(token.balance(&payee), 100);
 }
 
 /// A released escrow is gone — a second release cannot double-pay.
@@ -596,6 +596,55 @@ fn pay_and_release_share_daily_limit() {
         client.try_pay(&3_u64, &payee, &1_i128),
         Err(Ok(Error::ExceedsDailyLimit))
     );
+}
+
+/// The daily limit must bound what the agent COMMITS, not only what it settles.
+///
+/// create_escrow checked the payee gate, the per-payment cap, the session cap and
+/// the free balance — but never the rolling window, which was enforced only at
+/// release. An agent on a 100/day limit could therefore lock the whole 500 balance
+/// in open escrows while day_spent() still read 0, and since admin_withdraw only
+/// reaches the FREE balance, the owner could not withdraw a unit of their own money.
+#[test]
+fn create_escrow_charges_the_daily_window() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (payee, client, _token) = setup(&env, 100_i128, 100_i128);
+    client.add_payee(&payee);
+
+    client.create_escrow(&1_u64, &payee, &100_i128, &SECONDS_PER_DAY);
+    assert_eq!(client.day_spent(), 100); // committed value counts immediately
+    assert_eq!(client.locked(), 100);
+
+    // The allowance is gone: neither a second commitment nor a direct payment fits,
+    // so the agent can never lock more than one day's worth of the owner's money.
+    assert_eq!(
+        client.try_create_escrow(&2_u64, &payee, &1_i128, &SECONDS_PER_DAY),
+        Err(Ok(Error::ExceedsDailyLimit))
+    );
+    assert_eq!(
+        client.try_pay(&3_u64, &payee, &1_i128),
+        Err(Ok(Error::ExceedsDailyLimit))
+    );
+}
+
+/// Committed value is charged once, at commitment. Releasing moves money that was
+/// already accounted for — charging again would spend the allowance twice for one
+/// escrow, and would let a stale commitment block an unrelated payment days later.
+#[test]
+fn release_does_not_charge_the_window_twice() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (payee, client, token) = setup(&env, 100_i128, 100_i128);
+    client.add_payee(&payee);
+
+    let id = client.create_escrow(&1_u64, &payee, &100_i128, &SECONDS_PER_DAY);
+    assert_eq!(client.day_spent(), 100);
+
+    client.release_escrow(&id);
+    assert_eq!(client.day_spent(), 100); // still 100, not 200
+    assert_eq!(token.balance(&payee), 100);
+    assert_eq!(client.locked(), 0);
 }
 
 // --- M2: rolling 24h window ------------------------------------------------------

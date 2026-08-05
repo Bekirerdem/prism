@@ -449,6 +449,17 @@ impl Treasury {
                 return Err(Error::ExceedsSessionLimit);
             }
         }
+        // The rolling window charges here for the same reason. Enforcing it only at
+        // release bounded what the agent could SETTLE while leaving what it could
+        // COMMIT unbounded: an agent on a 100/day limit could lock an entire balance
+        // in open escrows with day_spent() reading 0, and admin_withdraw only reaches
+        // the free balance — so the owner lost access to their own funds without a
+        // single unit being spent. The daily limit is now the ceiling on agent-moved
+        // value, committed or settled.
+        let spent_window = Self::rolling_spent(&env);
+        if spent_window + amount > cfg.daily_limit {
+            return Err(Error::ExceedsDailyLimit);
+        }
         let locked = Self::locked(env.clone());
         if Self::balance(env.clone()) - locked < amount {
             return Err(Error::InsufficientFreeBalance);
@@ -476,6 +487,7 @@ impl Treasury {
             .extend_ttl(&DataKey::EscrowEntry(id), ttl, ttl);
         env.storage().instance().set(&DataKey::NextEscrowId, &(id + 1));
         env.storage().instance().set(&DataKey::Locked, &(locked + amount));
+        Self::record_window_spend(&env, amount);
         if let Some(mut s) = session {
             s.spent += amount;
             env.storage().instance().set(&DataKey::Session, &s);
@@ -500,14 +512,13 @@ impl Treasury {
             .get(&DataKey::EscrowEntry(id))
             .ok_or(Error::EscrowNotFound)?;
 
-        let spent_window = Self::rolling_spent(&env);
-        if spent_window + escrow.amount > cfg.daily_limit {
-            return Err(Error::ExceedsDailyLimit);
-        }
+        // No window check or charge here: `create_escrow` already spent this amount
+        // against the rolling window when the agent committed it. Charging again
+        // would consume the allowance twice for one escrow, and would let a stale
+        // commitment block an unrelated payment on the day it finally settles.
 
-        // EFFECTS before INTERACTION (checks-effects-interactions): record spend,
-        // drop the escrow, and release the lock, then move funds out last.
-        Self::record_window_spend(&env, escrow.amount);
+        // EFFECTS before INTERACTION (checks-effects-interactions): record the
+        // attribution, drop the escrow, release the lock, then move funds out last.
         let task_spent = Self::task_spent(env.clone(), escrow.task_id);
         env.storage()
             .persistent()
