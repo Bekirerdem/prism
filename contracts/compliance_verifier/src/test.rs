@@ -164,3 +164,51 @@ fn rejects_short_public_bytes() {
     let short_public = Bytes::from_slice(&env, &PUBLIC[..383]); // 383 != 384
     client.verify(&proof, &short_public); // -> InvalidPublicInputLength
 }
+
+// Hardening v3 (2026-08-05 audit, M2): a field element has many byte encodings.
+// `Bn254Fr::from_bytes` reduces modulo the scalar order `r`, so `periodId` and
+// `periodId + r` are the SAME element to the pairing check but DIFFERENT keys to
+// the replay guard, which keys on the raw 32 bytes. An unmodified, already-spent
+// proof could therefore be resubmitted ~5 times per period (r is ~0.189 * 2^256).
+// Only canonical encodings (< r) are accepted now, across all 12 signals.
+
+/// Big-endian 256-bit add of the BN254 scalar order: a different byte string for
+/// the same field element.
+fn plus_modulus(v: &[u8]) -> [u8; 32] {
+    const R: [u8; 32] = [
+        0x30, 0x64, 0x4E, 0x72, 0xE1, 0x31, 0xA0, 0x29, 0xB8, 0x50, 0x45, 0xB6, 0x81, 0x81, 0x58,
+        0x5D, 0x28, 0x33, 0xE8, 0x48, 0x79, 0xB9, 0x70, 0x91, 0x43, 0xE1, 0xF5, 0x93, 0xF0, 0x00,
+        0x00, 0x01,
+    ];
+    let mut out = [0u8; 32];
+    let mut carry = 0u16;
+    let mut i = 32;
+    while i > 0 {
+        i -= 1;
+        let s = v[i] as u16 + R[i] as u16 + carry;
+        out[i] = (s & 0xff) as u8;
+        carry = s >> 8;
+    }
+    out
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #3)")]
+fn rejects_non_canonical_period_id() {
+    let env = Env::default();
+    let (daily, per_task, root) = policy_from_fixture(&env);
+    let admin = Address::generate(&env);
+    let id = env.register(ComplianceVerifier, (admin, daily, per_task, root));
+    let client = ComplianceVerifierClient::new(&env, &id);
+
+    let proof = Bytes::from_slice(&env, PROOF);
+    client.verify(&proof, &Bytes::from_slice(&env, PUBLIC)); // 1st: attests, period consumed
+
+    // Same proof, periodId re-encoded as periodId + r. The pairing check cannot
+    // tell the difference; the replay guard used to.
+    let mut bytes = [0u8; 384];
+    bytes.copy_from_slice(PUBLIC);
+    let shifted = plus_modulus(&PUBLIC[96..128]);
+    bytes[96..128].copy_from_slice(&shifted);
+    client.verify(&proof, &Bytes::from_slice(&env, &bytes)); // -> NonCanonicalSignal
+}

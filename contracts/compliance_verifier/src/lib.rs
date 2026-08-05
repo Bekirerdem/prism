@@ -23,6 +23,35 @@ pub enum Groth16Error {
 pub enum VerifierError {
     InvalidProofLength = 1,
     InvalidPublicInputLength = 2,
+    NonCanonicalSignal = 3,
+}
+
+/// BN254 scalar field order `r`, big-endian.
+///
+/// `Bn254Fr::from_bytes` reduces modulo `r`, so a field element has many byte
+/// encodings: `x`, `x + r`, `x + 2r`, ... all denote the same element. The pairing
+/// check cannot tell them apart, but anything that keys on the raw bytes — the
+/// replay guard below — can. Only values strictly below `r` are canonical.
+const BN254_FR_MODULUS: [u8; 32] = [
+    0x30, 0x64, 0x4E, 0x72, 0xE1, 0x31, 0xA0, 0x29, 0xB8, 0x50, 0x45, 0xB6, 0x81, 0x81, 0x58, 0x5D,
+    0x28, 0x33, 0xE8, 0x48, 0x79, 0xB9, 0x70, 0x91, 0x43, 0xE1, 0xF5, 0x93, 0xF0, 0x00, 0x00, 0x01,
+];
+
+/// Whether a 32-byte public signal is the canonical encoding of its field element.
+/// Big-endian compare against `r`; equal to `r` is not canonical (it is zero).
+fn is_canonical(v: &BytesN<32>) -> bool {
+    let b = v.to_array();
+    let mut i = 0usize;
+    while i < 32 {
+        if b[i] < BN254_FR_MODULUS[i] {
+            return true;
+        }
+        if b[i] > BN254_FR_MODULUS[i] {
+            return false;
+        }
+        i += 1;
+    }
+    false
 }
 
 #[derive(Clone)]
@@ -191,6 +220,24 @@ impl ComplianceVerifier {
         }
         if public_bytes.len() != 384 {
             panic_with_error!(&env, VerifierError::InvalidPublicInputLength);
+        }
+
+        // ---- CANONICAL ENCODING: one field element, one byte string ----
+        // Without this the replay guard is bypassable: it keys on the raw 32 bytes of
+        // `periodId`, while the pairing check sees the value reduced mod `r`. Submitting
+        // an already-spent proof with `periodId + r` produced a different storage key for
+        // an identical element, so one period could be attested ~5 times. Checking every
+        // signal (not just the period) removes the malleability from the whole input.
+        let mut sig: u32 = 0;
+        while sig < 12 {
+            let fr: BytesN<32> = public_bytes
+                .slice(sig * 32..sig * 32 + 32)
+                .try_into()
+                .unwrap();
+            if !is_canonical(&fr) {
+                panic_with_error!(&env, VerifierError::NonCanonicalSignal);
+            }
+            sig += 1;
         }
 
         // ---- POLICY BINDING: the proof must assert *this owner's* policy ----
