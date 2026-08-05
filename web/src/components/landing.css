@@ -346,9 +346,10 @@
   text-decoration: none;
   will-change: transform;
 }
-/* The brand lock: mark + word. The gap is 38% of the mark's width rather than a fixed pixel
- * value, so the pairing looks identical at every size it appears in. The word sits 1px low —
- * Kalnia's serif baseline reads high when centred by the box. */
+/* The brand lock: mark + word. The mark is sized to the word's cap band (cap height plus
+ * ~1px of overshoot each side), not to the font size — a mark taller than the caps hangs
+ * below the baseline and reads as unseated. At 20px Kalnia the cap band is ~15px, so the
+ * mark is 17. The gap stays proportional so the pairing survives resizing. */
 .lp__nav-brand {
   font-family: "Kalnia", Georgia, serif;
   font-weight: 500;
@@ -358,7 +359,7 @@
   align-items: center;
   gap: 7px;
 }
-.lp__nav-brand svg { position: relative; top: 1px; }
+.lp__nav-brand svg { position: relative; top: 0; }
 .lp__nav-link:hover { color: var(--red); }
 .lp__nav-chip { display: inline-block; will-change: transform; }
 .lp__theme {
@@ -865,7 +866,8 @@
   align-items: center;
   gap: 8px;
 }
-.lp__footer-brand svg { position: relative; top: -1px; }
+/* Same cap-band rule as .lp__nav-brand: 21px Kalnia caps ≈ 16px, mark 18. */
+.lp__footer-brand svg { position: relative; top: -0.5px; }
 .lp__footer-line { margin-top: 10px; max-width: 34ch; line-height: 1.6; }
 .lp__footer-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 26px; }
 .lp__footer-cols a { display: block; margin-bottom: 8px; }
@@ -918,6 +920,8 @@
   .lp__nav { gap: 12px; }
   .lp__nav-end { gap: 14px; }
   .lp__nav-brand { font-size: 18px; }
+  /* The cap band shrinks with the word: 18px caps ≈ 13.5px, mark 15. */
+  .lp__nav-brand svg { width: 15px; height: 15px; top: -0.5px; }
   .lp__nav-aux { display: none; }
 
   /* The counter is pinned to the bottom edge of a full-height hero on desktop. On a phone the

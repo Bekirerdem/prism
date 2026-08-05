@@ -44,9 +44,9 @@
     <script>
       try {
         var t = localStorage.getItem("eunomia-theme");
-        if (t !== "dark" && t !== "light") {
-          t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
+        /* Light is the brand default for every first visit — the OS preference is not
+           consulted, only an explicit in-app choice overrides it. */
+        if (t !== "dark" && t !== "light") t = "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) { /* private mode: the light default stands */ }
     </script>
@@ -62,7 +62,9 @@
       .boot__m{display:flex;align-items:center;gap:11px;font-size:24px;opacity:0;animation:bootin .5s ease .15s forwards}
       /* The mark itself, not a generic dot — the same shape the favicon and the nav carry.
          Its middle arm is the part that pulses. */
-      .boot__mk{width:22px;height:22px;display:block}
+      /* Sized to the wordmark's cap band (24px Kalnia caps ≈ 18px + overshoot), so the mark
+         sits with the word instead of hanging below its baseline. */
+      .boot__mk{width:20px;height:20px;display:block}
       .boot__arm{animation:bootpulse 1.6s ease-in-out .15s infinite;transform-origin:38px 31px}
       @keyframes bootin{to{opacity:1}}
       @keyframes bootpulse{0%,100%{opacity:1}50%{opacity:.35}}

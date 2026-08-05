@@ -9,8 +9,9 @@ const SWEEP_MS = 900;
  *
  *  The attribute is set on the document (not the landing root) because the app shell reads
  *  the same tokens; index.html applies the stored choice before first paint so neither
- *  surface flashes the wrong palette. Order of precedence: an explicit past choice, then the
- *  operating system, then light. */
+ *  surface flashes the wrong palette. Only an explicit in-app choice overrides the light
+ *  default — the OS preference is deliberately not consulted, so every first visit opens
+ *  in the brand palette. */
 export function useTheme(): { theme: Theme; toggle: (e?: { clientX: number; clientY: number }) => void } {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
@@ -18,9 +19,9 @@ export function useTheme(): { theme: Theme; toggle: (e?: { clientX: number; clie
       const saved = window.localStorage.getItem(KEY);
       if (saved === "dark" || saved === "light") return saved;
     } catch {
-      // Private mode / blocked storage: fall through to the OS preference.
+      // Private mode / blocked storage: the light default stands.
     }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return "light";
   });
 
   useEffect(() => {

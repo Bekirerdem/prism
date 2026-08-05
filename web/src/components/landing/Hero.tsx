@@ -87,7 +87,7 @@ export default function Hero({
         <nav className="lp__nav">
           <span className="lp__nav-mask">
             <span className="lp__nav-link lp__nav-brand">
-              <EunomiaMark size={19} />
+              <EunomiaMark size={17} />
               Eunomia
             </span>
           </span>
