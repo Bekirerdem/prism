@@ -629,12 +629,19 @@ impl Treasury {
         }
     }
 
-    /// Sum of the last 24 hourly buckets — the rolling window. ~24 persistent
+    /// Sum of the trailing hourly buckets — the rolling window. ~25 persistent
     /// reads per spend; fits comfortably inside the per-tx entry limits (verified
     /// live), and a bucket inside the window can never be archived (see DataKey).
+    ///
+    /// 25 buckets, not 24, and that is the whole point: spend is charged to the
+    /// bucket of the hour it LANDS in, so a spend at second 3599 of hour N sits in
+    /// bucket N. Summing `[N-23 ..= N]` dropped it at the start of hour N+24, i.e.
+    /// after 23h00m01s — enough for a compromised agent to spend 2x the daily limit
+    /// inside one wall-clock day. Summing `[N-24 ..= N]` holds every spend for
+    /// 24-25h instead: never less than the advertised day, only ever more.
     fn rolling_spent(env: &Env) -> i128 {
         let now_hour = env.ledger().timestamp() / SECONDS_PER_HOUR;
-        let start = now_hour.saturating_sub(WINDOW_HOURS - 1);
+        let start = now_hour.saturating_sub(WINDOW_HOURS);
         let mut total = 0_i128;
         let mut h = start;
         while h <= now_hour {

@@ -136,8 +136,11 @@ fn daily_window_frees_after_24h() {
         Err(Ok(Error::ExceedsDailyLimit))
     );
 
-    // 24h later the hour-0 bucket falls out of the window (hours 1..=24).
-    env.ledger().with_mut(|li| li.timestamp = SECONDS_PER_DAY);
+    // The hour-0 bucket falls out once hour 25 starts — a spend is held for a full
+    // 24h from when it landed, not from the top of its hour (see
+    // `window_never_frees_before_a_full_24h`).
+    env.ledger()
+        .with_mut(|li| li.timestamp = SECONDS_PER_DAY + 3_600);
     assert_eq!(client.day_spent(), 0);
     client.pay(&3_u64, &payee, &100_i128);
     assert_eq!(client.day_spent(), 100);
@@ -503,8 +506,10 @@ fn release_escrow_exceeds_daily_limit() {
         Err(Ok(Error::ExceedsDailyLimit))
     );
 
-    // A fresh UTC day brings a fresh allowance — the release now clears.
-    env.ledger().with_mut(|li| li.timestamp = SECONDS_PER_DAY);
+    // Once the earlier spend ages out of the window the allowance is whole again
+    // and the release clears.
+    env.ledger()
+        .with_mut(|li| li.timestamp = SECONDS_PER_DAY + 3_600);
     client.release_escrow(&id);
     assert_eq!(client.day_spent(), 50);
     assert_eq!(token.balance(&payee), 110);
@@ -632,8 +637,8 @@ fn partial_window_drains_oldest_bucket_first() {
         Err(Ok(Error::ExceedsDailyLimit))
     );
 
-    // At hour 24 the hour-0 bucket (60) drops out; only the hour-5 bucket (40) remains.
-    env.ledger().with_mut(|li| li.timestamp = 24 * 3_600);
+    // At hour 25 the hour-0 bucket (60) drops out; only the hour-5 bucket (40) remains.
+    env.ledger().with_mut(|li| li.timestamp = 25 * 3_600);
     assert_eq!(client.day_spent(), 40);
     client.pay(&4_u64, &payee, &60_i128);
     assert_eq!(
@@ -656,6 +661,38 @@ fn rolling_window_spans_calendar_days() {
 
     env.ledger().with_mut(|li| li.timestamp = 90_000); // 01:00 UTC next day
     assert_eq!(client.day_spent(), 50);
+}
+
+/// The window must never be SHORTER than 24h.
+///
+/// Spend is charged to the bucket of the hour it lands in, so summing 24 buckets
+/// released a spend made at the last second of an hour after 23h00m01s — a
+/// compromised agent could spend 2x the daily limit inside one wall-clock day.
+/// Summing 25 buckets makes the window 24-25h: conservative in the safe direction.
+#[test]
+fn window_never_frees_before_a_full_24h() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (payee, client, _token) = setup(&env, 100_i128, 100_i128);
+    client.add_payee(&payee);
+
+    env.ledger().with_mut(|li| li.timestamp = 3_599); // last second of hour 0
+    client.pay(&1_u64, &payee, &100_i128);
+
+    // Exactly 24h after the spend it must still be inside the window.
+    env.ledger()
+        .with_mut(|li| li.timestamp = 3_599 + SECONDS_PER_DAY);
+    assert_eq!(client.day_spent(), 100);
+    assert_eq!(
+        client.try_pay(&2_u64, &payee, &1_i128),
+        Err(Ok(Error::ExceedsDailyLimit))
+    );
+
+    // An hour later it has aged out and the allowance is whole again.
+    env.ledger()
+        .with_mut(|li| li.timestamp = 3_599 + SECONDS_PER_DAY + 3_600);
+    assert_eq!(client.day_spent(), 0);
+    client.pay(&3_u64, &payee, &100_i128);
 }
 
 // --- M2: session — time-bound, spend-capped agent credential ---------------------
