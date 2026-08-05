@@ -16,6 +16,10 @@ concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege — this workflow only checks out and runs tests. See ci.yml.
+permissions:
+  contents: read
+
 jobs:
   playwright:
     name: Playwright · ${{ inputs.browser }} · testnet
@@ -23,9 +27,9 @@ jobs:
     timeout-minutes: 30
     environment: testnet-e2e
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -47,7 +51,7 @@ jobs:
 
       - name: Upload Playwright artifacts (trace/screenshot/video on failure)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: |

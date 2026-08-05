@@ -13,9 +13,16 @@ export default defineConfig({
   timeout: 300_000,
   use: {
     baseURL: "http://localhost:5173",
-    trace: "retain-on-failure",
+    // Traces and videos are for local debugging only, and that is a security
+    // boundary rather than a preference. A trace records addInitScript's source AND
+    // its arguments verbatim, and injectTestSigner passes the funded testnet wallet
+    // secret as an argument. On CI the run uploads test-results/ as an artifact from
+    // a PUBLIC repository, so a single failing test would have published a live
+    // signing key with a 14-day download window. Screenshots carry no such payload
+    // and stay on everywhere, which keeps failures diagnosable in CI.
+    trace: process.env.CI ? "off" : "retain-on-failure",
+    video: process.env.CI ? "off" : "retain-on-failure",
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
   },
 
   projects: [
