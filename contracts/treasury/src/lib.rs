@@ -9,7 +9,7 @@
 
 use soroban_sdk::{
     contract, contractclient, contracterror, contractimpl, contracttype, panic_with_error,
-    symbol_short, token, Address, Env,
+    symbol_short, token, Address, BytesN, Env,
 };
 
 #[contracterror]
@@ -85,6 +85,11 @@ pub enum DataKey {
     TaskSpent(u64),
     RepRegistry,
     MinReputation,
+    /// Poseidon Merkle root over the payee set a compliance proof is checked against.
+    /// Owner-declared (the whitelist itself is not enumerable on-chain), so the proof
+    /// asserts membership in *this* treasury's published payee set rather than one the
+    /// prover picked.
+    WhitelistRoot,
     EscrowEntry(u64),
     NextEscrowId,
     Locked,
@@ -186,6 +191,22 @@ impl Treasury {
             .set(&DataKey::MinReputation, &min_reputation);
         env.events()
             .publish((symbol_short!("rep_gate"),), (registry, min_reputation));
+    }
+
+    /// Publish the Merkle root of the payee set that compliance proofs are checked
+    /// against. Admin-only: the root IS the owner's policy statement, so an agent that
+    /// could write it would be choosing the payee set its own proof is verified against.
+    ///
+    /// The root is not derived from `DataKey::Payee` — the whitelist is a key-per-payee
+    /// map with no on-chain enumeration, and the circuit's Poseidon hash has no host
+    /// implementation to rebuild it with. The owner computes it off-chain and anchors it
+    /// here; the event makes every change auditable.
+    pub fn set_whitelist_root(env: Env, root: BytesN<32>) {
+        let cfg = Self::cfg(&env);
+        cfg.admin.require_auth();
+        Self::bump_instance(&env);
+        env.storage().instance().set(&DataKey::WhitelistRoot, &root);
+        env.events().publish((symbol_short!("wl_root"),), root);
     }
 
     /// The active reputation gate, if any: `(registry, min_reputation)`.
@@ -402,6 +423,41 @@ impl Treasury {
             .unwrap_or(0)
     }
 
+    /// Total agent-moved value inside the closed UTC day `period_id`
+    /// (`period_id = timestamp / 86400`) — the figure a compliance proof commits to.
+    ///
+    /// Deliberately NOT `day_spent`: the rolling window answers "how much allowance is
+    /// left right now" and changes every hour, so a proof could never bind to it. This
+    /// sums the 24 fixed buckets of one calendar day, giving a value that is final once
+    /// the day closes and reads identically forever after.
+    ///
+    /// "Moved" includes escrow commitments, not just settled payments — `create_escrow`
+    /// charges the same buckets, because locking the balance is the agent exercising its
+    /// budget whether or not the funds ever leave.
+    ///
+    /// 24 persistent reads, one fewer than `rolling_spent` already performs per spend.
+    pub fn period_spent(env: Env, period_id: u64) -> i128 {
+        let first_hour = period_id * (SECONDS_PER_DAY / SECONDS_PER_HOUR);
+        let mut total = 0_i128;
+        let mut h = first_hour;
+        while h < first_hour + (SECONDS_PER_DAY / SECONDS_PER_HOUR) {
+            let bucket: i128 = env
+                .storage()
+                .persistent()
+                .get(&DataKey::HourSpent(h))
+                .unwrap_or(0);
+            total += bucket;
+            h += 1;
+        }
+        total
+    }
+
+    /// The payee-set Merkle root this treasury publishes, or `None` if the owner never
+    /// declared one (in which case no compliance proof can be checked against it).
+    pub fn whitelist_root(env: Env) -> Option<BytesN<32>> {
+        env.storage().instance().get(&DataKey::WhitelistRoot)
+    }
+
     /// Spend inside the rolling 24-hour window (the "daily" allowance).
     pub fn day_spent(env: Env) -> i128 {
         Self::rolling_spent(&env)
@@ -417,7 +473,8 @@ impl Treasury {
     /// Agent reserves `amount` for `payee` against a future-delivered task. The funds
     /// stay in the treasury (locked, not transferred) until released on approval or
     /// refunded after `deadline`. Subject to the same payee gate + per-task limit +
-    /// session cap as a direct payment; the rolling window is enforced at release.
+    /// session cap as a direct payment; the rolling window is charged here, at
+    /// commitment time (see the reasoning inline below).
     pub fn create_escrow(
         env: Env,
         task_id: u64,
