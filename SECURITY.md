@@ -24,12 +24,15 @@ security-gated — see [`ROADMAP.md`](ROADMAP.md) (M2/M3) for what must land fir
   purpose (the contract, not a human click, is the safety). A build-time guard refuses to
   load it on any non-testnet network. The per-user product embeds no keys — every action is
   signed by the user's own wallet.
-- **ZK verifier — bounded claim.** The on-chain Groth16/BN254 verifier checks that a proof
-  carries the owner's anchored policy *values*, rejects non-canonical field encodings, and
-  enforces a per-period replay guard (all covered by tests, including a live replay-rejected
-  transaction on testnet). **It does not bind a proof to the treasury it describes**, and the
-  witness is prover-chosen — so an attestation is not by itself evidence that a particular
-  treasury behaved. See "Known limitations" and finding H1 below before citing it as one.
+- **ZK verifier — bound to chain state.** The on-chain Groth16/BN254 verifier holds no
+  policy of its own. Every claim in a proof is re-read from the treasury named in the call:
+  its limits (`get_config`), its published payee root (`whitelist_root`), and the total it
+  actually moved in that period (`period_spent`). The circuit forces the proved batch to
+  equal that total, so a batch the prover invented no longer verifies. Only the treasury's
+  admin can attest, periods must be closed and can only move forward, and non-canonical
+  field encodings are rejected. Live on testnet, including a fabricated batch rejected
+  on-chain (`Error(Contract, #9)`). What it still does **not** prove is the per-payment
+  breakdown — see "Known limitations".
 
 ## Audit history
 
@@ -64,7 +67,8 @@ fixed in **v3.1** the same day:
 A third round (agent-assisted, **2026-08-05**, full scope: contracts + data layer + web +
 CI/CD + supply chain + git history) ran after the passkey and recovery work shipped. **No
 critical findings — no path was found for a compromised agent key, a malicious payee or a
-third party to drain a treasury.** Everything below except H1 was fixed the same day.
+third party to drain a treasury.** Everything below except H1 was fixed the same day; H1
+was a design change and landed 2026-08-06.
 
 | ID | Severity | Finding | Status |
 |----|----------|---------|--------|
@@ -81,7 +85,7 @@ third party to drain a treasury.** Everything below except H1 was fixed the same
 | C5 | Low-Med | No `permissions:` block; jobs inherited the repository default token scope | ✅ Fixed — `contents: read` on both workflows |
 | C2′ | Medium | `main` had no required review/status checks and admins were exempt from what protection existed | 🟡 `enforce_admins` enabled; required reviews deliberately **not** enabled on a solo repo — that is a workflow decision, not a silent default |
 | M4 | Medium | With the reputation gate on, whoever controls the registry can authorize payees without the owner's signature, at the same limits as a whitelisted one | ⏳ Open — needs a separate, lower cap for reputation-authorized payees |
-| H1 | High | ZK attestation is **not bound to the treasury**: no public signal identifies it, none derives from chain state, the witness is prover-chosen and `verify` needs no auth → anyone can mint a valid `ComplianceAttested` for any period | ⏳ Open — design change, not a patch. **Do not present the ZK layer as attesting to real treasury behaviour until this lands.** |
+| H1 | High | ZK attestation is **not bound to the treasury**: no public signal identifies it, none derives from chain state, the witness is prover-chosen and `verify` needs no auth → anyone can mint a valid `ComplianceAttested` for any period | ✅ Fixed 2026-08-06 — the verifier is now multi-tenant and reads limits, payee root and the period total from the treasury itself; the circuit binds the batch to that total (`total === periodSpent`); only the treasury admin can attest; periods must be closed and strictly advancing. Proven on testnet: a valid proof of a fabricated batch is rejected with `Error(Contract, #9)` |
 
 ## Known limitations (honest scope)
 
@@ -94,15 +98,24 @@ third party to drain a treasury.** Everything below except H1 was fixed the same
   stored in localStorage — acceptable precisely because the credential is bounded
   (spend cap + expiry + instant revoke). Mainnet needs hardened key storage and fee
   sponsorship for session accounts (M3).
-- **The ZK layer attests after the fact, and does not yet prove *whose* behaviour.** `pay()`
-  does not require a proof; confidential compliance and the payment flow are not wired
-  together (M4). Worse, and newly documented: the twelve public signals carry policy
-  *values* but nothing identifying the treasury, and the amounts, payees and salts are
-  private inputs the prover chooses — so a valid proof demonstrates "some batch consistent
-  with these limits exists", not "this treasury obeyed them" (finding H1). Binding the proof
-  to the treasury address and to real on-chain state is a prerequisite before any
-  attestation is offered as evidence. The Groth16 setup is also a single-party dev setup —
-  a multi-party ceremony is a mainnet prerequisite (M3).
+- **The ZK layer attests after the fact, and proves the total rather than the breakdown.**
+  `pay()` does not require a proof; confidential compliance and the payment flow are not
+  wired together (M4). Since H1 the proof is bound to the chain — the batch must equal the
+  treasury's own `period_spent` for a closed day — so the honest claim is: *"this treasury
+  moved exactly this much in this period, no single payment exceeded the per-task limit,
+  and every payee was a member of the published root."* It is **not** proof of the
+  individual amounts and payees: a different split of the same total also satisfies the
+  circuit. Two gaps remain behind that:
+  - The payee root is **declared, not derived**. `set_whitelist_root` is written by the
+    owner; nothing ties it to the treasury's actual `Payee` entries, and there is no
+    mapping from a Stellar address to the circuit's payee field element. The whitelist is
+    a key-per-payee map with no on-chain enumeration, and the circuit's Poseidon hash has
+    no host implementation to rebuild a tree with — so deriving it is real work, not a
+    config change. Root changes emit an event, which is what makes them auditable today.
+  - Proving the breakdown itself would require `pay()` to publish a commitment per payment,
+    which runs into the same missing Poseidon primitive.
+  The Groth16 setup is also a single-party dev setup — a multi-party ceremony is a mainnet
+  prerequisite (M3).
 - **The treasury registry records claims, not facts.** `register` does not check that the
   registered contract is one the caller administers, and there is no `unregister`. The app
   now refuses any treasury whose on-chain `admin` is not the connected wallet, so a poisoned

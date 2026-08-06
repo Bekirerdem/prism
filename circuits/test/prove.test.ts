@@ -13,6 +13,7 @@ describe("buildInput (parametric prover)", () => {
       dailyLimit: 1000n,
       perTaskLimit: 300n,
       periodId: 2n,
+      periodSpent: 125n, // 50 + 75 — what the treasury recorded for the period
     };
     const input = await buildInput(batch);
 
@@ -31,5 +32,23 @@ describe("buildInput (parametric prover)", () => {
     expect(input.amount).to.have.length(8);
     expect(input.amount[2]).to.equal("0");
     expect(input.salt.every((s) => BigInt(s) >= 1n << 128n)).to.equal(true);
+  });
+
+  it("refuses a batch that does not account for the period's on-chain spend", async () => {
+    const batch = {
+      payments: [{ amount: 50n, payee: 11n }],
+      whitelist: [11n, 22n, 33n],
+      dailyLimit: 1000n,
+      perTaskLimit: 300n,
+      periodId: 2n,
+      periodSpent: 125n, // the chain saw 125; this batch only accounts for 50
+    };
+    let err: Error | undefined;
+    try {
+      await buildInput(batch);
+    } catch (e) {
+      err = e as Error;
+    }
+    expect(err?.message).to.match(/does not match the period's on-chain spend/);
   });
 });

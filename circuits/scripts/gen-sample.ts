@@ -14,6 +14,7 @@ const DEFAULT: ComplianceBatch = {
   dailyLimit: 1000n,
   perTaskLimit: 300n,
   periodId: 1n,
+  periodSpent: 350n, // the batch accounts for the whole period, as a real one must
 };
 
 async function main() {

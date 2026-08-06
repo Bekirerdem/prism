@@ -25,10 +25,25 @@ export interface ComplianceBatch {
   dailyLimit: bigint;
   perTaskLimit: bigint;
   periodId: bigint;
+  /** The period's on-chain total, read from `treasury.period_spent(periodId)`. The
+   *  circuit forces the batch to add up to exactly this, and the verifier re-reads it
+   *  from the treasury — so it is not ours to choose. */
+  periodSpent: bigint;
 }
 
 /** Build the circuit input for a batch (CSPRNG salts), matching the circuit layout. */
 export async function buildInput(batch: ComplianceBatch) {
+  // Fail here rather than at witness generation: a mismatch means the batch is not the
+  // period's real payment set, and the error is far more legible from this side than as
+  // an unsatisfied constraint (or, worse, a paid-for on-chain rejection).
+  const sum = batch.payments.reduce((a, p) => a + p.amount, 0n);
+  if (sum !== batch.periodSpent) {
+    throw new Error(
+      `batch total ${sum} does not match the period's on-chain spend ${batch.periodSpent} — ` +
+        `the batch must account for every payment in period ${batch.periodId}`,
+    );
+  }
+
   const tree = await buildTree(batch.whitelist, LEVELS);
   const pad = batch.whitelist[0]; // pad slots reuse a real whitelisted payee, amount 0
 
@@ -57,6 +72,7 @@ export async function buildInput(batch: ComplianceBatch) {
     perTaskLimit: batch.perTaskLimit.toString(),
     whitelistRoot: tree.root.toString(),
     periodId: batch.periodId.toString(),
+    periodSpent: batch.periodSpent.toString(),
     commitments,
     amount: amount.map(String),
     payee: payee.map(String),

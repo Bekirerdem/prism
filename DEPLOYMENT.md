@@ -125,7 +125,10 @@ Deployed with the `seyit` identity; per-user deploys in the app instantiate v3.
 
 | Item | Value |
 |------|-------|
-| **Treasury v3.3 wasm hash (current)** | `56a4d92660256b939433b51f35618515f4e77290f0978f72dcf64be719936795` |
+| **Treasury v3.4 wasm hash (current)** | `b813a1e7a3d2ddb1013dbaa11a41dcc1fbed984a30cfef9023dc199b12131a72` |
+| v3.4 (2026-08-06, audit **H1**: `period_spent` + `whitelist_root` — the surfaces a compliance proof binds to) | [`901f0c39…f6c9`](https://stellar.expert/explorer/testnet/tx/901f0c390a63216a3eae842c306bf667f07f70c491258a05bbd1967bc0c3f6c9) |
+| v3.4 smoke treasury (`daily=1000`, `per_task=300` stroops) | [`CBCBYWUM…JN36`](https://stellar.expert/explorer/testnet/contract/CBCBYWUMRD7L6GFTRJME232JUAEJ2B263N5O7MDGCMDFG4FI6GJ5JN36) |
+| Treasury v3.3 wasm hash (previous) | `56a4d92660256b939433b51f35618515f4e77290f0978f72dcf64be719936795` |
 | v3.3 upload tx (2026-08-05 audit: **M1** window holds a full 24h · **M3** daily limit bounds committed value) | [`71899b55…963c`](https://stellar.expert/explorer/testnet/tx/71899b55dd20d56b00bbdf09735736cc2b8f619d8f64482c92429b77ddcd963c) |
 | v3.3 smoke treasury | [`CBGPB5JG…7OZK`](https://stellar.expert/explorer/testnet/contract/CBGPB5JGKGVGLY3HHTR6Z2G4OC6PI3NOWSE7WGBCHGIEC5MALCDZ7OZK) |
 | Treasury v3.2 wasm hash (previous) | `475cfbe2ca79d7977c8e4d29438ae70b9d95a12cb2bfcd9fed4e4f7a26d798b2` |
@@ -153,8 +156,8 @@ Verified live on the smoke treasury:
   again and `get_session` → `None`.
 - **Registry** — `register` + duplicate no-op + `treasuries_of` returning the treasury.
 
-Contract tests: `cargo test -p treasury` → **51/51** · `cargo test -p treasury_registry` → **3/3** ·
-`cargo test -p compliance_verifier` → **6/6**.
+Contract tests: `cargo test -p treasury` → **59/59** · `cargo test -p treasury_registry` → **3/3** ·
+`cargo test -p compliance_verifier` → **17/17**.
 
 ### v3.3 live verification (2026-08-05)
 
@@ -172,16 +175,34 @@ Proved on the smoke treasury above (`daily_limit = per_task_limit = 100` stroops
 M1 (the 24h window boundary) is covered by `window_never_frees_before_a_full_24h` rather than
 on-chain: proving it live would mean waiting out a real 23-25h window on testnet.
 
-> **Pending — verifier redeploy, now bundled with the ZK rework.** The compliance verifier's
-> `verify` fails closed on malformed input lengths with typed errors (`Error(Contract, #1)`
-> InvalidProofLength / `#2` InvalidPublicInputLength) and, since the 2026-08-05 audit, rejects
-> non-canonical field encodings (`#3` NonCanonicalSignal — audit M2, which closed a replay
-> bypass). None of that is on chain yet, and it is **deliberately** still pending: audit finding
-> **H1** (the proof is not bound to the treasury it describes) requires a circuit change, which
-> means new public signals, a new `.zkey` and therefore another verifier address. Redeploying
-> now would spend the coordinated `VERIFIER_ID` + `ATTESTED_TX` migration twice for no gain.
-> Do it once, with H1: redeploy the verifier and re-run `circuits/scripts/prove-and-submit.ts`
-> **together**, then bump both constants so the showcase stays consistent.
+### H1 — proofs bound to chain state (2026-08-06)
+
+The verifier redeploy that was held back for this is done. It is now multi-tenant and keeps
+no policy of its own: `verify(treasury, proof, public)` re-reads the limits, the payee root
+and the period's total from the treasury itself, and the circuit forces the proved batch to
+equal that total (public signals 12 → 13, new `.zkey`, new verifier address).
+
+| Item | Value |
+|------|-------|
+| **Compliance verifier (current)** | [`CCZKA3K4…D5Q`](https://stellar.expert/explorer/testnet/contract/CCZKA3K4SPIFWG7UBIY2CE7LPKPMCWROCHXZO2JAMYVVGU6TUKOWMD5Q) |
+| verifier wasm hash | `84bdc367ff9abfcc00994b7480653135367a26b2a6ffee7e1a52650bad88a00d` |
+| deploy tx | [`7e9ca5e5…115c`](https://stellar.expert/explorer/testnet/tx/7e9ca5e50d4e623a96904ea21651e13d373d5e970a16e05d4cf50bd26b53115c) |
+| live attestation (`attested`, period 20670) | [`426e55d6…4606`](https://stellar.expert/explorer/testnet/tx/426e55d6ce0a9157c156190cee39dc2a1d302cf4c7f4f98cc930da5ad63b4606) |
+
+Verified on chain against the v3.4 smoke treasury — the rejections matter more than the
+acceptance, because H1 was precisely that nothing got rejected:
+
+| Step | Result |
+|---|---|
+| a valid proof of a **fabricated** 350-unit batch, on a period the chain says was quiet | ❌ `Error(Contract, #9)` SpendMismatch — **the fix**: this is the 08-05 audit's attack, refused |
+| attesting the current, still-open period | ❌ `Error(Contract, #6)` PeriodNotClosed |
+| the period's real total (`period_spent` = 0) for a closed day | ✅ `attested` emitted · `last_period` → `20670` |
+| the same period a second time | ❌ `Error(Contract, #8)` PeriodNotAdvancing |
+
+An attestation over a period with **non-zero** spend needs that period to close first: the
+smoke treasury spent 350 in period 20671, so
+`npx tsx scripts/prove-and-submit.ts --treasury CBCBYWUM…JN36 --period 20671 --payments 100:11,200:22,50:33`
+produces it once 20671 is over.
 
 ## Error codes
 

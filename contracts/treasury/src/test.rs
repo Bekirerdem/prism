@@ -1311,3 +1311,127 @@ fn pay_fails_closed_when_registry_traps() {
     assert_eq!(token.balance(&stranger), 0); // nothing paid
     assert_eq!(client.day_spent(), 0); // no spend recorded
 }
+
+// --- H1: the surface a compliance proof is checked against -----------------------
+//
+// `day_spent` is a ROLLING 24h figure — it answers "how much allowance is left right
+// now", which changes every hour and so can never be the thing a proof commits to. An
+// attestation needs a figure that is FINAL: the total for a closed calendar period,
+// identical no matter when it is read. `period_spent` is that figure, folded out of
+// the same hourly buckets the rolling window already keeps.
+
+/// A period's total is the sum of its 24 hourly buckets, and it does not bleed into the
+/// neighbouring day — the two periods are accounted separately and stay put.
+#[test]
+fn period_spent_sums_one_utc_day_and_stops_there() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (payee, client, _token) = setup(&env, 1000_i128, 100_i128);
+    client.add_payee(&payee);
+
+    env.ledger().with_mut(|li| li.timestamp = 3_600); // day 0, 01:00
+    client.pay(&1_u64, &payee, &50_i128);
+    env.ledger().with_mut(|li| li.timestamp = 79_200); // day 0, 22:00
+    client.pay(&2_u64, &payee, &30_i128);
+
+    assert_eq!(client.period_spent(&0_u64), 80);
+
+    env.ledger().with_mut(|li| li.timestamp = 90_000); // day 1, 01:00
+    client.pay(&3_u64, &payee, &20_i128);
+
+    // Day 0 is closed and immutable; day 1 carries only its own spend.
+    assert_eq!(client.period_spent(&0_u64), 80);
+    assert_eq!(client.period_spent(&1_u64), 20);
+    // The rolling window still spans both days — the two figures answer different questions.
+    assert_eq!(client.day_spent(), 100);
+}
+
+/// An escrow COMMITMENT is agent-moved value the moment it is locked, so it must land in
+/// the period total. Otherwise an agent could lock the entire balance and then attest to
+/// a period that reads as if nothing had happened.
+#[test]
+fn period_spent_counts_escrow_commitments_not_just_settled_pay() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (payee, client, token) = setup(&env, 1000_i128, 100_i128);
+    client.add_payee(&payee);
+
+    env.ledger().with_mut(|li| li.timestamp = 3_600); // day 0
+    client.create_escrow(&1_u64, &payee, &70_i128, &SECONDS_PER_DAY);
+
+    assert_eq!(client.period_spent(&0_u64), 70); // charged at commitment time
+    assert_eq!(token.balance(&payee), 0); // …while nothing has actually moved yet
+}
+
+/// A period nobody spent in reads zero rather than trapping — the verifier calls this for
+/// arbitrary past periods and must get an answer, not a panic.
+#[test]
+fn period_spent_is_zero_for_an_untouched_period() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (_payee, client, _token) = setup(&env, 1000_i128, 100_i128);
+
+    assert_eq!(client.period_spent(&0_u64), 0);
+    assert_eq!(client.period_spent(&9_999_u64), 0);
+}
+
+/// The whitelist root starts unset: a treasury that never declared one cannot have a proof
+/// checked against it, and the verifier has to be able to see that.
+#[test]
+fn whitelist_root_starts_unset_and_round_trips() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (_payee, client, _token) = setup(&env, 1000_i128, 100_i128);
+
+    assert_eq!(client.whitelist_root(), None);
+
+    let root = BytesN::from_array(&env, &[7_u8; 32]);
+    client.set_whitelist_root(&root);
+    assert_eq!(client.whitelist_root(), Some(root));
+}
+
+/// The root is the owner's policy statement, so only the admin may write it. If the agent
+/// could set it, a compromised agent would choose the payee set its own proof is checked
+/// against — destroying the binding this whole change exists to create.
+#[test]
+fn whitelist_root_is_admin_only() {
+    let env = Env::default();
+
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+
+    let sac = env.register_stellar_asset_contract_v2(admin.clone());
+    let token_addr = sac.address();
+
+    let id = env.register(
+        Treasury,
+        (admin.clone(), agent.clone(), token_addr, 1000_i128, 100_i128),
+    );
+    let client = TreasuryClient::new(&env, &id);
+    let root = BytesN::from_array(&env, &[7_u8; 32]);
+
+    // Signed by the AGENT — the host must reject it.
+    env.mock_auths(&[MockAuth {
+        address: &agent,
+        invoke: &MockAuthInvoke {
+            contract: &id,
+            fn_name: "set_whitelist_root",
+            args: (root.clone(),).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_set_whitelist_root(&root).is_err());
+
+    // The same call signed by the admin is accepted.
+    env.mock_auths(&[MockAuth {
+        address: &admin,
+        invoke: &MockAuthInvoke {
+            contract: &id,
+            fn_name: "set_whitelist_root",
+            args: (root.clone(),).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    client.set_whitelist_root(&root);
+    assert_eq!(client.whitelist_root(), Some(root));
+}
