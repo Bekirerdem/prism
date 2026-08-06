@@ -3,6 +3,6 @@
     "file": "compliance",
     "template": "Compliance",
     "params": [8, 8, 64],
-    "pubs": ["dailyLimit", "perTaskLimit", "whitelistRoot", "periodId", "commitments"]
+    "pubs": ["dailyLimit", "perTaskLimit", "whitelistRoot", "periodId", "periodSpent", "commitments"]
   }
 }

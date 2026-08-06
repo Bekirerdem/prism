@@ -36,23 +36,31 @@ template MerkleInclusion(levels) {
     root === hashes[levels];
 }
 
-// Prism Confidential — compliance predicate over a fixed batch of N payments.
+// Eunomia Confidential — compliance predicate over a fixed batch of N payments.
 //
 // Proves, WITHOUT revealing amounts or payees:
 //   - each amount <= per-task limit          (range proof)
 //   - sum of amounts <= daily limit          (aggregate bound)
+//   - sum of amounts == periodSpent          (binds the batch to on-chain reality)
 //   - (Task 3) commitments bind (amount,payee,salt)
 //   - (Task 4) each payee is in the whitelist Merkle tree
 //
-// Public params (limits, whitelistRoot) are trusted inputs chosen by the owner
-// and re-checked by the verifying contract; only the private amounts/payees are
-// adversary-controlled, so those are the signals we range-bound here.
+// Public params (limits, whitelistRoot, periodSpent) are trusted inputs chosen by
+// the owner and re-checked by the verifying contract; only the private amounts/payees
+// are adversary-controlled, so those are the signals we range-bound here.
+//
+// The equality against `periodSpent` is what stops the predicate from being vacuous.
+// Without it a prover could invent any batch that happens to satisfy the limits — the
+// proof asserted "some compliant batch exists", which is true of every treasury that
+// ever set a policy. The verifier reads `periodSpent` from the treasury's own storage,
+// so the batch must now account for exactly the value that actually moved.
 template Compliance(N, levels, nBits) {
     // ---- public ----
     signal input dailyLimit;
     signal input perTaskLimit;
     signal input whitelistRoot;            // used in Task 4
-    signal input periodId;                 // public binding only (ties proof to a period)
+    signal input periodId;                 // which period this batch covers (bound on-chain)
+    signal input periodSpent;              // that period's on-chain total; the batch must match it
     signal input commitments[N];           // used in Task 3
 
     // ---- private ----
@@ -113,4 +121,9 @@ template Compliance(N, levels, nBits) {
     dailyCmp.in[0] <== total;
     dailyCmp.in[1] <== dailyLimit;
     dailyCmp.out === 1;
+
+    // The batch must account for the period's on-chain total exactly — no inventing a
+    // convenient set of payments, no omitting the inconvenient ones. `total` is already
+    // Num2Bits(nBits+4)-bounded above, so this equality bounds `periodSpent` too.
+    total === periodSpent;
 }
