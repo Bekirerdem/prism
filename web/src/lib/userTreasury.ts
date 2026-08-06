@@ -20,15 +20,18 @@ import { NETWORK_PASSPHRASE, RPC_URL } from "../config";
 export const XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 // Treasury WASM already installed on-chain — deploy just instantiates a new contract from it.
 //
-// v3.3 (2026-08-05 audit: M1 the rolling window holds a full 24h, M3 the daily limit
-// bounds committed value so the agent can no longer lock the balance out from under the
-// owner), installed 2026-08-05:
-// https://stellar.expert/explorer/testnet/tx/71899b55dd20d56b00bbdf09735736cc2b8f619d8f64482c92429b77ddcd963c
+// v3.4 (2026-08-06): adds the two read-only surfaces a compliance proof binds to —
+// `period_spent(period_id)`, the final total for a closed UTC day, and the owner-published
+// `whitelist_root`. Without them the verifier has nothing on-chain to check a proof
+// against (2026-08-05 audit, H1), so only v3.4 treasuries can be attested for.
+//
+// Carries v3.3's fixes forward (M1 the rolling window holds a full 24h, M3 the daily limit
+// bounds committed value so the agent cannot lock the balance out from under the owner).
 //
 // Treasuries are immutable by design, so this only governs NEWLY created ones; every
 // treasury deployed before today keeps running the code it was born with.
 export const TREASURY_WASM_HASH =
-  "56a4d92660256b939433b51f35618515f4e77290f0978f72dcf64be719936795";
+  "b813a1e7a3d2ddb1013dbaa11a41dcc1fbed984a30cfef9023dc199b12131a72";
 
 const XLM_UNIT = 10_000_000;
 

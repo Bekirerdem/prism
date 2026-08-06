@@ -53,7 +53,7 @@ So agents "research and recommend" but never transact. Eunomia removes the block
 | **Fund** | Earmark money for a specific agent budget with no memos | A pool account issues **zero-cost muxed sub-addresses**; deposits attributed by `to_muxed_id` |
 | **Trust** | The agent can pay *new* counterparties safely, not just a static list | A payee passes if **whitelisted OR** its on-chain ERC-8004 **reputation ≥ threshold** |
 | **Outcome** | Pay only for delivered work | **Escrow** locks funds; released on approval, refunded after a deadline |
-| **Prove** | Auditable without disclosure | Confidential mode proves policy compliance in zero-knowledge, [verified on-chain](https://stellar.expert/explorer/testnet/tx/4438c94952d6d06fbf6b205e07be1c28ea33c5e1422a5323e93572788b9cac2a) |
+| **Prove** | Auditable without disclosure | Confidential mode proves a period's spending matched policy in zero-knowledge, [verified on-chain](https://stellar.expert/explorer/testnet/tx/426e55d6ce0a9157c156190cee39dc2a1d302cf4c7f4f98cc930da5ad63b4606) against the treasury's own totals |
 
 The business keeps custody the whole time — funds live in the owner's own Soroban contract. Eunomia is the **guardrails + accounting + rail**, never the custodian.
 
@@ -101,7 +101,7 @@ A first-time user creates a treasury with **Face ID, a fingerprint or a device P
 |---|---|
 | Treasury (v3, per-user) | [`CAYWNXHA…SPAZ`](https://stellar.expert/explorer/testnet/contract/CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ) |
 | Treasury Registry | [`CBEPVXK6…4ZE7`](https://stellar.expert/explorer/testnet/contract/CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7) |
-| Compliance Verifier (ZK) | [`CCOLX7NE…DBRH`](https://stellar.expert/explorer/testnet/contract/CCOLX7NEBDJRRVTPFVSK3UJLHMG3HO4UVYJW3NFBOTUG7Q7GOP63DBRH) |
+| Compliance Verifier (ZK) | [`CCZKA3K4…D5Q`](https://stellar.expert/explorer/testnet/contract/CCZKA3K4SPIFWG7UBIY2CE7LPKPMCWROCHXZO2JAMYVVGU6TUKOWMD5Q) |
 | Treasury v2 (reputation + escrow) | [`CDKQGDPL…XT5H`](https://stellar.expert/explorer/testnet/contract/CDKQGDPLRX6DOCQTI5KVMZNGMPKMSRNGJRVCQ7LAAQGB2S5JKDCHXT5H) |
 | ERC-8004 Identity Registry | [`CDE3K4CO…FIWZH`](https://stellar.expert/explorer/testnet/contract/CDE3K4COIAGWNNJQQLL26SYI3KBJF5FUDHXG5FA6GYDJCG7T5V7FIWZH) |
 | Reputation Oracle (8004 stand-in) | [`CCJFIEYF…INKY`](https://stellar.expert/explorer/testnet/contract/CCJFIEYFNPRTJVCOGOSESYC5Z6FHHHYAH36V7QTZEDPKESY6O5TPINKY) |
@@ -128,9 +128,9 @@ Usage is provable from two independent sources, neither of which we can quietly 
 
 ## Built during Stellar Hacks: Real-World ZK
 
-The bounded-treasury core predates the hackathon (built at IBW 2026). **Everything zero-knowledge — the entire Confidential layer — was designed and built inside the Stellar Hacks: Real-World ZK window (18–22 June 2026)**: the Circom compliance circuit (per-payment range + daily-sum bounds, Poseidon commitments, Poseidon-Merkle whitelist membership), the Groth16 trusted setup, and the on-chain BN254 verifier with anchored-policy binding and a replay guard.
+The bounded-treasury core predates the hackathon (built at IBW 2026). **Everything zero-knowledge — the entire Confidential layer — was designed and built inside the Stellar Hacks: Real-World ZK window (18–22 June 2026)**: the Circom compliance circuit (per-payment range + daily-sum bounds, Poseidon commitments, Poseidon-Merkle whitelist membership), the Groth16 trusted setup, and the on-chain BN254 verifier with a replay guard. It has since been rebuilt to bind proofs to chain state (2026-08-06).
 
-Where the ZK is load-bearing: the [circuit](circuits/circuits/compliance.circom) proves the bounds, and the [on-chain verifier](contracts/compliance_verifier/src/lib.rs) runs the real BN254 pairing check through Soroban's native host functions — a valid proof is the *only* way to produce a `ComplianceAttested` event. Proof: [live verify tx](https://stellar.expert/explorer/testnet/tx/4438c94952d6d06fbf6b205e07be1c28ea33c5e1422a5323e93572788b9cac2a), plus a live replay-**rejected** proof in [`DEPLOYMENT.md`](DEPLOYMENT.md).
+Where the ZK is load-bearing: the [circuit](circuits/circuits/compliance.circom) proves the bounds *and* that the batch adds up to the treasury's own recorded total for the period, and the [on-chain verifier](contracts/compliance_verifier/src/lib.rs) runs the real BN254 pairing check through Soroban's native host functions after re-reading the policy and that total from the treasury — a valid proof over the real figures is the *only* way to produce an `attested` event. Proof: [live verify tx](https://stellar.expert/explorer/testnet/tx/426e55d6ce0a9157c156190cee39dc2a1d302cf4c7f4f98cc930da5ad63b4606), plus a fabricated batch and a replay both **rejected** on-chain in [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ---
 
