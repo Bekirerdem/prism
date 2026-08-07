@@ -5,25 +5,29 @@
 // and Vercel compiles api/* with node16 resolution, where an extensionless relative import
 // does not resolve and the function dies at cold start with a 500. `npm run check:api-types`
 // guards it. (Vite and vitest map the .js back to this .ts, so the bundle is unaffected.)
-import { TREASURY_WASM_HASH } from "./treasuryWasm.js";
+import { LEGACY_TREASURY_WASM_HASHES, TREASURY_WASM_HASH } from "./treasuryWasm.js";
 
 /** Soroban contract ids are StrKey-encoded, start with `C`, and are 56 characters long. */
 const CONTRACT_ID = /^C[A-Z2-7]{55}$/;
 
-/** Wasm hashes the relay will sponsor a deploy of: whatever the environment names, plus the
- *  treasury wasm this build actually deploys.
+/** Wasm hashes the relay will sponsor: whatever the environment names, plus every treasury
+ *  version this app has deployed — the current one and the ones before it.
  *
- *  That last part is not configuration, for the same reason the native SAC is hardcoded in
- *  the contract allowlist: a passkey user cannot create a treasury at all unless the relay
- *  admits the code the app is shipping. Leaving it to an env var meant the two drifted the
- *  moment the treasury was upgraded, and every passkey sign-up was refused with 403 until
- *  someone noticed. The env stays useful for keeping OLDER hashes reachable. */
+ *  Neither of those is configuration, for the same reason the native SAC is hardcoded in
+ *  the contract allowlist. Miss the current hash and nobody can create a treasury at all;
+ *  miss an old one and the people who already have a treasury cannot spend from it, because
+ *  their contract is immutable and the passkey path has no other way to pay a fee. Both
+ *  mistakes were made a day apart: the first refused every sign-up with 403 for two days,
+ *  the second locked out every treasury created that week the moment v3.5 shipped.
+ *
+ *  The env remains an escape hatch for a hash we forgot to carry forward. */
 export function allowedWasmHashes(envValue: string | undefined): string[] {
   const listed = (envValue ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  return listed.includes(TREASURY_WASM_HASH) ? listed : [...listed, TREASURY_WASM_HASH];
+  const ours = [TREASURY_WASM_HASH, ...LEGACY_TREASURY_WASM_HASHES];
+  return [...listed, ...ours.filter((h) => !listed.includes(h))];
 }
 
 /** Whether the relay may forward a call to this contract.

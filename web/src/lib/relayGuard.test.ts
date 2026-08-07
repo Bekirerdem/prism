@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { allowedWasmHashes, isAllowedContract, isRelayAllowed } from "./relayGuard";
-import { TREASURY_WASM_HASH } from "./treasuryWasm";
+import { LEGACY_TREASURY_WASM_HASHES, TREASURY_WASM_HASH } from "./treasuryWasm";
 
 describe("allowedWasmHashes", () => {
   it("always admits the treasury wasm the app deploys, with no env set at all", () => {
@@ -17,6 +17,14 @@ describe("allowedWasmHashes", () => {
     const list = allowedWasmHashes(` ${older} , `);
     expect(list).toContain(older);
     expect(list).toContain(TREASURY_WASM_HASH);
+  });
+
+  it("keeps sponsoring the treasuries this app deployed before, with no env at all", () => {
+    // Shipping v3.5 moved the allowlist off v3.4 and locked every treasury created that
+    // week out of the passkey path — the owner's funds sit in an immutable contract the
+    // relay had stopped paying fees for. Old code versions are not configuration.
+    const list = allowedWasmHashes(undefined);
+    for (const legacy of LEGACY_TREASURY_WASM_HASHES) expect(list).toContain(legacy);
   });
 
   it("does not list the shipped hash twice when the env already names it", () => {
