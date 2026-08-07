@@ -1,5 +1,28 @@
 import { describe, it, expect, vi } from "vitest";
-import { isAllowedContract, isRelayAllowed } from "./relayGuard";
+import { allowedWasmHashes, isAllowedContract, isRelayAllowed } from "./relayGuard";
+import { TREASURY_WASM_HASH } from "./treasuryWasm";
+
+describe("allowedWasmHashes", () => {
+  it("always admits the treasury wasm the app deploys, with no env set at all", () => {
+    // The regression this exists for: the app moved to treasury v3.4 while the deploy
+    // allowlist stayed an env var listing the old hash, so every passkey user's "create
+    // treasury" was refused by the relay with 403 for two days. The hash the app ships is
+    // not configuration — it cannot drift away from what the relay admits.
+    expect(allowedWasmHashes(undefined)).toContain(TREASURY_WASM_HASH);
+    expect(allowedWasmHashes("")).toContain(TREASURY_WASM_HASH);
+  });
+
+  it("keeps env-listed hashes alongside it, so older treasuries stay reachable", () => {
+    const older = "56a4d9264b5eb9dd8fa4b0e8ba2e3b7bb0b2d63e0b0dcbdc1a1b1c1d1e1f6795";
+    const list = allowedWasmHashes(` ${older} , `);
+    expect(list).toContain(older);
+    expect(list).toContain(TREASURY_WASM_HASH);
+  });
+
+  it("does not list the shipped hash twice when the env already names it", () => {
+    expect(allowedWasmHashes(TREASURY_WASM_HASH).filter((h) => h === TREASURY_WASM_HASH)).toHaveLength(1);
+  });
+});
 
 // A real testnet contract id, so the shape check is exercised against the genuine article.
 const TREASURY = "CBEPVXK6RGYUMHZCJ4H2TQZKGCVWZC5X6LPUZQ6ZOEXTPZ63DZMD4ZE7";

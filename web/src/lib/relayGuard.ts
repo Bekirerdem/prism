@@ -1,9 +1,26 @@
 // The relay endpoint is public in an open-source repo: without this gate anyone could spend
 // our OZ Channels fee quota. Kept as a pure function so it is testable without the Node
 // runtime the proxy itself runs in.
+import { TREASURY_WASM_HASH } from "./treasuryWasm";
 
 /** Soroban contract ids are StrKey-encoded, start with `C`, and are 56 characters long. */
 const CONTRACT_ID = /^C[A-Z2-7]{55}$/;
+
+/** Wasm hashes the relay will sponsor a deploy of: whatever the environment names, plus the
+ *  treasury wasm this build actually deploys.
+ *
+ *  That last part is not configuration, for the same reason the native SAC is hardcoded in
+ *  the contract allowlist: a passkey user cannot create a treasury at all unless the relay
+ *  admits the code the app is shipping. Leaving it to an env var meant the two drifted the
+ *  moment the treasury was upgraded, and every passkey sign-up was refused with 403 until
+ *  someone noticed. The env stays useful for keeping OLDER hashes reachable. */
+export function allowedWasmHashes(envValue: string | undefined): string[] {
+  const listed = (envValue ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return listed.includes(TREASURY_WASM_HASH) ? listed : [...listed, TREASURY_WASM_HASH];
+}
 
 /** Whether the relay may forward a call to this contract.
  *  Fails closed: a malformed id, a non-contract StrKey, or a missing allowlist all reject. */

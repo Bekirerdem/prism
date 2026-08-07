@@ -14,7 +14,7 @@ import { Keypair, rpc, xdr } from "@stellar/stellar-sdk";
 // Explicit .js extensions — see the note in api/faucet.ts.
 import process from "node:process";
 import { classifyHostFunction, hostFunctionFromEnvelope } from "../src/lib/hostFunction.js";
-import { isRelayAllowed } from "../src/lib/relayGuard.js";
+import { allowedWasmHashes, isRelayAllowed } from "../src/lib/relayGuard.js";
 import { submitEnvelope, submitHostFunction } from "../src/lib/relaySubmit.js";
 
 // Invisible characters smuggled into an env value have bitten this project twice (a BOM in
@@ -33,7 +33,9 @@ const csv = (v: string | undefined): string[] =>
 // worst a stranger can do is spend our testnet fee on moving their own funds.
 const NATIVE_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 const ALLOWED_CONTRACTS = [...csv(process.env.RELAY_ALLOWED_CONTRACTS), NATIVE_SAC];
-const ALLOWED_WASM = csv(process.env.RELAY_ALLOWED_WASM);
+// Includes the treasury wasm this build deploys whether or not the env names it — the two
+// drifted once already and silently broke every passkey sign-up. See allowedWasmHashes.
+const ALLOWED_WASM = allowedWasmHashes(clean(process.env.RELAY_ALLOWED_WASM));
 const RPC_URL = clean(process.env.RELAY_RPC_URL) || "https://soroban-testnet.stellar.org";
 const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
 

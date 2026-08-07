@@ -14,24 +14,15 @@ import {
 import { Client, type Session } from "./treasuryClient";
 import { contractErr, errText } from "./wallet-errors";
 import type { SubmittableTx, TxExecutor } from "./executor";
+import { TREASURY_WASM_HASH } from "./treasuryWasm";
 import { NETWORK_PASSPHRASE, RPC_URL } from "../config";
 
 // Native XLM SAC on testnet — the token each user treasury holds and spends.
 export const XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 // Treasury WASM already installed on-chain — deploy just instantiates a new contract from it.
-//
-// v3.4 (2026-08-06): adds the two read-only surfaces a compliance proof binds to —
-// `period_spent(period_id)`, the final total for a closed UTC day, and the owner-published
-// `whitelist_root`. Without them the verifier has nothing on-chain to check a proof
-// against (2026-08-05 audit, H1), so only v3.4 treasuries can be attested for.
-//
-// Carries v3.3's fixes forward (M1 the rolling window holds a full 24h, M3 the daily limit
-// bounds committed value so the agent cannot lock the balance out from under the owner).
-//
-// Treasuries are immutable by design, so this only governs NEWLY created ones; every
-// treasury deployed before today keeps running the code it was born with.
-export const TREASURY_WASM_HASH =
-  "b813a1e7a3d2ddb1013dbaa11a41dcc1fbed984a30cfef9023dc199b12131a72";
+// Defined in its own module so the relay, which decides whether to sponsor the deploy, reads
+// the very same value; see the drift note in relayGuard.allowedWasmHashes.
+export { TREASURY_WASM_HASH };
 
 const XLM_UNIT = 10_000_000;
 
