@@ -40,4 +40,27 @@ describe("relayTx", () => {
     await expect(relayTx(fetchImpl, { signAndSend: vi.fn() })).rejects.toThrow(/could not be prepared/i);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
+
+  it("does not tell the user to retry something the relay will always refuse", async () => {
+    // A 403 means this build is not cleared to sponsor the call. It cost a live user an
+    // evening of retrying "Couldn't submit that transaction. Try again." while every
+    // attempt was refused identically, so the permanent case must not read as transient.
+    await expect(relayTx(respond(false, 403, { error: "Not allowed." }), assembled())).rejects.toThrow(
+      /on our side, not you/i,
+    );
+    await expect(
+      relayTx(respond(false, 403, { error: "Not allowed." }), assembled()),
+    ).rejects.not.toThrow(/try again/i);
+  });
+
+  it("says so when fee sponsorship is switched off entirely", async () => {
+    await expect(relayTx(respond(false, 503, { error: "not configured" }), assembled())).rejects.toThrow(
+      /configured/i,
+    );
+  });
+
+  it("still asks for a retry on a genuinely transient failure", async () => {
+    const fetchImpl = respond(false, 502, { error: "Relay failed." });
+    await expect(relayTx(fetchImpl, assembled())).rejects.toThrow(/try again/i);
+  });
 });

@@ -13,6 +13,11 @@ export type FetchLike = (
 
 const GENERIC_MSG = "Couldn't submit that transaction. Try again.";
 const UNBUILT_MSG = "That transaction could not be prepared — try again.";
+// A refusal is not a hiccup: the relay will answer the same way however many times it is
+// asked. Saying "try again" there sends people in circles — a live user spent an evening
+// retrying a deploy the relay was never going to sponsor.
+const REFUSED_MSG = "We're not cleared to sponsor that transaction — that's on our side, not you. Retrying won't help.";
+const UNCONFIGURED_MSG = "Fee sponsorship isn't configured right now, so we can't cover this transaction.";
 
 interface XdrLike {
   toXDR: (format?: string) => string;
@@ -49,6 +54,8 @@ async function post(fetchImpl: FetchLike, payload: unknown): Promise<{ hash?: st
     // and whatever it did say belong in the console — otherwise every relay failure looks the
     // same from here, which is how one live failure cost a whole round.
     console.error(`[relay] ${res.status}:`, body.error ?? "(no detail)");
+    if (res.status === 403) throw new Error(REFUSED_MSG);
+    if (res.status === 503) throw new Error(UNCONFIGURED_MSG);
     throw new Error(GENERIC_MSG);
   }
   return { hash: body.hash };
