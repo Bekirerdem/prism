@@ -74,6 +74,19 @@ test.describe.serial("Live passkey onboarding", () => {
 
     const pageErrors: string[] = [];
     page.on("pageerror", (e) => pageErrors.push(String(e)));
+    // The app deliberately keeps its user-facing messages short and puts the reason in the
+    // console (the relay prints the status it was refused with). Without this the run
+    // reports "something failed" and the next person goes archaeology-hunting on chain.
+    const consoleErrors: string[] = [];
+    page.on("console", (m) => {
+      if (m.type() === "error") consoleErrors.push(m.text());
+    });
+    // A bare "403" in the console names neither the endpoint nor the call. Record the URL
+    // and status of anything that fails, so a red run says which seam broke.
+    const badResponses: string[] = [];
+    page.on("response", (r) => {
+      if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url()}`);
+    });
 
     await enableVirtualPasskey(page);
     await page.goto("/");
@@ -114,7 +127,12 @@ test.describe.serial("Live passkey onboarding", () => {
     // Carry the toast's words into the failure, not just a count — "expected 0, got 1"
     // sends the next person hunting through screenshots for what actually broke.
     const errors = await page.locator('[data-toast-kind="error"]').allTextContents();
-    expect(errors, `onboarding raised an error toast: ${errors.join(" | ")}`).toEqual([]);
+    expect(
+      errors,
+      `onboarding raised an error toast: ${errors.join(" | ")}` +
+        `\nfailed requests: ${badResponses.join(" | ")}` +
+        `\nconsole: ${consoleErrors.join(" | ")}`,
+    ).toEqual([]);
 
     // The real proof: the app wrote a treasury id against this wallet, which only happens
     // once the deploy came back with a contract id — i.e. the relay sponsored it and the
