@@ -51,13 +51,13 @@ const settle = makeTreasurySettle({ treasuryId: TREASURY, taskId: TASK_ID, sourc
 
 function reqFor(amount: bigint): PaymentRequirements {
   return {
-    x402Version: 1,
     scheme: "exact",
     network: "stellar:testnet",
-    maxAmountRequired: amount.toString(),
+    amount: amount.toString(),
     asset: cfg.token,
     payTo: PAYEE,
-    resource: "https://api.example.com/inference",
+    maxTimeoutSeconds: 60,
+    extra: { areFeesSponsored: true },
   };
 }
 

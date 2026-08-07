@@ -1,3 +1,24 @@
+# Kova 7 — x402 v2 + facilitator interop (2026-08-07)
+
+Hedef: SCF resubmit öncesi x402 interop çekirdeğini kanıtlamak. Kapsam SINIRI (SCF
+"geçmiş iş faturalanamaz" kuralı): eunomia-mcp + USDC + confidential entegrasyonu
+BİLİNÇLİ kapsam dışı — grant tranche'ında kalacak. Mimari: funded agent account
+(G-hesabı spec-uyumlu öder, treasury `pay()` ile limitli fonlar).
+
+- [x] 0. Working tree temizliği: snapshot CRLF artığı restore, registered-users.json
+      commit (`df129b6`)
+- [ ] 1. v2 spec hizası — `scheme_exact_stellar.md` v2-only: `amount` (eski
+      `maxAmountRequired`), `maxTimeoutSeconds`, `extra.areFeesSponsored`;
+      `x402Version`/`resource` envelope'a → doğrula: gate testleri v2 şemasıyla geçsin
+- [ ] 2. HTTP 402 handshake — fetch → 402 parse → gate → pay → X-PAYMENT retry
+      (`@x402/stellar` 2.21.0) → doğrula: unit testler + tsc temiz
+- [ ] 3. Facilitator erişimi — OZ testnet facilitator API key durumu netleşsin
+      (07-09 bulgusu: v2.12'den beri key istiyor) → doğrula: /verify çağrısı geçer
+- [ ] 4. Funded agent account settle — agent G-hesabı auth-entry imzalar, treasury
+      `pay()` top-up'ı bounded tutar → doğrula: mevcut 11 test + yeni testler yeşil
+- [ ] 5. Uçtan uca kanıt — demo 402 server'a karşı gerçek 402→ödeme→200, tx hash
+      kayıtlı → SCF formunda "verifiable in-submission" kanıtı
+
 # Kova 6 — animmaster mekaniklerinin gerçek uyarlaması (2026-08-03, branch `feat/passkey-onboarding`)
 
 **Neden:** `0a62843` beş animmaster bileşenini "uyarladım" diyordu; referans `code.zip`'lerle

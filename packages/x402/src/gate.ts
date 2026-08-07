@@ -7,7 +7,10 @@ import type { GateResult, PaymentRequirements, TreasuryPolicy } from "./types.js
  * payment the contract would reject. The on-chain `treasury.pay` is the final word.
  */
 export function gateX402(req: PaymentRequirements, policy: TreasuryPolicy): GateResult {
-  const amount = BigInt(req.maxAmountRequired);
+  if (req.scheme !== "exact") {
+    return { allowed: false, amount: 0n, reason: `unsupported scheme "${req.scheme}"` };
+  }
+  const amount = BigInt(req.amount);
 
   if (req.asset !== policy.token) {
     return { allowed: false, amount, reason: "asset mismatch with treasury token" };

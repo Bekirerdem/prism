@@ -6,15 +6,17 @@ import type { PaymentRequirements, TreasuryPolicy } from "./types.js";
 
 const TOKEN = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"; // testnet native XLM SAC (treasury v2 token)
 
+// x402 v2 exact-scheme requirements (scheme_exact_stellar.md): `amount` is the
+// v2 field name (v1's maxAmountRequired is unsupported on Stellar).
 function req(over: Partial<PaymentRequirements> = {}): PaymentRequirements {
   return {
-    x402Version: 1,
     scheme: "exact",
     network: "stellar:testnet", // CAIP-2
-    maxAmountRequired: "50000000", // 5 XLM (7 decimals)
+    amount: "50000000", // 5 XLM (7 decimals)
     asset: TOKEN,
     payTo: "GVENDOR",
-    resource: "https://api.example.com/data",
+    maxTimeoutSeconds: 60,
+    extra: { areFeesSponsored: true },
     ...over,
   };
 }
@@ -36,8 +38,14 @@ test("allows a payment within policy to an allowed payee", () => {
   assert.equal(r.amount, 50000000n);
 });
 
+test("denies a scheme other than exact", () => {
+  const r = gateX402(req({ scheme: "upto" }), policy());
+  assert.equal(r.allowed, false);
+  assert.match(r.reason!, /scheme/);
+});
+
 test("denies over the per-task limit", () => {
-  const r = gateX402(req({ maxAmountRequired: "150000000" }), policy());
+  const r = gateX402(req({ amount: "150000000" }), policy());
   assert.equal(r.allowed, false);
   assert.match(r.reason!, /per-task/);
 });
@@ -71,7 +79,7 @@ test("boundedPay settles only when allowed", async () => {
   assert.equal(ok.txHash, "txhash123");
   assert.equal(settled, 1);
 
-  const denied = await boundedPay(req({ maxAmountRequired: "150000000" }), policy(), settle);
+  const denied = await boundedPay(req({ amount: "150000000" }), policy(), settle);
   assert.equal(denied.txHash, undefined);
   assert.equal(settled, 1); // settle NOT called again
 });
