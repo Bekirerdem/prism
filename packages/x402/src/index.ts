@@ -1,5 +1,7 @@
 export * from "./types.js";
 export { gateX402 } from "./gate.js";
+export { makeBoundedPolicy, type GateDecision } from "./policy.js";
+export { makeBoundedFetch, type BoundedFetchOptions } from "./boundedFetch.js";
 export { buildPayArgs, makeTreasurySettle } from "./settle.js";
 
 import { gateX402 } from "./gate.js";
