@@ -14,11 +14,24 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { rpc, scValToNative } from "@stellar/stellar-sdk";
+import {
+  Account,
+  Address,
+  BASE_FEE,
+  Contract,
+  TransactionBuilder,
+  rpc,
+  scValToNative,
+} from "@stellar/stellar-sdk";
+import { applyFunding } from "./qualify.mjs";
 
 // Keep in sync with web/src/config.ts (plain .mjs can't import the TS module).
 const RPC_URL = "https://soroban-testnet.stellar.org";
 const REGISTRY_ID = "CBEPVXK6BN2FZ3IYHV5KQUGROFHNBWBYHKHRZ5U3O7UWGIOPFOFE4ZE7";
+const XLM_SAC = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
+// Any funded account works as a simulation source; nothing is signed or submitted.
+const PROBE = "GCB32DDRIOE24JJ66IYB2V44UAYYPRA4UIPGQKM2OINHDK2NPW365XTA";
 const TARGET = 50;
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -69,6 +82,41 @@ async function fetchRegistrations() {
   return out;
 }
 
+/** XLM a treasury holds, read from the native SAC by simulation. Null when unreadable —
+ *  treated as "no evidence of funding", never as evidence of absence. */
+async function treasuryBalance(server, contractId) {
+  try {
+    const tx = new TransactionBuilder(new Account(PROBE, "0"), {
+      fee: BASE_FEE,
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(new Contract(XLM_SAC).call("balance", new Address(contractId).toScVal()))
+      .setTimeout(30)
+      .build();
+    const sim = await server.simulateTransaction(tx);
+    if (!rpc.Api.isSimulationSuccess(sim) || !sim.result?.retval) return null;
+    return Number(scValToNative(sim.result.retval)) / 10_000_000;
+  } catch {
+    return null;
+  }
+}
+
+/** Owners with at least one treasury holding value right now. */
+async function fundedOwners(owners) {
+  const server = new rpc.Server(RPC_URL);
+  const found = new Set();
+  for (const [owner, entry] of Object.entries(owners)) {
+    if (entry.funded) continue; // already established; the flag is sticky
+    for (const treasury of entry.treasuries) {
+      if ((await treasuryBalance(server, treasury)) > 0) {
+        found.add(owner);
+        break;
+      }
+    }
+  }
+  return found;
+}
+
 function loadSnapshot() {
   if (!existsSync(SNAPSHOT)) return { target: TARGET, owners: {} };
   try {
@@ -103,18 +151,23 @@ for (const { owner, treasury, at } of registrations) {
     newTreasuries++;
   }
 }
+const { active, pending } = applyFunding(snap.owners, await fundedOwners(snap.owners));
 snap.updatedAt = new Date().toISOString();
 
 mkdirSync(dirname(SNAPSHOT), { recursive: true });
 writeFileSync(SNAPSHOT, JSON.stringify(snap, null, 2) + "\n");
 
 const count = Object.keys(snap.owners).length;
-const bar = "█".repeat(Math.min(count, TARGET)) + "░".repeat(Math.max(0, TARGET - count));
-console.log(`\nPrism registered wallets: ${count} / ${TARGET}`);
+const bar = "█".repeat(Math.min(active, TARGET)) + "░".repeat(Math.max(0, TARGET - active));
+// `active` is the number to publish: registering is free (the relay sponsors the fee), so
+// only owners who moved value into a treasury carry evidence weight. See scripts/qualify.mjs.
+console.log(`\nPrism active wallets: ${active} / ${TARGET}`);
 console.log(bar);
+console.log(`(${count} registered in total — ${pending} deployed a treasury but never funded it)`);
 console.log(`(this run: +${newOwners} new wallet(s), +${newTreasuries} treasury registration(s) in the RPC window)`);
-if (excluded.size > 0) console.log(`(excluding ${excluded.size} E2E wallet(s); pruned ${pruned} from the snapshot this run)`);
+if (excluded.size > 0) console.log(`(excluding ${excluded.size} own/E2E wallet(s); pruned ${pruned} from the snapshot this run)`);
 console.log(`snapshot: ${SNAPSHOT}\n`);
 for (const [owner, e] of Object.entries(snap.owners)) {
-  console.log(`  ${owner}  treasuries: ${e.treasuries.length}  first seen: ${e.firstSeen}`);
+  const mark = e.funded ? "active " : "pending";
+  console.log(`  ${mark}  ${owner}  treasuries: ${e.treasuries.length}  first seen: ${e.firstSeen}`);
 }
