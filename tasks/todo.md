@@ -7,17 +7,19 @@ BİLİNÇLİ kapsam dışı — grant tranche'ında kalacak. Mimari: funded agen
 
 - [x] 0. Working tree temizliği: snapshot CRLF artığı restore, registered-users.json
       commit (`df129b6`)
-- [ ] 1. v2 spec hizası — `scheme_exact_stellar.md` v2-only: `amount` (eski
-      `maxAmountRequired`), `maxTimeoutSeconds`, `extra.areFeesSponsored`;
-      `x402Version`/`resource` envelope'a → doğrula: gate testleri v2 şemasıyla geçsin
-- [ ] 2. HTTP 402 handshake — fetch → 402 parse → gate → pay → X-PAYMENT retry
-      (`@x402/stellar` 2.21.0) → doğrula: unit testler + tsc temiz
-- [ ] 3. Facilitator erişimi — OZ testnet facilitator API key durumu netleşsin
-      (07-09 bulgusu: v2.12'den beri key istiyor) → doğrula: /verify çağrısı geçer
-- [ ] 4. Funded agent account settle — agent G-hesabı auth-entry imzalar, treasury
-      `pay()` top-up'ı bounded tutar → doğrula: mevcut 11 test + yeni testler yeşil
-- [ ] 5. Uçtan uca kanıt — demo 402 server'a karşı gerçek 402→ödeme→200, tx hash
-      kayıtlı → SCF formunda "verifiable in-submission" kanıtı
+- [x] 1. v2 spec hizası (`e8fc497`) — `amount` + `maxTimeoutSeconds` +
+      `extra.areFeesSponsored`; scheme!=exact reddi; 12/12 test + strict tsc temiz
+      (koşular WSL'den — node_modules linux-x64)
+- [x] 2. HTTP 402 handshake (`938d29d`) — makeBoundedFetch (@x402/fetch) +
+      makeBoundedPolicy (gate → x402Client.registerPolicy); 18/18 test + tsc temiz
+- [x] 3. Facilitator — OZ hosted /supported hâlâ 401 (API key duvarı teyit);
+      karar: resmi @x402/stellar facilitator implementasyonu self-host (E2E in-process).
+      OZ key almak istenirse Bekir aksiyonu, opsiyonel.
+- [x] 4. Funded agent account — treasury pay() ile bounded top-up
+      (tx `70511db2…`), x402 harcaması agent G-hesabından auth-entry ile
+- [x] 5. Uçtan uca kanıt (e2e-interop.ts) — gerçek 402→gate→öde→200:
+      settlement tx `c93de1e8…` (facilitator-sponsored, Horizon'dan doğrulandı);
+      over-limit 15 XLM imza atılmadan reddedildi ("exceeds per-task limit")
 
 # Kova 6 — animmaster mekaniklerinin gerçek uyarlaması (2026-08-03, branch `feat/passkey-onboarding`)
 

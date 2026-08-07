@@ -5,7 +5,8 @@
   "description": "Bounded x402 buyer for Prism — gate an x402 payment against the treasury policy, then settle through the bounded treasury.",
   "scripts": {
     "test": "node --import tsx --test src/gate.test.ts src/settle.test.ts src/policy.test.ts src/boundedFetch.test.ts",
-    "e2e": "tsx src/e2e.ts"
+    "e2e": "tsx src/e2e.ts",
+    "e2e:interop": "tsx src/e2e-interop.ts"
   },
   "dependencies": {
     "@x402/core": "~2.21.0",

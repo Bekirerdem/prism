@@ -37,10 +37,26 @@ The E2E runs against the **live testnet treasury** and proves both halves:
 - **Asset:** native XLM via its SAC `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` — the v2 treasury's token.
 - **Treasury (v2, testnet):** `CDKQGDPLRX6DOCQTI5KVMZNGMPKMSRNGJRVCQ7LAAQGB2S5JKDCHXT5H`.
 
-## Remaining production seam
+## Standards-compliant interop (`npm run e2e:interop`)
 
-This package ships the Prism-specific value — the **bounded gate** + treasury-routed
-settlement, **live on testnet**. The remaining seam is the HTTP `402` handshake itself
-plus third-party-agent **auth-entry signing** (for an agent that isn't the treasury's
-own key), via the [`@x402/stellar`](https://www.npmjs.com/package/@x402/stellar) client
-and the OpenZeppelin Relayer facilitator (`https://channels.openzeppelin.com/x402/testnet`).
+The full x402 **v2** handshake — fetch → 402 → gate → pay → retry → 200 — through the
+official [`@x402/stellar`](https://www.npmjs.com/package/@x402/stellar) client and
+facilitator implementation, proven live on testnet with the **funded agent account**
+architecture:
+
+- **Bounded allowance:** the treasury funds the agent's spending account through
+  `pay()` — the allowance itself is policy-checked and attributed on-chain
+  (tx [`70511db2…`](https://stellar.expert/explorer/testnet/tx/70511db2f45533b001b01eb2335182aa2d4f6e96902198d0a3b20d372e2b9d71)).
+  The treasury key never touches the HTTP handshake.
+- **In-policy** 1 XLM request → gated, auth-entry signed by the agent, settled by the
+  facilitator with sponsored fees — tx
+  [`c93de1e8…`](https://stellar.expert/explorer/testnet/tx/c93de1e8dd69e410e4403d64e7babb55fa6aac685e179bb879210ae83f5ecafb).
+- **Over-limit** 15 XLM request → refused by the gate inside the official client's
+  policy seam (`x402Client.registerPolicy`), **before any signature exists**.
+
+`makeBoundedFetch({ policy, agentSecret })` builds the paying fetch;
+`makeBoundedPolicy` adapts `gateX402` to the client's `PaymentPolicy` seam, with an
+`onDecision` callback so refusals stay visible. The E2E's resource server verifies and
+settles through `x402Facilitator` — the same class a hosted facilitator runs (the
+hosted OpenZeppelin testnet facilitator currently requires an API key, so the E2E
+hosts its own instance of the official implementation).
