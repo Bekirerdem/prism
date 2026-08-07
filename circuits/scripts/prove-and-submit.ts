@@ -16,7 +16,9 @@ import { execFileSync } from "node:child_process";
 import { proveCompliance, type CompliancePayment } from "./prove.js";
 import { submitProof } from "../../packages/prover/src/submit.js";
 
-const VERIFIER = "CCZKA3K4SPIFWG7UBIY2CE7LPKPMCWROCHXZO2JAMYVVGU6TUKOWMD5Q";
+// N=16 verifier (2026-08-07). Its predecessor CCZKA3K4… expects 13 public signals and
+// cannot check a 16-slot batch — proofs from this build do not verify against it.
+const VERIFIER = "CD3TB3F4VQF2H56IQC4KV3YLA6QRIF272W5D6PK2SWVTYPXHS4NFDYZ3";
 const SOURCE = "zk-deployer";
 const NETWORK = "testnet";
 // The payee field elements the whitelist tree is built over. Mapping real Stellar

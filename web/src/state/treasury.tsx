@@ -33,7 +33,7 @@ import {
 import { SERVICE, shortAddr } from "../config";
 import { fundWithFriendbot, getContractXlmBalance, getXlmBalance } from "../lib/funding";
 import { connectErr, errText, sendErr } from "../lib/wallet-errors";
-import { parseXlmAmount } from "../lib/validate";
+import { checkLimits, parseXlmAmount } from "../lib/validate";
 import { trackError, trackViolation } from "../lib/analytics";
 import { logActivity } from "../lib/activity";
 import {
@@ -240,11 +240,10 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       if (!dailyLimit.ok) return invalid(dailyLimit.msg);
       const perTaskLimit = parseXlmAmount(perTask, "per-payment limit");
       if (!perTaskLimit.ok) return invalid(perTaskLimit.msg);
-      // The v3 constructor rejects a self-contradicting policy on-chain — catch it
-      // here first so the user gets a clear message instead of a failed deploy.
-      if (perTaskLimit.value > dailyLimit.value) {
-        return invalid("Per-payment limit can't exceed the daily limit.");
-      }
+      // The constructor rejects an incoherent policy on-chain — catch it here first so
+      // the user gets a clear message instead of a failed deploy.
+      const coherent = checkLimits(dailyLimit.value, perTaskLimit.value);
+      if (!coherent.ok) return invalid(coherent.msg);
       setBusy("deploy");
       toast("info", "Creating your treasury — confirm in your wallet…");
       try {
@@ -616,9 +615,8 @@ export function TreasuryProvider({ children }: { children: React.ReactNode }) {
       if (!dailyLimit.ok) return invalid(dailyLimit.msg);
       const perTaskLimit = parseXlmAmount(perTask, "per-payment limit");
       if (!perTaskLimit.ok) return invalid(perTaskLimit.msg);
-      if (perTaskLimit.value > dailyLimit.value) {
-        return invalid("Per-payment limit can't exceed the daily limit.");
-      }
+      const coherent = checkLimits(dailyLimit.value, perTaskLimit.value);
+      if (!coherent.ok) return invalid(coherent.msg);
       setBusy("limits");
       toast("info", "Updating limits — confirm in your wallet…");
       try {

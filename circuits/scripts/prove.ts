@@ -11,7 +11,11 @@ import { H, buildTree } from "../test/helpers.js";
 import { randomFieldSalt } from "../../packages/prover/src/salt.js";
 import { encodeProofHex, encodePublicHex } from "../../packages/prover/src/encode.js";
 
-const N = 8;
+/** Batch capacity. MUST match `params[0]` in circuits.json (the circuit is compiled from
+ *  it) and `MAX_BATCH` in the treasury contract, which refuses any policy whose daily
+ *  limit could exceed N x per_task_limit — a period that outruns the batch cannot be
+ *  proved at all. `n-matches-circuit.test.ts` fails if these drift apart. */
+export const N = 16;
 const LEVELS = 8;
 
 export interface CompliancePayment {
@@ -20,7 +24,7 @@ export interface CompliancePayment {
 }
 
 export interface ComplianceBatch {
-  payments: CompliancePayment[]; // 1..8 real payments; padded to 8
+  payments: CompliancePayment[]; // 1..N real payments; padded to N
   whitelist: bigint[]; // payee fields allowed (Merkle members)
   dailyLimit: bigint;
   perTaskLimit: bigint;
@@ -86,7 +90,7 @@ const CIRCUITS = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export interface ProveResult {
   proof: Buffer; // 256 bytes (a||b||c)
-  publicSignals: Buffer; // 384 bytes (12 field elements)
+  publicSignals: Buffer; // (5 + N) field elements x 32 bytes
   whitelistRoot: string;
   periodId: string;
 }

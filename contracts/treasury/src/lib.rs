@@ -123,6 +123,19 @@ const MAX_TTL_LEDGERS: u32 = 3_110_400; // ≈ 6 months of 5s ledgers (order of 
 const INSTANCE_TTL_THRESHOLD: u32 = LEDGERS_PER_WEEK; // extend once < ~1 week of TTL remains…
 const INSTANCE_TTL_EXTEND_TO: u32 = 4 * LEDGERS_PER_WEEK; // …back up to ~1 month
 
+/// How many payments the compliance circuit can attest to in one period.
+///
+/// This is not a treasury parameter — it is the batch size the circuit is compiled with
+/// (`params[0]` in `circuits/circuits.json`) and it decides what a period's spend may be
+/// at most: the circuit caps every slot at `per_task_limit` and forces the batch to equal
+/// the period's on-chain total exactly. A daily limit above `MAX_BATCH * per_task_limit`
+/// therefore lets the agent spend a day that no proof can cover — and since the verifier
+/// only asks periods to move forward, that day would drop out of the attestation record
+/// silently. The policy is refused instead, so capacity and enforcement cannot disagree.
+///
+/// Raising it means recompiling the circuit, a new trusted setup, and a new verifier.
+pub const MAX_BATCH: i128 = 16;
+
 #[contract]
 pub struct Treasury;
 
@@ -139,7 +152,7 @@ impl Treasury {
         daily_limit: i128,
         per_task_limit: i128,
     ) {
-        if daily_limit <= 0 || per_task_limit <= 0 || per_task_limit > daily_limit {
+        if !Self::limits_are_coherent(daily_limit, per_task_limit) {
             panic_with_error!(&env, Error::InvalidLimits);
         }
         let cfg = Config {
@@ -315,7 +328,7 @@ impl Treasury {
         let mut cfg = Self::cfg(&env);
         cfg.admin.require_auth();
         Self::bump_instance(&env);
-        if daily_limit <= 0 || per_task_limit <= 0 || per_task_limit > daily_limit {
+        if !Self::limits_are_coherent(daily_limit, per_task_limit) {
             return Err(Error::InvalidLimits);
         }
         cfg.daily_limit = daily_limit;
@@ -734,6 +747,20 @@ impl Treasury {
         env.storage()
             .persistent()
             .set(&DataKey::HourSpent(hour), &(bucket + amount));
+    }
+
+    /// Whether a policy is one the whole system can honour — the single gate used by both
+    /// the constructor and `set_limits`, so a treasury cannot be walked past it later.
+    ///
+    /// Beyond the obvious (positive, per-task not above daily), the daily limit must stay
+    /// within what the compliance circuit can attest to; see `MAX_BATCH`. The product
+    /// cannot overflow: callers are bounded by the verifier's 64-bit range check on
+    /// `per_task_limit`, and 16 * 2^64 is far inside i128.
+    fn limits_are_coherent(daily_limit: i128, per_task_limit: i128) -> bool {
+        daily_limit > 0
+            && per_task_limit > 0
+            && per_task_limit <= daily_limit
+            && daily_limit <= MAX_BATCH.saturating_mul(per_task_limit)
     }
 
     /// Whitelist OR earned-reputation gate. See `set_reputation_policy`.

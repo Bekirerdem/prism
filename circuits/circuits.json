@@ -2,7 +2,7 @@
   "compliance": {
     "file": "compliance",
     "template": "Compliance",
-    "params": [8, 8, 64],
+    "params": [16, 8, 64],
     "pubs": ["dailyLimit", "perTaskLimit", "whitelistRoot", "periodId", "periodSpent", "commitments"]
   }
 }

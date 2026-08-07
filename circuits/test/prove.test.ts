@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { buildInput } from "../scripts/prove.js";
+import { buildInput, N } from "../scripts/prove.js";
 import { H, buildTree } from "./helpers.js";
 
 describe("buildInput (parametric prover)", () => {
@@ -28,8 +28,8 @@ describe("buildInput (parametric prover)", () => {
     const tree = await buildTree([11n, 22n, 33n], 8);
     expect(input.whitelistRoot).to.equal(tree.root.toString());
 
-    // padded to the fixed batch of 8, pad slots carry amount 0
-    expect(input.amount).to.have.length(8);
+    // padded to the circuit's fixed batch, pad slots carry amount 0
+    expect(input.amount).to.have.length(N);
     expect(input.amount[2]).to.equal("0");
     expect(input.salt.every((s) => BigInt(s) >= 1n << 128n)).to.equal(true);
   });

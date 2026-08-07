@@ -34,6 +34,52 @@ fn setup<'a>(
     (payee, client, token)
 }
 
+/// A day the agent is allowed to fill cannot be one the compliance circuit is unable to
+/// prove. The circuit takes a fixed batch of MAX_BATCH payments, each capped at
+/// `per_task_limit`, and forces their sum to equal the period's on-chain total — so a
+/// daily limit above `MAX_BATCH * per_task_limit` buys the agent spending capacity that
+/// no attestation can ever cover. That day would simply go unproved, and because the
+/// verifier only requires periods to move forward, it would vanish from the record
+/// without a trace. Refuse the policy instead.
+#[test]
+#[should_panic]
+fn constructor_rejects_a_daily_limit_the_circuit_could_never_prove() {
+    let env = Env::default();
+    let admin = Address::generate(&env);
+    let agent = Address::generate(&env);
+    let sac = env.register_stellar_asset_contract_v2(admin.clone());
+    // One unit past what MAX_BATCH payments of per_task_limit can add up to.
+    env.register(
+        Treasury,
+        (admin, agent, sac.address(), MAX_BATCH * 100 + 1, 100_i128),
+    );
+}
+
+/// …while a policy that exactly fills the batch is legitimate and must still deploy.
+#[test]
+fn constructor_accepts_a_daily_limit_the_batch_exactly_covers() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (_payee, client, _token) = setup(&env, MAX_BATCH * 100, 100_i128);
+    assert_eq!(client.get_config().daily_limit, MAX_BATCH * 100);
+}
+
+/// The same ceiling has to hold when the policy is changed later, or the treasury would
+/// simply be walked past it after deployment.
+#[test]
+fn set_limits_holds_the_provable_ceiling_too() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (_payee, client, _token) = setup(&env, 1000_i128, 100_i128);
+
+    assert_eq!(
+        client.try_set_limits(&(MAX_BATCH * 10 + 1), &10_i128),
+        Err(Ok(Error::InvalidLimits))
+    );
+    client.set_limits(&(MAX_BATCH * 10), &10_i128); // at the ceiling: allowed
+    assert_eq!(client.get_config().daily_limit, MAX_BATCH * 10);
+}
+
 #[test]
 fn pay_accounting_and_rejections() {
     let env = Env::default();

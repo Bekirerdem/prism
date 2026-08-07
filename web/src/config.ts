@@ -12,7 +12,9 @@ export const TREASURY_ID = "CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVF
 // ZK compliance verifier. Multi-tenant: it holds no policy of its own and re-reads every
 // claim — limits, payee root, and the period's actual total — from the treasury named in
 // the call, which is what makes an attestation mean something. Emits `attested`.
-export const VERIFIER_ID = "CCZKA3K4SPIFWG7UBIY2CE7LPKPMCWROCHXZO2JAMYVVGU6TUKOWMD5Q";
+// 2026-08-07: rebuilt for the 16-slot batch (21 public signals). Proofs are not portable
+// across this change — the previous verifier CCZKA3K4… expects 13 and rejects them.
+export const VERIFIER_ID = "CD3TB3F4VQF2H56IQC4KV3YLA6QRIF272W5D6PK2SWVTYPXHS4NFDYZ3";
 // Live on-chain compliance attestation — the verify() tx that emitted `attested`.
 // Periods only move forward, so this one cannot be re-run; it is shown, not repeated.
 export const ATTESTED_TX = "426e55d6ce0a9157c156190cee39dc2a1d302cf4c7f4f98cc930da5ad63b4606";

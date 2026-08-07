@@ -7,9 +7,14 @@ use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env, IntoVal};
 const PROOF: &[u8] = include_bytes!("../fixtures/proof.bin");
 const PUBLIC: &[u8] = include_bytes!("../fixtures/public.bin");
 
-// public_bytes layout (13 field elements x 32 bytes):
+// public_bytes layout (5 header field elements x 32 bytes, then one per batch slot):
 //   [dailyLimit(0..32), perTaskLimit(32..64), whitelistRoot(64..96), periodId(96..128),
-//    periodSpent(128..160), commitments(160..416)]
+//    periodSpent(128..160), commitments(160..)]
+//
+// Tests that tamper with a signal copy PUBLIC rather than declaring a byte length, so the
+// batch size can change without leaving a stale constant behind that silently turns a
+// should_panic test into one that passes for the wrong reason.
+const PUBLIC_LEN: usize = PUBLIC.len();
 
 /// The fixture's own claims, read back out of the bytes rather than hard-coded — if the
 /// sample batch is ever regenerated with different numbers, these tests follow it.
@@ -313,7 +318,7 @@ fn rejects_limits_wider_than_the_circuit_comparators() {
         .with_mut(|li| li.timestamp = (f.period + 1) * 86_400);
 
     // Public signals carry the wide limit too, so this is past the policy comparison.
-    let mut bytes = [0u8; 416];
+    let mut bytes = [0u8; PUBLIC_LEN];
     bytes.copy_from_slice(PUBLIC);
     bytes[16..32].copy_from_slice(&wide.to_be_bytes());
     client.verify(&treasury, &proof(&env), &Bytes::from_slice(&env, &bytes));
@@ -517,7 +522,7 @@ fn rejects_a_non_canonical_signal() {
     env.mock_all_auths();
     let (_admin, treasury, client, _f) = honest_setup(&env);
 
-    let mut bytes = [0u8; 416];
+    let mut bytes = [0u8; PUBLIC_LEN];
     bytes.copy_from_slice(PUBLIC);
     let shifted = plus_modulus(&PUBLIC[96..128]); // periodId re-encoded as periodId + r
     bytes[96..128].copy_from_slice(&shifted);
