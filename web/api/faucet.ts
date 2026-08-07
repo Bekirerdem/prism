@@ -21,7 +21,7 @@ import {
 // relative import does not resolve and the function dies at cold start with a 500. The local
 // bundler config maps .js back to .ts, so this satisfies both.
 import process from "node:process";
-import { dispenseDecision, DISPENSE_XLM } from "../src/lib/dispenser.js";
+import { dispenseDecision, DAILY_DISPENSE_CAP, DISPENSE_XLM } from "../src/lib/dispenser.js";
 
 const clean = (v: string | undefined): string => (v ?? "").replace(/[^\x20-\x7E]/g, "").trim();
 
@@ -60,6 +60,28 @@ async function walletBalance(server: rpc.Server, source: Keypair, wallet: string
     return Number(scValToNative(sim.result.retval) as bigint) / STROOPS;
   } catch {
     return 0;
+  }
+}
+
+/** Allocations made so far this UTC day, read back off the chain so the count survives
+ *  serverless instances restarting (there is no shared memory to keep it in).
+ *
+ *  `account_debited` on the dispenser means the dispenser itself sent XLM out, which only
+ *  happens here — the relay shares this key but only pays fees, and the payments it sponsors
+ *  move the USER's funds between contracts (`contract_debited`/`contract_credited`). A failure
+ *  to read returns the cap, so an unreachable Horizon pauses the faucet rather than opening it. */
+async function servedToday(publicKey: string): Promise<number> {
+  const since = new Date().toISOString().slice(0, 10); // UTC date, effects are ISO-8601
+  try {
+    const res = await fetch(`${HORIZON}/accounts/${publicKey}/effects?order=desc&limit=200`);
+    if (!res.ok) return DAILY_DISPENSE_CAP;
+    const body = (await res.json()) as {
+      _embedded?: { records?: Array<{ type: string; created_at: string }> };
+    };
+    const records = body._embedded?.records ?? [];
+    return records.filter((r) => r.type === "account_debited" && r.created_at.startsWith(since)).length;
+  } catch {
+    return DAILY_DISPENSE_CAP;
   }
 }
 
@@ -137,10 +159,14 @@ async function handler(req: Request): Promise<Response> {
     // One allocation per wallet: a wallet that already holds XLM has been served.
     alreadyServed: async (w) => (await walletBalance(server, dispenser, w)) > 0,
     dispenserBalance: () => accountBalance(dispenser.publicKey()),
+    servedToday: () => servedToday(dispenser.publicKey()),
   });
 
   if (decision.action === "invalid") return json({ error: "That is not a smart wallet address." }, 400);
   if (decision.action === "already-served") return json({ error: "This wallet already has funds." }, 409);
+  if (decision.action === "daily-cap-reached") {
+    return json({ error: "The testnet faucet has hit its daily limit. Try again tomorrow." }, 429);
+  }
 
   try {
     if (decision.action === "refill-then-dispense") await refill(server, dispenser);

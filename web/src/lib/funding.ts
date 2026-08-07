@@ -93,6 +93,9 @@ async function dispenseToWallet(wallet: string, fetchFn: typeof fetch): Promise<
   if (res.status === 409) {
     throw new Error("This wallet already has its starting test XLM.");
   }
+  if (res.status === 429) {
+    throw new Error(body.error ?? "The testnet faucet has hit its daily limit. Try again tomorrow.");
+  }
   console.error(`[faucet] ${res.status}:`, body.error ?? "(no detail)");
   throw new Error("Couldn't send starting funds. Try again shortly.");
 }

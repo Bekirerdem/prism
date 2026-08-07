@@ -58,6 +58,16 @@ describe("fundWithFriendbot", () => {
 
     await expect(fundWithFriendbot(wallet, fetchFn)).rejects.toThrow(/already has its starting/i);
   });
+
+  it("passes the daily-limit refusal through verbatim (429)", async () => {
+    // "Try again tomorrow" is actionable; the generic failure text is not.
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValue(res(429, { error: "The testnet faucet has hit its daily limit. Try again tomorrow." }));
+    const wallet = "CBBUJFC4JUV3DYJOGFAYYSVLZCYPXZJIPQZARQEGSFAVVG37HP7YPGFU";
+
+    await expect(fundWithFriendbot(wallet, fetchFn)).rejects.toThrow(/daily limit.*tomorrow/i);
+  });
 });
 
 describe("needsFunding", () => {
