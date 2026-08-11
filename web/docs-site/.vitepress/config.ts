@@ -14,9 +14,10 @@ export default defineConfig({
   // build emits "try-it.html" — so the site's own navigation 404'd on a static host and only
   // the index was reachable. cleanUrls emits "try-it/index.html", which those links resolve to.
   cleanUrls: true,
-  // The docs are served from the same origin as the app, so they point at the same brand
-  // files rather than carrying their own copies. Absolute paths on purpose: `base` is
-  // "/docs/", and a relative href would look for the icon inside it.
+  // `head` hrefs are emitted literally, so "/favicon.svg" reaches the app's own brand
+  // files at the origin root. themeConfig.logo is different: VitePress prepends `base`
+  // to it, so its "/favicon.svg" resolves to "/docs/favicon.svg" — that file must exist
+  // in docs-site/public/ (it's a copy of web/public/favicon.svg; keep them in sync).
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
     ["link", { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon.png" }],

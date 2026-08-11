@@ -1,3 +1,7 @@
+---
+title: What is Eunomia?
+---
+
 # Give your agent a budget — not your wallet.
 
 Eunomia is a **bounded treasury** for autonomous agents on Stellar. You set the rules

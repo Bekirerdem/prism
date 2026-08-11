@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Eunomia">
+  <!-- Dark plate rather than a transparent mark: the tab strip is cream in one browser and
+       near-black in another, and a dark-green mark disappears against the second. The plate
+       also matches the profile picture, so the tab and the social avatar read as one thing.
+       The mark is held at 70% so it keeps a margin inside the rounded square. -->
+  <rect width="64" height="64" rx="11" fill="#223E05"/>
+  <g transform="translate(32 32) scale(.7) translate(-32 -32)">
+    <path d="M8 6h10v52H8zM18 6h38v10H18zM18 48h38v10H18z" fill="#EDF6D2"/>
+    <rect x="28" y="26" width="20" height="10" fill="#A2CB28"/>
+  </g>
+</svg>
