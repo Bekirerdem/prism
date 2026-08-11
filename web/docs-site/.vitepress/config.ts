@@ -14,6 +14,7 @@ export default defineConfig({
   // build emits "try-it.html" — so the site's own navigation 404'd on a static host and only
   // the index was reachable. cleanUrls emits "try-it/index.html", which those links resolve to.
   cleanUrls: true,
+  lastUpdated: true,
   // `head` hrefs are emitted literally, so "/favicon.svg" reaches the app's own brand
   // files at the origin root. themeConfig.logo is different: VitePress prepends `base`
   // to it, so its "/favicon.svg" resolves to "/docs/favicon.svg" — that file must exist
@@ -41,6 +42,15 @@ export default defineConfig({
   ],
   themeConfig: {
     logo: { src: "/favicon.svg", alt: `${NAME}` },
+    // the logo is the way back — clicking the brand leaves the docs for the site,
+    // docs-home stays one click away in the sidebar
+    logoLink: { link: "https://eunomia.finance", ariaLabel: "eunomia.finance" },
+    search: { provider: "local" },
+    lastUpdated: { text: "Last updated" },
+    editLink: {
+      pattern: "https://github.com/eunomia-finance/eunomia/edit/main/web/docs-site/:path",
+      text: "Edit this page on GitHub",
+    },
     nav: [
       { text: "App", link: "https://eunomia.finance/#overview" },
       { text: "GitHub", link: "https://github.com/eunomia-finance/eunomia" },
