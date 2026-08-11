@@ -4,11 +4,10 @@
    (and the contrast measurements in web/docs/design/palette-preview.html).
 
    Rules carried over from those measurements:
-   - --green (#a2cb28) is FILL ONLY on cream (1.84:1) — it never carries text
-     in light mode. Text accents are ink (#223e05) or red (#a62021, 7.16:1).
+   - --green (#a2cb28) is FILL ONLY on cream (1.84:1) — it never carries text.
+     Text accents are ink (#223e05) or red (#a62021, 7.16:1).
    - Text ON green is always ink (6.31:1).
-   - In dark mode the same green reads ~8:1 on #152a03, so there it MAY
-     carry text — links go lime in the dark, red in the light.
+   The docs are single-appearance (appearance: false in config) — cream only.
    ========================================================================== */
 
 :root {
@@ -55,29 +54,6 @@
   /* type: landing identity — Questrial headings, Geist body */
   --vp-font-family-base: "Geist", system-ui, -apple-system, sans-serif;
   --vp-font-family-mono: "JetBrains Mono", ui-monospace, monospace;
-}
-
-.dark {
-  --vp-c-bg: #152a03;
-  --vp-c-bg-alt: #1e3a06;
-  --vp-c-bg-elv: #1e3a06;
-  --vp-c-bg-soft: #1e3a06;
-
-  --vp-c-text-1: #edf6d2;
-  --vp-c-text-2: #94a87a;
-  --vp-c-text-3: #94a87a;
-
-  --vp-c-divider: rgba(162, 203, 40, 0.24);
-  --vp-c-border: rgba(162, 203, 40, 0.24);
-  --vp-c-gutter: rgba(162, 203, 40, 0.24);
-
-  /* on the dark ground the lime clears contrast, so it carries the links */
-  --vp-c-brand-1: #a2cb28;
-  --vp-c-brand-2: #b8dd4a;
-  --vp-c-brand-3: #a2cb28;
-  --vp-c-brand-soft: rgba(162, 203, 40, 0.16);
-
-  --vp-code-block-bg: #102002;
 }
 
 /* landing sets its own selection because the browser default blue-violet
