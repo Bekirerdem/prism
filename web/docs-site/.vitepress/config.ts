@@ -19,6 +19,16 @@ export default defineConfig({
   // to it, so its "/favicon.svg" resolves to "/docs/favicon.svg" — that file must exist
   // in docs-site/public/ (it's a copy of web/public/favicon.svg; keep them in sync).
   head: [
+    // same faces the landing loads — Questrial (headings), Geist (body), JetBrains Mono (code)
+    ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
+    ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
+    [
+      "link",
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Questrial&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
+      },
+    ],
     ["link", { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }],
     ["link", { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon.png" }],
     ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
