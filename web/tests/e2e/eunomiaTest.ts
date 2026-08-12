@@ -33,7 +33,7 @@ export async function injectTestSigner(
   );
 }
 
-export class PrismPage {
+export class EunomiaPage {
   constructor(public readonly page: Page) {}
 
   private toast(kind: "success" | "error" | "info"): Locator {

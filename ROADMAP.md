@@ -1,6 +1,6 @@
-# PRISM Roadmap
+# Eunomia Roadmap
 
-PRISM is moving from a proven testnet product to **mainnet agent-payments infrastructure on Stellar**. Milestones are sequenced, not dated — each one unlocks the next, and each is verifiable on-chain or in the repo.
+Eunomia is moving from a proven testnet product to **mainnet agent-payments infrastructure on Stellar**. Milestones are sequenced, not dated — each one unlocks the next, and each is verifiable on-chain or in the repo.
 
 ## M1 — Traction on testnet *(current)*
 
@@ -30,7 +30,7 @@ Closing the gap between "a human signs every payment" and "an agent spends auton
 ## M4 — Ecosystem integrations
 
 - [ ] Production **ERC-8004 reputation** ([trionlabs/stellar-8004](https://github.com/trionlabs/stellar-8004)) — earned reputation replaces the testnet stand-in oracle
-- [ ] **OpenClaw / ClawHub skill** — agents create and manage their PRISM treasury conversationally
+- [ ] **OpenClaw / ClawHub skill** — agents create and manage their Eunomia treasury conversationally
 - [ ] **x402 productization** — bounded pay-per-use spending for agent-facing APIs
 - [ ] ZK compliance wired into the payment flow (confidential-by-default option), composing with OpenZeppelin Confidential Tokens via `ComplianceHooks`
 
@@ -42,4 +42,4 @@ Closing the gap between "a human signs every payment" and "an agent spends auton
 
 ---
 
-**Where we are:** M2 is shipped — treasury v3 (agent sessions + lifecycle + rolling window, [design spec](docs/superpowers/specs/2026-07-07-prism-m2-design.md)) and the treasury registry are live on testnet, wired into the app. M1's remaining boxes (10+ user wallets, published feedback summary) are distribution work in progress. M3 (mainnet path) is next. Progress is tracked in the commit history and [`DEPLOYMENT.md`](DEPLOYMENT.md).
+**Where we are:** M2 is shipped — treasury v3 (agent sessions + lifecycle + rolling window) and the treasury registry are live on testnet, wired into the app. M1's remaining boxes (10+ user wallets, published feedback summary) are distribution work in progress. M3 (mainnet path) is next. Progress is tracked in the commit history and [`DEPLOYMENT.md`](DEPLOYMENT.md).

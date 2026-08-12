@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Prism user counter — the evidence backbone for the "50 user wallets" program goal.
+// Eunomia user counter — the evidence backbone for the "50 user wallets" program goal.
 //
 // Counts DISTINCT wallets that registered a treasury in the on-chain TreasuryRegistry
 // (every in-app deploy best-effort-registers itself since M2). The RPC only retains
@@ -161,7 +161,7 @@ const count = Object.keys(snap.owners).length;
 const bar = "█".repeat(Math.min(active, TARGET)) + "░".repeat(Math.max(0, TARGET - active));
 // `active` is the number to publish: registering is free (the relay sponsors the fee), so
 // only owners who moved value into a treasury carry evidence weight. See scripts/qualify.mjs.
-console.log(`\nPrism active wallets: ${active} / ${TARGET}`);
+console.log(`\nEunomia active wallets: ${active} / ${TARGET}`);
 console.log(bar);
 console.log(`(${count} registered in total — ${pending} deployed a treasury but never funded it)`);
 console.log(`(this run: +${newOwners} new wallet(s), +${newTreasuries} treasury registration(s) in the RPC window)`);

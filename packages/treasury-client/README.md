@@ -1,6 +1,6 @@
 # treasury-client
 
-Generated TypeScript client for the **Prism Treasury** contract — produced by
+Generated TypeScript client for the **Eunomia Treasury** contract — produced by
 `stellar contract bindings typescript` from the treasury wasm. **Do not edit
 `src/index.ts` by hand**; it is generator output.
 

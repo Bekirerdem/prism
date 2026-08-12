@@ -5,7 +5,6 @@
 // They were not deleted, they moved to /docs — this page carries what they achieve.
 //
 // Design tokens and the contrast measurements behind them: web/docs/design/palette-preview.html
-// Spec: docs/superpowers/specs/2026-08-02-landing-redesign-design.md
 import "./landing.css";
 import { useState } from "react";
 import { connectPasskey } from "../lib/walletKit";

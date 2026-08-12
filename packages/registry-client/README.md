@@ -1,6 +1,6 @@
 # registry-client
 
-Generated TypeScript client for the **Prism Treasury Registry** contract (the
+Generated TypeScript client for the **Eunomia Treasury Registry** contract (the
 permissionless wallet → treasury discovery index used for cross-device recovery).
 Produced by `stellar contract bindings typescript`; **do not edit `src/index.ts`
 by hand**.

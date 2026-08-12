@@ -1,8 +1,8 @@
-# Try Prism — a 5-Minute Guide (Testnet)
+# Try Eunomia — a 5-Minute Guide (Testnet)
 
 *Türkçe versiyon: [TRY-IT-TR.md](TRY-IT-TR.md)*
 
-**What is Prism?** A bounded treasury on Stellar that lets you hand an AI agent real
+**What is Eunomia?** A bounded treasury on Stellar that lets you hand an AI agent real
 spending power, safely: the daily limit, per-payment limit, and payee whitelist are
 enforced by the **contract** — no matter how hard the model is "persuaded", funds can't
 leave the policy.

@@ -43,7 +43,7 @@ export async function logActivity(input: ActivityInput): Promise<void> {
     await supabase.from("activity").insert(buildActivityRow(input));
   } catch (e) {
     // best-effort — a logging failure must never break the user's action
-    console.error("[prism] activity log failed:", e instanceof Error ? e.message : e);
+    console.error("[eunomia] activity log failed:", e instanceof Error ? e.message : e);
   }
 }
 

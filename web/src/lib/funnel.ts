@@ -62,6 +62,6 @@ export async function logFunnel(input: FunnelInput): Promise<void> {
     await supabase.from("funnel_events").insert(row);
   } catch (e) {
     // best-effort — a logging failure must never break the user's action
-    console.error("[prism] funnel log failed:", e instanceof Error ? e.message : e);
+    console.error("[eunomia] funnel log failed:", e instanceof Error ? e.message : e);
   }
 }

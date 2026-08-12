@@ -2,7 +2,7 @@
 // treasury recognises as its ONLY spender while active. This is what makes the
 // per-user product's agent autonomous: after one wallet-signed set_session, the
 // session keypair signs payments with no wallet popups (same pattern as the demo
-// agent in prism.ts).
+// agent in eunomia.ts).
 //
 // ⚠️ The session SECRET lives in localStorage — acceptable on TESTNET precisely
 // because the design's point is a bounded credential: cap + expiry + instant

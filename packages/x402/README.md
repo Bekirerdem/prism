@@ -1,15 +1,15 @@
-# prism-x402 — bounded x402 buyer
+# eunomia-x402 — bounded x402 buyer
 
 The safe wallet behind an agent's [x402](https://developers.stellar.org/docs/build/agentic-payments/x402) payments on Stellar.
 
 When a service replies `402 Payment Required`, an agent normally signs a payment for
-whatever the server asks. **prism-x402 gates that payment against the treasury policy
+whatever the server asks. **eunomia-x402 gates that payment against the treasury policy
 first** — per-task limit, daily limit, and the payee whitelist OR reputation gate — and
 only settles through the bounded treasury if it passes. An over-limit or wrong-payee
 x402 request never reaches settlement.
 
 ```ts
-import { boundedPay, makeTreasurySettle } from "prism-x402";
+import { boundedPay, makeTreasurySettle } from "eunomia-x402";
 
 const settle = makeTreasurySettle({ treasuryId, taskId });
 const result = await boundedPay(requirements, policy, settle);

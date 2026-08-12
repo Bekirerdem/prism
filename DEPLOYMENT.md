@@ -1,4 +1,4 @@
-# Prism — Testnet Deployment
+# Eunomia — Testnet Deployment
 
 Network: **Stellar Testnet** (`Test SDF Network ; September 2015`)
 
@@ -15,7 +15,7 @@ Network: **Stellar Testnet** (`Test SDF Network ; September 2015`)
 | Contract | Address |
 |----------|---------|
 | USDC (SAC, issuer=alice) | `CDCEHPK4OJXVRA4JV7N56GR5SRD5KGGZ55BDSHKODGR72Y4KGS6A3Y2W` |
-| **Prism Treasury** | `CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ` |
+| **Eunomia Treasury** | `CAYWNXHANRY5GSJAZOR4YTKBKNOKTCITE52ZRKDKCAWLDTYWFFVFSPAZ` |
 | Treasury wasm hash | `41c8bb1f0b4d9bd7b89c3a855ee87cb56971a256fe110cd2860d406dde040c2b` |
 | **Compliance Verifier (ZK, hardened)** | `CCOLX7NEBDJRRVTPFVSK3UJLHMG3HO4UVYJW3NFBOTUG7Q7GOP63DBRH` |
 
@@ -62,7 +62,7 @@ The verify call emitted `attested = { whitelist_root, period_id }` on-chain. Cir
 (`npm test` in `circuits/`) → **6/6**; contract tests (`cargo test -p compliance_verifier`) → **4/4**
 (valid attest, tampered-proof trap, policy-mismatch trap, replay trap).
 
-**Honesty note.** The ZK layer hides Prism's *compliance ledger* — Prism's storage and events carry
+**Honesty note.** The ZK layer hides Eunomia's *compliance ledger* — Eunomia's storage and events carry
 only commitments and a proof, never plaintext amounts or payees. If confidential mode also moves real
 USDC via SAC transfers to revealed payees at settlement, those transfers stay visible at the
 **token-contract layer**; transfer-level privacy is the shielded-pool roadmap. For the demo, real fund
@@ -74,15 +74,15 @@ generated with `soroban-verifier-gen --curve bn254`, verified via Soroban's `bn2
 
 ## Confidential Token policy — OpenZeppelin `ComplianceHooks` (live on testnet)
 
-Prism's payee gate, packaged as an [OpenZeppelin + SDF Confidential Token](https://github.com/OpenZeppelin/stellar-contracts/tree/feat/confidential-verifier-ultrahonk)
+Eunomia's payee gate, packaged as an [OpenZeppelin + SDF Confidential Token](https://github.com/OpenZeppelin/stellar-contracts/tree/feat/confidential-verifier-ultrahonk)
 `Policy` (`is_authorized(account, token) -> bool`). Wire it as a confidential token's
 `compliance.policy` and every **private-amount** transfer is still bounded to authorized
-payees by Prism — whitelist OR earned reputation. *The confidential token hides the amount;
-Prism bounds the payee.*
+payees by Eunomia — whitelist OR earned reputation. *The confidential token hides the amount;
+Eunomia bounds the payee.*
 
 | Item | Value |
 |------|-------|
-| **Prism Policy** (ComplianceHooks) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
+| **Eunomia Policy** (ComplianceHooks) | `CBWMYGL7E663UON6ER5KQX2JZZA4UDZZD4RIFEHGXXF2HMMBRAN7BLQF` |
 | Deploy tx | [`8fb7f456…`](https://stellar.expert/explorer/testnet/tx/8fb7f45696f9d632596e960f61477654189dcc96f6af134843519958b9d13562) |
 | `is_authorized(service)` — whitelisted | `true` ✅ (live) |
 | `is_authorized(attacker)` — not whitelisted | `false` ✅ (live) |
@@ -90,7 +90,7 @@ Prism bounds the payee.*
 Wiring at the confidential token's construction:
 
 ```rust
-ComplianceConfig { policy: Some(PRISM_POLICY), sac_passthrough: false }
+ComplianceConfig { policy: Some(EUNOMIA_POLICY), sac_passthrough: false }
 ```
 
 Contract tests: `cargo test -p policy` → **2/2** (whitelist gate + reputation gate). The
@@ -117,7 +117,7 @@ oracle above is a demo stand-in for trionlabs/stellar-8004, which is the product
 
 ## Treasury v3 + Treasury Registry — M2 agent infrastructure (live on testnet)
 
-M2 ([design spec](docs/superpowers/specs/2026-07-07-prism-m2-design.md)) ships agent
+M2 ships agent
 **sessions** (time-bound, spend-capped, instantly revocable — the ONLY spender while
 active), the contract **lifecycle** (pause/resume, admin withdraw, limit updates, agent
 rotation), and a **rolling 24h window** (hourly buckets — closes audit finding C2).

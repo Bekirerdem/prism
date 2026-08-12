@@ -1,6 +1,6 @@
 // Per-user treasury operations: deploy a fresh treasury owned by the connected wallet,
 // fund it, govern its policy, and spend from it — all signed by the user's wallet. This is
-// the per-user analogue of prism.ts (which drives the single embedded-agent demo treasury).
+// the per-user analogue of eunomia.ts (which drives the single embedded-agent demo treasury).
 import {
   Address,
   BASE_FEE,

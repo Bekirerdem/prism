@@ -1,8 +1,8 @@
-# Prism — demo & pitch
+# Eunomia — demo & pitch
 
 ## One-liner
 
-> Prism is the wallet your AI agent can't drain. A business hands an autonomous agent real
+> Eunomia is the wallet your AI agent can't drain. A business hands an autonomous agent real
 > money to spend; the **contract** enforces the limits, every payment is auto-accounted, and
 > Stellar settles in sub-cents.
 
@@ -10,7 +10,7 @@
 
 AI agents can reason and act — until they need to pay. No business gives an LLM agent a
 wallet, because one jailbreak drains it and hundreds of micro-payments are impossible to
-reconcile. Prism fixes both: the agent's spend is **bounded by a Soroban contract** (whitelist,
+reconcile. Eunomia fixes both: the agent's spend is **bounded by a Soroban contract** (whitelist,
 per-task and daily limits, rejected on-chain), every payment is **auto-accounted per task**,
 and budgets are funded through **zero-cost muxed sub-addresses** — Stellar primitives nothing
 else matches. It's live on testnet, settling payments in testnet USDC (a test-issued asset;
@@ -34,7 +34,7 @@ per-user treasuries run on native testnet XLM — Circle USDC is the mainnet pat
 
 ## Full product demo — app shell (screen-recording script)
 
-Goal: prove Prism is a **usable product**, not a scripted demo — a first-time user connects a
+Goal: prove Eunomia is a **usable product**, not a scripted demo — a first-time user connects a
 wallet, deploys their **own** bounded treasury, the contract rejects a real over-spend, and an
 agent then spends on a revocable **Leash** with no wallet popups. **Real screen recording**
 (Freighter + live testnet, real tx hashes) with voiceover *or* captions — no static-screenshot
@@ -46,7 +46,7 @@ zoom/pan. Target ~3:10.
 | 0:12–0:26 | **Open app** → Connect wallet → Freighter approve | "I connect my own Stellar wallet. This address becomes the treasury owner — nobody custodies my funds." |
 | 0:26–0:50 | **Setup** wizard → limits (per-payment 10 / daily 50) → sign | "One signature deploys *my* bounded treasury on-chain. I set the rules; the contract keeps them." *(show the tx)* |
 | 0:50–1:05 | **Overview** — balance, limit bar, next-step stepper | "This is my treasury. Balance, remaining daily allowance, and what to do next — read live from chain." |
-| 1:05–1:18 | **Fund** it from the wallet | "I fund it with testnet XLM. The funds live in my contract, never with Prism." |
+| 1:05–1:18 | **Fund** it from the wallet | "I fund it with testnet XLM. The funds live in my contract, never with Eunomia." |
 | 1:18–1:33 | **Payments** → add payee (sample vendor) | "I approve exactly one payee. Only this address can ever receive money." |
 | 1:33–1:52 | **Payments** → pay the payee, in-policy → settles | "In-policy payment: inside the limit, to an approved payee. Settled on-chain in seconds." *(tx link, balance drops)* |
 | **1:52–2:15** | **Payments** → pay over the limit **→ 🔴 blocked** | **The climax — hold on this.** "Now I overspend. The contract rejects it: `ExceedsTaskLimit`. The funds never moved. The model can misbehave — the contract doesn't care." *(open the failed tx in Stellar Expert)* |

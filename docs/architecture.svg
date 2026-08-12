@@ -20,7 +20,7 @@
   <rect x="0.5" y="0.5" width="1199" height="679" rx="18" fill="url(#glow)"/>
 
   <!-- title -->
-  <text x="48" y="58" font-family="Georgia, serif" font-size="26" fill="#f3f1ec">Prism <tspan fill="#56555f" font-size="20">— architecture</tspan></text>
+  <text x="48" y="58" font-family="Georgia, serif" font-size="26" fill="#f3f1ec">Eunomia <tspan fill="#56555f" font-size="20">— architecture</tspan></text>
   <text x="48" y="84" font-size="11.5" letter-spacing="2" fill="#94939c">THE SAFETY LAYER FOR AGENT MONEY · STELLAR</text>
   <text x="1152" y="58" text-anchor="end" font-size="11" fill="#56555f">non-custodial · every rule on-chain</text>
 

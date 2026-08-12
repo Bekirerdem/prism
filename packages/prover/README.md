@@ -1,6 +1,6 @@
 # prover
 
-Off-chain tooling for Prism's ZK compliance layer: turns snarkjs Groth16 output
+Off-chain tooling for Eunomia's ZK compliance layer: turns snarkjs Groth16 output
 into the byte layout the on-chain BN254 verifier expects, and generates the
 commitment salts.
 
@@ -13,6 +13,4 @@ commitment salts.
 
 `npm test` runs the CSPRNG salt tests (3) — self-contained, no network. The
 `fixtures`/`submit` scripts need the ZK build artifacts (`circuits/build/`,
-gitignored) and the `stellar` CLI with a funded identity; see
-`docs/superpowers/plans/2026-06-19-prism-confidential-zk.md` for the full
-toolchain (circom + snarkjs + Hermez ptau).
+gitignored) and the `stellar` CLI with a funded identity (toolchain: circom + snarkjs + Hermez ptau).

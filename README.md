@@ -162,7 +162,6 @@ packages/registry-client/       generated TypeScript client for the treasury reg
 packages/prover/                snarkjs → Soroban byte encoder + proof fixtures
 packages/x402/                  bounded x402 buyer (gate an x402 payment, settle via the treasury)
 web/                            landing + app (Vite · React 19 · TS) + docs site
-deck/                           pitch deck
 DEPLOYMENT.md                   live testnet addresses & verified results
 ```
 

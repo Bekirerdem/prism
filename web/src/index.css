@@ -1,6 +1,6 @@
 /* ============================================================================
    Eunomia — design system v2 ("Spectral instrument on the void")
-   True near-black base + electric-violet→cyan→lime prism ramp. Glass over a
+   True near-black base + electric-violet→cyan→lime spectral ramp. Glass over a
    living CSS aurora. Semantic colour = product story (approved/rejected/limit).
    ========================================================================== */
 
@@ -182,12 +182,6 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
 .hero__sub{ color:var(--muted); font-size:18px; margin:24px 0 0; max-width:46ch; }
 .hero__sub b{ color:var(--text); font-weight:600; }
 .hero__cta{ display:flex; gap:13px; margin-top:30px; flex-wrap:wrap; }
-
-/* hero prism artefact */
-.prism-art{ position:relative; aspect-ratio:1/1; width:100%; max-width:460px; margin-left:auto; }
-.prism-art svg{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 0 40px rgba(124,58,237,0.35)); }
-.beam-anim{ animation:beamshift 9s ease-in-out infinite; }
-@keyframes beamshift{0%,100%{opacity:.85}50%{opacity:1}}
 
 /* ===================== STAT CONSOLE ===================== */
 .console{ margin-top:30px; display:grid; grid-template-columns:1fr 1fr 1fr; padding:0; overflow:hidden; }
@@ -387,7 +381,7 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
 
 /* ===================== Reduced motion ===================== */
 @media (prefers-reduced-motion: reduce){
-  .bg__aurora, .bg__fan, .dot--live, .badge--rej, .beam-anim{ animation:none !important; }
+  .bg__aurora, .bg__fan, .dot--live, .badge--rej{ animation:none !important; }
   *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
 }
 
@@ -424,7 +418,7 @@ input, textarea, select{ font-family:inherit; font-size:14px; }
 .conf__attest{ margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
 @media(max-width:680px){ .conf__proof{ grid-template-columns:1fr; } }
 
-/* hero: floating glass cards showing Prism's live data — flat fills, no gradients */
+/* hero: floating glass cards showing Eunomia's live data — flat fills, no gradients */
 .hero__cards{ position:relative; display:flex; flex-direction:column; gap:16px; width:100%; max-width:392px; margin-left:auto; }
 .hcard{ background:rgba(22,18,34,0.62); border:1px solid var(--border); border-radius:16px;
   backdrop-filter:blur(16px) saturate(1.1); -webkit-backdrop-filter:blur(16px) saturate(1.1);

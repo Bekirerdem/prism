@@ -1,8 +1,8 @@
 {
-  "name": "prism-x402",
+  "name": "eunomia-x402",
   "private": true,
   "type": "module",
-  "description": "Bounded x402 buyer for Prism — gate an x402 payment against the treasury policy, then settle through the bounded treasury.",
+  "description": "Bounded x402 buyer for Eunomia — gate an x402 payment against the treasury policy, then settle through the bounded treasury.",
   "scripts": {
     "test": "node --import tsx --test src/gate.test.ts src/settle.test.ts src/policy.test.ts src/boundedFetch.test.ts",
     "e2e": "tsx src/e2e.ts",
